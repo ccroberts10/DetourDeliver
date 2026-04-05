@@ -3,10 +3,10 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-<title>iHaul</title>
+<title>Detour</title>
 <link href="https://fonts.googleapis.com/css2?family=Syne:wght@700;800&family=DM+Sans:wght@400;500&display=swap" rel="stylesheet">
 <style>
-:root{--orange:#FF5C00;--orange2:#FF7A2F;--black:#080808;--dark:#111111;--dark2:#1C1C1C;--dark3:#242424;--white:#FFFFFF;--gray:#777777;--gray2:#444444;--green:#3DCC78;--red:#F05555;--r:14px;--rs:8px}
+:root{--teal:#00C2A8;--teal2:#00DDB8;--black:#080808;--dark:#111111;--dark2:#1C1C1C;--dark3:#242424;--white:#FFFFFF;--gray:#777777;--gray2:#444444;--green:#3DCC78;--red:#F05555;--r:14px;--rs:8px}
 *{margin:0;padding:0;box-sizing:border-box;-webkit-tap-highlight-color:transparent}
 html,body{height:100%;background:var(--black);color:var(--white);font-family:'DM Sans',sans-serif;font-size:15px;line-height:1.5;overflow:hidden}
 .screen{display:none;height:100vh;flex-direction:column}
@@ -14,47 +14,47 @@ html,body{height:100%;background:var(--black);color:var(--white);font-family:'DM
 .auth-wrap{display:flex;flex-direction:column;height:100vh;background:var(--black)}
 .auth-top{flex:1;display:flex;flex-direction:column;align-items:center;justify-content:center;padding:40px 28px 28px}
 .auth-logo{font-family:'Syne',sans-serif;font-size:80px;font-weight:800;letter-spacing:-4px;line-height:1;color:var(--white)}
-.auth-logo span{color:var(--orange)}
+.auth-logo span{color:var(--teal)}
 .auth-tagline{font-size:16px;color:var(--gray);margin-top:14px;text-align:center}
 .auth-pills{display:flex;gap:8px;margin-top:24px;flex-wrap:wrap;justify-content:center}
 .auth-pill{background:rgba(255,255,255,0.05);border:0.5px solid rgba(255,255,255,0.1);border-radius:30px;padding:6px 14px;font-size:12px;color:rgba(255,255,255,0.4)}
 .auth-bottom{background:var(--dark);border-radius:28px 28px 0 0;border-top:0.5px solid rgba(255,255,255,0.08);padding:24px 24px 40px;overflow-y:auto}
 .tab-switch{display:flex;background:var(--dark2);border-radius:var(--rs);padding:4px;margin-bottom:22px;gap:4px}
 .tab-btn{flex:1;padding:9px;border:none;background:none;color:var(--gray);font-size:14px;font-family:'DM Sans',sans-serif;font-weight:500;border-radius:6px;cursor:pointer;transition:all 0.2s}
-.tab-btn.active{background:var(--orange);color:var(--white)}
+.tab-btn.active{background:var(--teal);color:var(--white)}
 .field-group{margin-bottom:14px}
 .field-group label{display:block;font-size:11px;font-weight:500;color:rgba(255,255,255,0.4);text-transform:uppercase;letter-spacing:0.07em;margin-bottom:5px}
 .field-group input,.field-group select,.field-group textarea{width:100%;background:var(--dark2);border:0.5px solid rgba(255,255,255,0.1);border-radius:var(--rs);color:var(--white);font-size:15px;font-family:'DM Sans',sans-serif;padding:11px 14px;outline:none;transition:border-color 0.2s;-webkit-appearance:none;appearance:none}
-.field-group input:focus,.field-group select:focus,.field-group textarea:focus{border-color:var(--orange)}
+.field-group input:focus,.field-group select:focus,.field-group textarea:focus{border-color:var(--teal)}
 .field-group select option{background:var(--dark2)}
 textarea{resize:none}
 .field-row{display:flex;gap:10px}
 .field-row .field-group{flex:1}
-.req{color:var(--orange)}
-.btn-primary{width:100%;padding:14px;background:var(--orange);color:var(--white);border:none;border-radius:var(--r);font-size:15px;font-family:'DM Sans',sans-serif;font-weight:500;cursor:pointer;margin-top:6px;transition:opacity 0.15s,transform 0.1s}
+.req{color:var(--teal)}
+.btn-primary{width:100%;padding:14px;background:var(--teal);color:var(--white);border:none;border-radius:var(--r);font-size:15px;font-family:'DM Sans',sans-serif;font-weight:500;cursor:pointer;margin-top:6px;transition:opacity 0.15s,transform 0.1s}
 .btn-primary:active{opacity:0.82;transform:scale(0.99)}
 .btn-primary.btn-large{padding:16px;font-size:16px;margin-top:14px}
 .btn-primary.btn-sm{width:auto;padding:11px 18px;margin-top:0;white-space:nowrap}
-.btn-secondary{width:100%;padding:12px;background:transparent;color:var(--orange);border:0.5px solid rgba(255,92,0,0.5);border-radius:var(--r);font-size:14px;font-family:'DM Sans',sans-serif;font-weight:500;cursor:pointer;margin-top:6px;transition:all 0.2s}
-.btn-ghost{background:none;border:none;color:var(--orange);font-size:13px;font-family:'DM Sans',sans-serif;cursor:pointer;padding:4px 6px}
+.btn-secondary{width:100%;padding:12px;background:transparent;color:var(--teal);border:0.5px solid rgba(0,194,168,0.5);border-radius:var(--r);font-size:14px;font-family:'DM Sans',sans-serif;font-weight:500;cursor:pointer;margin-top:6px;transition:all 0.2s}
+.btn-ghost{background:none;border:none;color:var(--teal);font-size:13px;font-family:'DM Sans',sans-serif;cursor:pointer;padding:4px 6px}
 #app-screen{background:var(--black)}
 .app-header{background:var(--black);border-bottom:0.5px solid rgba(255,255,255,0.07);padding:14px 20px;display:flex;align-items:center;justify-content:space-between;flex-shrink:0}
 .header-logo{font-family:'Syne',sans-serif;font-size:22px;font-weight:800;letter-spacing:-1px;color:var(--white)}
-.header-logo span{color:var(--orange)}
+.header-logo span{color:var(--teal)}
 .header-user{display:flex;align-items:center;gap:6px;font-size:13px;color:var(--gray)}
 .app-body{flex:1;overflow:hidden;position:relative}
 .view{display:none;height:100%;overflow-y:auto;padding:20px 20px 100px}
 .view.active{display:block}
 .view-header{display:flex;align-items:center;gap:10px;margin-bottom:22px}
 .view-header h2{font-family:'Syne',sans-serif;font-size:22px;font-weight:800;letter-spacing:-0.5px}
-.back-btn{background:none;border:none;color:var(--orange);font-size:14px;font-family:'DM Sans',sans-serif;cursor:pointer;padding:0;white-space:nowrap}
+.back-btn{background:none;border:none;color:var(--teal);font-size:14px;font-family:'DM Sans',sans-serif;cursor:pointer;padding:0;white-space:nowrap}
 .home-hero{margin-bottom:22px}
 .home-greeting{font-family:'Syne',sans-serif;font-size:26px;font-weight:800;letter-spacing:-0.5px}
 .home-sub{font-size:15px;color:var(--gray);margin-top:3px}
 .action-grid{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:26px}
 .action-card{background:var(--dark);border:0.5px solid rgba(255,255,255,0.07);border-radius:var(--r);padding:18px 14px;cursor:pointer;transition:border-color 0.2s,transform 0.1s}
 .action-card:active{transform:scale(0.97)}
-.shipper-card:hover{border-color:rgba(255,92,0,0.5)}
+.shipper-card:hover{border-color:rgba(0,194,168,0.5)}
 .driver-card:hover{border-color:rgba(61,204,120,0.5)}
 .action-icon{font-size:26px;margin-bottom:10px}
 .action-title{font-family:'Syne',sans-serif;font-size:14px;font-weight:700;line-height:1.25;margin-bottom:4px}
@@ -62,30 +62,30 @@ textarea{resize:none}
 .section-head{display:flex;justify-content:space-between;align-items:center;font-size:11px;font-weight:500;color:rgba(255,255,255,0.4);text-transform:uppercase;letter-spacing:0.09em;margin-bottom:10px}
 .jobs-list{display:flex;flex-direction:column;gap:10px}
 .job-card{background:var(--dark);border:0.5px solid rgba(255,255,255,0.07);border-radius:var(--r);padding:14px;cursor:pointer;transition:border-color 0.2s}
-.job-card:hover{border-color:rgba(255,92,0,0.35)}
+.job-card:hover{border-color:rgba(0,194,168,0.35)}
 .job-card-header{display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:9px}
 .job-card-title{font-family:'Syne',sans-serif;font-size:14px;font-weight:700;flex:1;margin-right:10px;line-height:1.3}
-.job-price{font-family:'Syne',sans-serif;font-size:18px;font-weight:800;color:var(--orange);flex-shrink:0}
+.job-price{font-family:'Syne',sans-serif;font-size:18px;font-weight:800;color:var(--teal);flex-shrink:0}
 .job-route{display:flex;align-items:center;gap:7px;margin-bottom:8px}
 .route-dot{width:7px;height:7px;border-radius:50%;flex-shrink:0}
 .route-dot.start{background:var(--green)}
-.route-dot.end{background:var(--orange)}
+.route-dot.end{background:var(--teal)}
 .route-line{flex:1;height:1px;border-top:1px dashed rgba(255,255,255,0.12)}
 .route-city{font-size:12px;color:rgba(255,255,255,0.65);font-weight:500}
 .job-meta{font-size:11px;color:var(--gray);display:flex;gap:10px;flex-wrap:wrap;align-items:center}
 .status-badge{display:inline-block;padding:3px 9px;border-radius:20px;font-size:10px;font-weight:600;letter-spacing:0.03em}
 .status-open{background:rgba(61,204,120,0.12);color:var(--green)}
-.status-accepted{background:rgba(255,92,0,0.12);color:var(--orange2)}
+.status-accepted{background:rgba(0,194,168,0.12);color:var(--teal2)}
 .status-in_transit{background:rgba(96,165,250,0.12);color:#60A5FA}
 .status-completed{background:rgba(255,255,255,0.06);color:var(--gray)}
 .form-section{background:var(--dark);border:0.5px solid rgba(255,255,255,0.07);border-radius:var(--r);padding:16px;margin-bottom:12px}
 .form-section-title{font-size:11px;font-weight:500;color:rgba(255,255,255,0.4);text-transform:uppercase;letter-spacing:0.09em;margin-bottom:14px}
 .type-picker{display:flex;gap:6px;flex-wrap:wrap;margin-bottom:10px}
 .type-opt{display:flex;flex-direction:column;align-items:center;gap:3px;padding:10px 8px;background:var(--dark2);border:0.5px solid rgba(255,255,255,0.08);border-radius:var(--rs);cursor:pointer;transition:all 0.2s;flex:1;min-width:50px}
-.type-opt.active{background:rgba(255,92,0,0.1);border-color:var(--orange)}
+.type-opt.active{background:rgba(0,194,168,0.1);border-color:var(--teal)}
 .type-emoji{font-size:17px}
 .type-name{font-size:10px;color:rgba(255,255,255,0.5);text-align:center}
-.type-opt.active .type-name{color:var(--orange)}
+.type-opt.active .type-name{color:var(--teal)}
 .type-hint{font-size:12px;color:var(--gray);line-height:1.5;padding:6px 2px 0}
 .toggle-row{display:flex;justify-content:space-between;align-items:center;padding:4px 0}
 .toggle-row label:first-child{font-size:14px;color:rgba(255,255,255,0.65);text-transform:none;letter-spacing:0}
@@ -93,13 +93,13 @@ textarea{resize:none}
 .toggle input{opacity:0;width:0;height:0}
 .toggle-slider{position:absolute;inset:0;background:var(--dark2);border:0.5px solid rgba(255,255,255,0.15);border-radius:24px;cursor:pointer;transition:background 0.2s}
 .toggle-slider:before{content:'';position:absolute;width:18px;height:18px;left:3px;top:3px;background:var(--gray);border-radius:50%;transition:transform 0.2s,background 0.2s}
-.toggle input:checked+.toggle-slider{background:rgba(255,92,0,0.18);border-color:var(--orange)}
-.toggle input:checked+.toggle-slider:before{transform:translateX(20px);background:var(--orange)}
+.toggle input:checked+.toggle-slider{background:rgba(0,194,168,0.18);border-color:var(--teal)}
+.toggle input:checked+.toggle-slider:before{transform:translateX(20px);background:var(--teal)}
 .price-input-wrap{display:flex;align-items:center;background:var(--dark2);border:0.5px solid rgba(255,255,255,0.1);border-radius:var(--rs);overflow:hidden}
-.price-dollar{padding:11px 4px 11px 14px;font-size:18px;color:var(--orange);font-weight:600}
+.price-dollar{padding:11px 4px 11px 14px;font-size:18px;color:var(--teal);font-weight:600}
 .price-input-wrap input{border:none;background:none;padding:11px 14px 11px 4px;font-size:18px;font-weight:600;flex:1;color:var(--white)}
 .price-input-wrap input:focus{outline:none}
-.price-breakdown{background:rgba(255,92,0,0.05);border:0.5px solid rgba(255,92,0,0.18);border-radius:var(--rs);padding:11px 13px;margin-top:-6px;margin-bottom:12px}
+.price-breakdown{background:rgba(0,194,168,0.05);border:0.5px solid rgba(0,194,168,0.18);border-radius:var(--rs);padding:11px 13px;margin-top:-6px;margin-bottom:12px}
 .price-row{display:flex;justify-content:space-between;font-size:13px;padding:4px 0;color:rgba(255,255,255,0.65);border-bottom:0.5px solid rgba(255,255,255,0.05)}
 .price-row:last-child{border-bottom:none}
 .price-row.total{font-weight:600;color:var(--white);padding-top:7px}
@@ -107,10 +107,10 @@ textarea{resize:none}
 .price-val.muted{color:var(--gray)}
 .drive-mode-switch{display:flex;gap:8px;margin-bottom:18px}
 .drive-mode-btn{flex:1;padding:11px;background:var(--dark);border:0.5px solid rgba(255,255,255,0.08);border-radius:var(--r);color:var(--gray);font-size:13px;font-family:'DM Sans',sans-serif;font-weight:500;cursor:pointer;transition:all 0.2s}
-.drive-mode-btn.active{background:rgba(255,92,0,0.08);border-color:var(--orange);color:var(--white)}
+.drive-mode-btn.active{background:rgba(0,194,168,0.08);border-color:var(--teal);color:var(--white)}
 .haul-types{display:flex;flex-wrap:wrap;gap:7px;margin-top:6px}
 .haul-tag{display:flex;align-items:center;gap:6px;background:var(--dark2);border:0.5px solid rgba(255,255,255,0.08);border-radius:20px;padding:6px 11px;font-size:12px;color:rgba(255,255,255,0.65);cursor:pointer}
-.haul-tag input{accent-color:var(--orange)}
+.haul-tag input{accent-color:var(--teal)}
 .route-filter{display:flex;gap:8px;align-items:flex-end;margin-bottom:18px}
 .driver-route-card{border-color:rgba(61,204,120,0.15)}
 .driver-route-card:hover{border-color:rgba(61,204,120,0.4)}
@@ -126,11 +126,11 @@ textarea{resize:none}
 .messages-thread{display:flex;flex-direction:column;gap:7px;max-height:220px;overflow-y:auto;padding:4px 0;margin-bottom:10px}
 .msg-bubble{max-width:80%;padding:9px 13px;border-radius:15px;font-size:14px;line-height:1.4}
 .msg-in{background:var(--dark2);color:rgba(255,255,255,0.85);border-bottom-left-radius:4px;align-self:flex-start}
-.msg-out{background:var(--orange);color:var(--white);border-bottom-right-radius:4px;align-self:flex-end}
+.msg-out{background:var(--teal);color:var(--white);border-bottom-right-radius:4px;align-self:flex-end}
 .msg-name{font-size:10px;color:var(--gray);margin-bottom:2px}
 .msg-input-row{display:flex;gap:7px;align-items:center}
 .msg-input-row input{margin:0;flex:1}
-.msg-send-btn{width:40px;height:40px;background:var(--orange);border:none;border-radius:50%;color:var(--white);font-size:17px;cursor:pointer;flex-shrink:0;display:flex;align-items:center;justify-content:center}
+.msg-send-btn{width:40px;height:40px;background:var(--teal);border:none;border-radius:50%;color:var(--white);font-size:17px;cursor:pointer;flex-shrink:0;display:flex;align-items:center;justify-content:center}
 .photo-upload-row{display:flex;gap:8px;margin-bottom:12px;flex-wrap:wrap}
 .photo-thumb{width:76px;height:76px;border-radius:var(--rs);object-fit:cover;border:0.5px solid rgba(255,255,255,0.08)}
 .photo-add-btn{width:76px;height:76px;background:var(--dark2);border:1px dashed rgba(255,255,255,0.15);border-radius:var(--rs);display:flex;align-items:center;justify-content:center;font-size:22px;color:var(--gray);cursor:pointer}
@@ -157,12 +157,13 @@ textarea{resize:none}
 <div id="auth-screen" class="screen active">
   <div class="auth-wrap">
     <div class="auth-top">
-      <div class="auth-logo">i<span>Haul</span></div>
-      <p class="auth-tagline">Monetize the miles you're already driving.</p>
+      <div class="auth-logo">De<span>tour</span></div>
+      <p class="auth-tagline">Make money on drives you're already doing.</p>
       <div class="auth-pills">
         <span class="auth-pill">📦 Deliver anything</span>
         <span class="auth-pill">🚗 Earn on your commute</span>
         <span class="auth-pill">🛋️ Marketplace pickups</span>
+        <span class="auth-pill">🗺️ Durango · Telluride · Beyond</span>
       </div>
     </div>
     <div class="auth-bottom">
@@ -202,7 +203,7 @@ textarea{resize:none}
 <!-- MAIN APP -->
 <div id="app-screen" class="screen">
   <div class="app-header">
-    <div class="header-logo">i<span>Haul</span></div>
+    <div class="header-logo">De<span>tour</span></div>
     <div class="header-user"><span id="header-name"></span><button class="btn-ghost" onclick="logout()">Sign out</button></div>
   </div>
   <div class="app-body">
@@ -304,7 +305,7 @@ textarea{resize:none}
           </div>
           <div id="price-breakdown" class="price-breakdown" style="display:none">
             <div class="price-row"><span>Driver earns</span><span id="pb-driver" class="price-val green"></span></div>
-            <div class="price-row"><span>iHaul fee (25%)</span><span id="pb-fee" class="price-val muted"></span></div>
+            <div class="price-row"><span>Detour fee (25%)</span><span id="pb-fee" class="price-val muted"></span></div>
             <div class="price-row total"><span>You pay total</span><span id="pb-total" class="price-val"></span></div>
           </div>
           <div class="field-group" style="margin-top:10px;"><label>Notes for driver</label><textarea id="job-notes" rows="2" placeholder="Meet at back entrance, call on arrival..."></textarea></div>
@@ -477,7 +478,7 @@ function driverCard(r){
   const dep=new Date(r.departure_time).toLocaleString([],{weekday:'short',hour:'2-digit',minute:'2-digit'});
   const rating=r.avg_rating?`⭐ ${r.avg_rating}`:'New driver';
   const hauls=(typeof r.haul_types==='string'?JSON.parse(r.haul_types):r.haul_types)||[];
-  return`<div class="job-card driver-route-card" onclick="requestDriver('${r.id}','${escHtml(r.driver_name)}','${escHtml(r.destination_city)}')"><div class="job-card-header"><div><div class="job-card-title">🚗 ${escHtml(r.driver_name)}</div><div class="job-meta">${rating} · ${escHtml(r.origin_city)} → ${escHtml(r.destination_city)}</div></div><div style="text-align:right;font-size:12px;color:var(--orange);">Leaving<br>${dep}</div></div><div class="job-meta" style="margin-top:5px;"><span>↗ Up to ${r.max_detour_minutes} min detour</span>${r.vehicle_description?`<span>${escHtml(r.vehicle_description)}</span>`:''}</div><div class="tags-row" style="margin-top:7px;">${hauls.map(h=>`<span class="size-tag">${SZ[h]||h}</span>`).join('')}</div><div style="font-size:12px;color:var(--orange);margin-top:9px;font-weight:500;">Tap to post a job for this driver →</div></div>`;
+  return`<div class="job-card driver-route-card" onclick="requestDriver('${r.id}','${escHtml(r.driver_name)}','${escHtml(r.destination_city)}')"><div class="job-card-header"><div><div class="job-card-title">🚗 ${escHtml(r.driver_name)}</div><div class="job-meta">${rating} · ${escHtml(r.origin_city)} → ${escHtml(r.destination_city)}</div></div><div style="text-align:right;font-size:12px;color:var(--teal);">Leaving<br>${dep}</div></div><div class="job-meta" style="margin-top:5px;"><span>↗ Up to ${r.max_detour_minutes} min detour</span>${r.vehicle_description?`<span>${escHtml(r.vehicle_description)}</span>`:''}</div><div class="tags-row" style="margin-top:7px;">${hauls.map(h=>`<span class="size-tag">${SZ[h]||h}</span>`).join('')}</div><div style="font-size:12px;color:var(--teal);margin-top:9px;font-weight:500;">Tap to post a job for this driver →</div></div>`;
 }
 function requestDriver(routeId,driverName,destCity){showView('view-post');document.getElementById('job-dropoff-city').value=destCity;document.getElementById('job-notes').value=`Requested for driver: ${driverName}`;window._requestedDriverRouteId=routeId;toast(`Posting a job for ${driverName}'s drive to ${destCity}`);}
 async function browseJobs(){
@@ -510,7 +511,7 @@ async function loadJobDetail(silent=false){
 function renderJobDetail(job,messages){
   const isShipper=job.shipper_id===currentUser?.userId,isDriver=job.driver_id===currentUser?.userId;
   const extra=job.extra_data||{},dp=parseFloat(job.driver_payout||job.offered_price*0.75).toFixed(2);
-  let h=`<div class="job-detail-card"><div style="display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:10px;"><div><div style="font-size:11px;color:var(--orange);margin-bottom:4px;">${TL[job.job_type]||'📦 General'}</div><div style="font-family:'Syne',sans-serif;font-size:18px;font-weight:800;margin-bottom:6px;">${escHtml(job.title)}</div><span class="status-badge status-${job.status}">${ST[job.status]}</span></div><div style="text-align:right;"><div style="font-family:'Syne',sans-serif;font-size:26px;font-weight:800;color:var(--orange);">$${parseFloat(job.offered_price).toFixed(2)}</div>${isDriver?`<div style="font-size:12px;color:var(--green);">You earn $${dp}</div>`:''}</div></div>${job.description?`<p style="font-size:14px;color:rgba(255,255,255,0.55);margin-bottom:10px;">${escHtml(job.description)}</p>`:''}<div class="detail-grid"><div><div class="detail-label">Size</div><div class="detail-val">${SZ[job.item_size]||job.item_size}</div></div><div><div class="detail-label">Weight</div><div class="detail-val">${job.item_weight?job.item_weight+' lbs':'—'}</div></div></div>${job.fragile?'<div class="alert-box danger">⚠️ Fragile — handle with care</div>':''}${job.needs_disassembly?'<div class="alert-box warn">🔧 Requires disassembly / reassembly</div>':''}</div>`;
+  let h=`<div class="job-detail-card"><div style="display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:10px;"><div><div style="font-size:11px;color:var(--teal);margin-bottom:4px;">${TL[job.job_type]||'📦 General'}</div><div style="font-family:'Syne',sans-serif;font-size:18px;font-weight:800;margin-bottom:6px;">${escHtml(job.title)}</div><span class="status-badge status-${job.status}">${ST[job.status]}</span></div><div style="text-align:right;"><div style="font-family:'Syne',sans-serif;font-size:26px;font-weight:800;color:var(--teal);">$${parseFloat(job.offered_price).toFixed(2)}</div>${isDriver?`<div style="font-size:12px;color:var(--green);">You earn $${dp}</div>`:''}</div></div>${job.description?`<p style="font-size:14px;color:rgba(255,255,255,0.55);margin-bottom:10px;">${escHtml(job.description)}</p>`:''}<div class="detail-grid"><div><div class="detail-label">Size</div><div class="detail-val">${SZ[job.item_size]||job.item_size}</div></div><div><div class="detail-label">Weight</div><div class="detail-val">${job.item_weight?job.item_weight+' lbs':'—'}</div></div></div>${job.fragile?'<div class="alert-box danger">⚠️ Fragile — handle with care</div>':''}${job.needs_disassembly?'<div class="alert-box warn">🔧 Requires disassembly / reassembly</div>':''}</div>`;
   if(job.listing_photos?.length)h+=`<div class="job-detail-card"><div class="detail-label" style="margin-bottom:10px;">Item Photos</div><div class="photo-upload-row">${job.listing_photos.map(p=>`<img class="photo-thumb" src="${p}">`).join('')}</div></div>`;
   if(job.job_type==='marketplace'&&(extra.seller_name||extra.buyer_name))h+=`<div class="job-detail-card"><div class="detail-label" style="margin-bottom:10px;">Marketplace Parties</div>${extra.seller_name?`<div class="detail-grid"><div><div class="detail-label">Seller</div><div class="detail-val">${escHtml(extra.seller_name)}</div></div>${extra.seller_phone?`<div><div class="detail-label">Phone</div><div class="detail-val">${escHtml(extra.seller_phone)}</div></div>`:''}</div>`:''}${extra.buyer_name?`<div class="detail-grid" style="margin-top:8px;"><div><div class="detail-label">Buyer</div><div class="detail-val">${escHtml(extra.buyer_name)}</div></div>${extra.buyer_phone?`<div><div class="detail-label">Phone</div><div class="detail-val">${escHtml(extra.buyer_phone)}</div></div>`:''}</div>`:''}</div>`;
   if(job.job_type==='errand'&&(extra.store_name||extra.item_to_pickup))h+=`<div class="job-detail-card"><div class="detail-label" style="margin-bottom:10px;">Errand Details</div>${extra.store_name?`<div><div class="detail-label">Store</div><div class="detail-val">${escHtml(extra.store_name)}</div></div>`:''}${extra.item_to_pickup?`<div style="margin-top:8px;"><div class="detail-label">Item to pick up</div><div class="detail-val" style="font-size:13px;">${escHtml(extra.item_to_pickup)}</div></div>`:''}</div>`;
@@ -592,8 +593,8 @@ async function checkAndShowConnectPrompt(){
   const ex=document.getElementById('connect-prompt');if(ex)ex.remove();
   const p=document.createElement('div');p.id='connect-prompt';p.className='job-detail-card';
   if(!status.connected||!status.charges_enabled){
-    p.style.cssText='border-color:rgba(255,92,0,0.4);margin-bottom:14px;';
-    p.innerHTML=`<div style="display:flex;gap:12px;align-items:flex-start;"><div style="font-size:22px;">💳</div><div style="flex:1;"><div style="font-family:'Syne',sans-serif;font-size:15px;font-weight:800;margin-bottom:4px;">Set up payouts to earn</div><div style="font-size:13px;color:rgba(255,255,255,0.55);margin-bottom:10px;line-height:1.5;">Connect your bank account so iHaul can pay you after each delivery. Takes 2 minutes.</div><button class="btn-primary" style="margin:0;" onclick="startConnectOnboarding()">Connect Bank Account →</button></div></div>`;
+    p.style.cssText='border-color:rgba(0,194,168,0.4);margin-bottom:14px;';
+    p.innerHTML=`<div style="display:flex;gap:12px;align-items:flex-start;"><div style="font-size:22px;">💳</div><div style="flex:1;"><div style="font-family:'Syne',sans-serif;font-size:15px;font-weight:800;margin-bottom:4px;">Set up payouts to earn</div><div style="font-size:13px;color:rgba(255,255,255,0.55);margin-bottom:10px;line-height:1.5;">Connect your bank account so Detour can pay you after each delivery. Takes 2 minutes.</div><button class="btn-primary" style="margin:0;" onclick="startConnectOnboarding()">Connect Bank Account →</button></div></div>`;
   }else{
     p.style.cssText='border-color:rgba(61,204,120,0.3);margin-bottom:14px;';
     p.innerHTML=`<div style="display:flex;justify-content:space-between;align-items:center;"><div><div style="font-size:13px;color:var(--green);font-weight:600;">✓ Payout account connected</div><div style="font-size:12px;color:var(--gray);">Earnings deposited automatically</div></div><button class="btn-ghost" onclick="openStripeDashboard()">View earnings →</button></div>`;
