@@ -8,7 +8,9 @@ const PORT = process.env.PORT || 3000;
 
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
-app.use(express.static(path.join(__dirname, 'public')));
+
+// Serve static files but NOT index.html automatically
+app.use(express.static(path.join(__dirname, 'public'), { index: false }));
 
 app.use(session({
   secret: process.env.SESSION_SECRET || 'detour-dev-secret-change-in-prod',
@@ -28,12 +30,12 @@ app.get('/', (req, res) => {
 
 // App at /app
 app.get('/app', (req, res) => {
-  res.sendFile(path.join(__dirname, 'public', 'index.html'));
+  res.sendFile(path.join(__dirname, 'public', 'app.html'));
 });
 
-// Everything else → app (handles /app/* deep links)
+// Everything else → app
 app.get('*', (req, res) => {
-  res.sendFile(path.join(__dirname, 'public', 'index.html'));
+  res.sendFile(path.join(__dirname, 'public', 'app.html'));
 });
 
 app.listen(PORT, () => console.log(`Detour running on port ${PORT}`));
