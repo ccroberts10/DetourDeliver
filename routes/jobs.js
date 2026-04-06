@@ -84,8 +84,8 @@ router.delete('/driver-routes/:id', requireAuth, (req, res) => {
 router.post('/', requireAuth, upload.array('listing_photos', 6), async (req, res) => {
   const {
     job_type, title, description, item_size, item_weight, fragile, needs_disassembly,
-    pickup_address, pickup_city, dropoff_address, dropoff_city, offered_price, notes,
-    seller_name, seller_phone, buyer_name, buyer_phone,
+    pickup_address, pickup_city, pickup_state, dropoff_address, dropoff_city, dropoff_state,
+    offered_price, notes, seller_name, seller_phone, buyer_name, buyer_phone,
     store_name, item_to_pickup, requested_driver_route_id
   } = req.body;
 
@@ -109,7 +109,8 @@ router.post('/', requireAuth, upload.array('listing_photos', 6), async (req, res
     seller_name: seller_name || null, seller_phone: seller_phone || null,
     buyer_name: buyer_name || null, buyer_phone: buyer_phone || null,
     store_name: store_name || null, item_to_pickup: item_to_pickup || null,
-    requested_driver_route_id: requested_driver_route_id || null
+    requested_driver_route_id: requested_driver_route_id || null,
+    pickup_state: pickup_state || null, dropoff_state: dropoff_state || null
   });
 
   let paymentIntentId = null;
@@ -134,19 +135,23 @@ router.post('/', requireAuth, upload.array('listing_photos', 6), async (req, res
     notes || null, extraData, paymentIntentId
   );
 
-  res.json({ success: true, job: db.prepare('SELECT * FROM jobs WHERE id = ?').get(id) });
+  const job = db.prepare('SELECT * FROM jobs WHERE id = ?').get(id);
+  job.pickup_state = pickup_state || null;
+  job.dropoff_state = dropoff_state || null;
+  res.json({ success: true, job });
 });
 
 router.get('/', (req, res) => {
-  const { destination, job_type } = req.query;
+  const { destination, job_type, item_size } = req.query;
   let query = `SELECT j.*, u.name as shipper_name, u.rating_total, u.rating_count
     FROM jobs j JOIN users u ON j.shipper_id = u.id WHERE j.status = "open"`;
   const params = [];
   if (job_type && VALID_JOB_TYPES.includes(job_type)) { query += ' AND j.job_type = ?'; params.push(job_type); }
+  if (item_size) { query += ' AND j.item_size = ?'; params.push(item_size); }
   if (destination) {
-    query += ' AND (LOWER(j.dropoff_city) LIKE ? OR LOWER(j.pickup_city) LIKE ?)';
+    query += ' AND (LOWER(j.dropoff_city) LIKE ? OR LOWER(j.pickup_city) LIKE ? OR LOWER(j.extra_data) LIKE ?)';
     const term = `%${destination.toLowerCase()}%`;
-    params.push(term, term);
+    params.push(term, term, term);
   }
   query += ' ORDER BY j.created_at DESC';
   const jobs = db.prepare(query).all(...params);
@@ -155,7 +160,10 @@ router.get('/', (req, res) => {
     j.listing_photos = JSON.parse(j.listing_photos || '[]');
     j.pickup_photos = JSON.parse(j.pickup_photos || '[]');
     j.dropoff_photos = JSON.parse(j.dropoff_photos || '[]');
-    j.extra_data = JSON.parse(j.extra_data || '{}');
+    const extra = JSON.parse(j.extra_data || '{}');
+    j.extra_data = extra;
+    j.pickup_state = extra.pickup_state || null;
+    j.dropoff_state = extra.dropoff_state || null;
   });
   res.json(jobs);
 });
