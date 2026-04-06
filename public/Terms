@@ -1,0 +1,129 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Terms of Service — Detour</title>
+<link href="https://fonts.googleapis.com/css2?family=Syne:wght@700;800&family=DM+Sans:wght@400;500&display=swap" rel="stylesheet">
+<style>
+*{margin:0;padding:0;box-sizing:border-box}
+body{background:#080808;color:#fff;font-family:'DM Sans',sans-serif;font-size:15px;line-height:1.75}
+nav{position:sticky;top:0;background:rgba(8,8,8,0.95);backdrop-filter:blur(10px);border-bottom:0.5px solid rgba(255,255,255,0.08);padding:14px 24px;display:flex;align-items:center;justify-content:space-between;z-index:100}
+.nav-logo{font-family:'Syne',sans-serif;font-size:20px;font-weight:800;letter-spacing:-1px;color:#fff;text-decoration:none}
+.nav-logo span{color:#00C2A8}
+.nav-back{color:#00C2A8;font-size:13px;text-decoration:none}
+.doc{max-width:720px;margin:0 auto;padding:60px 24px 100px}
+.doc-title{font-family:'Syne',sans-serif;font-size:36px;font-weight:800;letter-spacing:-1px;margin-bottom:8px}
+.doc-meta{font-size:13px;color:#666;margin-bottom:48px;padding-bottom:24px;border-bottom:0.5px solid rgba(255,255,255,0.08)}
+h2{font-family:'Syne',sans-serif;font-size:16px;font-weight:700;color:#00C2A8;text-transform:uppercase;letter-spacing:0.08em;margin:40px 0 12px}
+h3{font-size:15px;font-weight:500;margin:20px 0 8px;color:rgba(255,255,255,0.9)}
+p{margin-bottom:14px;color:rgba(255,255,255,0.7)}
+ul,ol{margin:8px 0 16px 24px;color:rgba(255,255,255,0.7)}
+li{margin-bottom:6px}
+.highlight{background:rgba(0,194,168,0.08);border-left:3px solid #00C2A8;padding:14px 18px;border-radius:0 8px 8px 0;margin:20px 0;font-size:14px}
+.warning{background:rgba(255,107,0,0.08);border-left:3px solid #ff6b00;padding:14px 18px;border-radius:0 8px 8px 0;margin:20px 0;font-size:14px;color:rgba(255,255,255,0.7)}
+footer{text-align:center;padding:40px 24px;border-top:0.5px solid rgba(255,255,255,0.06);font-size:12px;color:#444}
+footer a{color:#00C2A8;text-decoration:none;margin:0 12px}
+</style>
+</head>
+<body>
+<nav>
+  <a href="/" class="nav-logo">De<span>tour</span></a>
+  <a href="/" class="nav-back">← Back to home</a>
+</nav>
+<div class="doc">
+  <h1 class="doc-title">Terms of Service</h1>
+  <div class="doc-meta">Effective Date: April 5, 2026 &nbsp;·&nbsp; Version 1.0 &nbsp;·&nbsp; detourdeliver.com</div>
+
+  <div class="warning">These Terms should be reviewed by a licensed attorney before going live. Fill in April 5, 2026, Colorado, and Detour before publishing.</div>
+
+  <h2>1. About Detour</h2>
+  <p>Detour ("Detour", "Detour", "we", "us", or "our") operates the Detour platform at detourdeliver.com. Detour is a technology marketplace that connects individuals and businesses who need items transported ("Shippers") with independent drivers who are already traveling along compatible routes ("Drivers").</p>
+  <div class="highlight"><strong>Important:</strong> Detour is a technology platform and marketplace only — not a carrier, freight broker, or delivery company. Detour does not employ Drivers and does not own or operate vehicles. All transportation is performed by independent Drivers.</div>
+
+  <h2>2. Acceptance of Terms</h2>
+  <p>By accessing or using the Platform, creating an account, or clicking "I Agree," you agree to be bound by these Terms. If you do not agree, do not use the Platform. You must be at least 18 years old to use Detour.</p>
+
+  <h2>3. What Detour Does and Does Not Do</h2>
+  <h3>What Detour does:</h3>
+  <ul>
+    <li>Provides technology to match Shippers with Drivers along compatible routes</li>
+    <li>Facilitates in-app communication between Shippers and Drivers</li>
+    <li>Processes payments through Stripe</li>
+    <li>Maintains a rating and review system</li>
+    <li>Keeps records of transactions for dispute reference</li>
+  </ul>
+  <h3>What Detour does not do:</h3>
+  <ul>
+    <li>Take possession of, transport, or control any items</li>
+    <li>Guarantee driver availability, delivery times, or outcomes</li>
+    <li>Verify the accuracy of item descriptions</li>
+    <li>Guarantee background checks will identify all risks</li>
+  </ul>
+
+  <h2>4. User Accounts</h2>
+  <p>You are responsible for maintaining the confidentiality of your account credentials and for all activity under your account. You agree to provide accurate information and update it as necessary. Detour may suspend or terminate accounts that violate these Terms.</p>
+
+  <h2>5. Driver Requirements</h2>
+  <p>If you use Detour as a Driver, you represent and warrant that you:</p>
+  <ul>
+    <li>Are at least 18 years of age with a valid driver's license</li>
+    <li>Have current and valid auto insurance meeting state minimums</li>
+    <li>Have a vehicle that is registered and in safe operating condition</li>
+    <li>Have passed Detour's background check process</li>
+    <li>Are legally permitted to work as an independent contractor in the US</li>
+    <li>Understand your personal auto insurance may not cover commercial delivery activities</li>
+  </ul>
+  <p>Drivers are independent contractors — not employees, agents, or partners of Detour.</p>
+
+  <h2>6. Shipper Responsibilities</h2>
+  <p>As a Shipper you agree to accurately describe all items, only submit permitted items, be available for pickup coordination, photograph items at handoff, and confirm delivery promptly upon receipt.</p>
+
+  <h2>7. Payments and Fees</h2>
+  <h3>How payments work:</h3>
+  <ul>
+    <li>Payment is authorized when a Driver accepts a job and held in escrow</li>
+    <li>Funds are released to the Driver upon Shipper confirmation of delivery</li>
+    <li>Detour retains a platform fee of 25% of the total transaction</li>
+    <li>Drivers receive 75% of the agreed delivery price</li>
+  </ul>
+  <h3>Refunds and disputes:</h3>
+  <p>Disputes regarding item condition or delivery must be raised within 48 hours. Detour will review available evidence but makes no guarantee of any particular outcome. Drivers are responsible for all taxes on earnings received through the Platform.</p>
+
+  <h2>8. Prohibited Items</h2>
+  <p>The following may not be transported under any circumstances:</p>
+  <ul>
+    <li>Illegal drugs, controlled substances, or drug paraphernalia</li>
+    <li>Firearms, ammunition, or weapons of any kind</li>
+    <li>Explosives, flammable materials, or hazardous chemicals</li>
+    <li>Stolen property or items obtained illegally</li>
+    <li>Currency or negotiable instruments over $500</li>
+    <li>Any item whose transport violates federal, state, or local law</li>
+    <li>Adult or sexually explicit materials</li>
+  </ul>
+
+  <h2>9. Limitation of Liability</h2>
+  <div class="highlight">Please read carefully — this limits Detour's legal responsibility.</div>
+  <p>TO THE MAXIMUM EXTENT PERMITTED BY LAW, DETOUR SHALL NOT BE LIABLE FOR ANY INDIRECT, INCIDENTAL, SPECIAL, CONSEQUENTIAL, OR PUNITIVE DAMAGES ARISING FROM USE OF THE PLATFORM. DETOUR'S TOTAL LIABILITY SHALL NOT EXCEED THE GREATER OF FEES PAID BY YOU IN THE PRIOR THREE MONTHS OR $100.</p>
+  <p>Detour is not liable for the actions or negligence of Drivers or Shippers. Disputes between users are between those parties directly.</p>
+
+  <h2>10. Indemnification</h2>
+  <p>You agree to indemnify and hold harmless Detour and its officers, directors, and employees from any claims arising from your use of the Platform, violation of these Terms, or any delivery transaction you participate in.</p>
+
+  <h2>11. Governing Law</h2>
+  <p>These Terms are governed by the laws of the State of Colorado. Disputes shall be resolved through binding arbitration under AAA rules, conducted in Durango, Colorado. YOU WAIVE YOUR RIGHT TO A JURY TRIAL AND CLASS ACTION PARTICIPATION.</p>
+
+  <h2>12. Changes to Terms</h2>
+  <p>Detour may modify these Terms at any time. We will notify users of material changes by posting updates on the Platform. Continued use constitutes acceptance.</p>
+
+  <h2>13. Contact</h2>
+  <p>Questions about these Terms: <a href="mailto:hello@detourdeliver.com" style="color:#00C2A8;">hello@detourdeliver.com</a></p>
+</div>
+<footer>
+  <a href="/">Home</a>
+  <a href="/privacy">Privacy Policy</a>
+  <a href="/app">Sign In</a>
+  <br><br>© 2025 Detour · detourdeliver.com
+</footer>
+</body>
+</html>
