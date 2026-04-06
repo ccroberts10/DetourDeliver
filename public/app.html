@@ -15,6 +15,7 @@
 <link rel="apple-touch-icon" href="/icons/icon-192.png">
 <link rel="icon" type="image/png" sizes="192x192" href="/icons/icon-192.png">
 <link rel="icon" type="image/png" sizes="512x512" href="/icons/icon-512.png">
+<meta name="stripe-pk" content="pk_live_51HsdjEHr60zI2cLPJB3fA6O1sX0HI45REiwT7DfGYvJ0oiL5sLkU608l8DevXTkcSEOjlYpxrejhcXtpVdxqRrsn00KLZzc6di">
 <link href="https://fonts.googleapis.com/css2?family=Syne:wght@700;800&family=DM+Sans:wght@400;500&display=swap" rel="stylesheet">
 <style>
 :root{--teal:#00C2A8;--teal2:#00DDB8;--black:#080808;--dark:#111111;--dark2:#1C1C1C;--dark3:#242424;--white:#FFFFFF;--gray:#777777;--gray2:#444444;--green:#3DCC78;--red:#F05555;--r:14px;--rs:8px}
@@ -190,8 +191,12 @@ textarea{resize:none}
       </div>
       <div id="login-form">
         <div class="field-group"><label>Email</label><input type="email" id="login-email" placeholder="you@email.com" autocomplete="email"></div>
-        <div class="field-group"><label>Password</label><input type="password" id="login-password" placeholder="••••••••"></div>
+        <div class="field-group"><label>Password</label><input type="password" id="login-password" placeholder="••••••••" autocomplete="current-password"></div>
         <div id="login-error" class="error-msg"></div>
+        <div style="display:flex;align-items:center;gap:10px;margin:10px 0;">
+          <input type="checkbox" id="keep-signed-in" checked style="width:16px;height:16px;accent-color:var(--teal);cursor:pointer;">
+          <label for="keep-signed-in" style="font-size:13px;color:rgba(255,255,255,0.5);cursor:pointer;text-transform:none;letter-spacing:0;">Keep me signed in</label>
+        </div>
         <button class="btn-primary" onclick="login()">Sign In →</button>
       </div>
       <div id="register-form" style="display:none">
@@ -346,6 +351,12 @@ textarea{resize:none}
           </div>
           <div class="field-group" style="margin-top:10px;"><label>Notes for driver</label><textarea id="job-notes" rows="2" placeholder="Meet at back entrance, call on arrival..."></textarea></div>
         </div>
+        <div class="form-section" style="margin-top:8px;">
+          <div class="form-section-title">Payment Method</div>
+          <div style="font-size:12px;color:rgba(255,255,255,0.4);margin-bottom:12px;">Your card is held securely by Stripe and only charged when a driver accepts your job.</div>
+          <div id="stripe-card-element" style="background:var(--dark2);border:0.5px solid rgba(255,255,255,0.1);border-radius:var(--rs);padding:12px 14px;"></div>
+          <div id="stripe-card-error" class="error-msg" style="margin-top:8px;"></div>
+        </div>
         <div id="post-error" class="error-msg" style="font-size:14px;padding:10px 0;"></div>
         <button type="button" onclick="postJob()" class="btn-primary btn-large">Post Delivery Job →</button>
       </form>
@@ -480,6 +491,23 @@ if ('serviceWorker' in navigator) {
       .catch(err => console.log('SW registration failed:', err));
   });
 }
+
+// Initialize Stripe Elements
+let stripeInstance, stripeCard;
+function initStripeElements(){
+  if(stripeInstance)return;
+  try{
+    stripeInstance=Stripe(document.querySelector('meta[name="stripe-pk"]')?.content||'');
+    const elements=stripeInstance.elements({
+      style:{base:{color:'#fff',fontSize:'15px',fontFamily:'"DM Sans",sans-serif','::placeholder':{color:'rgba(255,255,255,0.3)'}},invalid:{color:'#F05555'}}
+    });
+    stripeCard=elements.create('card',{hidePostalCode:true});
+    stripeCard.mount('#stripe-card-element');
+    stripeCard.on('change',e=>{
+      document.getElementById('stripe-card-error').textContent=e.error?e.error.message:'';
+    });
+  }catch(e){console.log('Stripe init error:',e);}
+}
 </script>
 <script>
 let currentUser=null,currentJobId=null,currentJobPerspective='shipper',jobPollInterval=null;
@@ -494,10 +522,18 @@ function showTab(t){
   document.querySelectorAll('.tab-btn').forEach((b,i)=>b.classList.toggle('active',i===(t==='login'?0:1)));
 }
 async function login(){
-  const email=document.getElementById('login-email').value.trim(),password=document.getElementById('login-password').value;
+  const email=document.getElementById('login-email').value.trim();
+  const password=document.getElementById('login-password').value;
+  const keepSignedIn=document.getElementById('keep-signed-in').checked;
   document.getElementById('login-error').textContent='';
-  try{const r=await api('POST','/api/auth/login',{email,password});currentUser=r;enterApp(r.name);}
-  catch(e){document.getElementById('login-error').textContent=e.message;}
+  try{
+    const r=await api('POST','/api/auth/login',{email,password,keepSignedIn});
+    currentUser=r;
+    // Save email for next time, save keepSignedIn preference
+    localStorage.setItem('detour_email',email);
+    localStorage.setItem('detour_keep',keepSignedIn?'1':'0');
+    enterApp(r.name);
+  }catch(e){document.getElementById('login-error').textContent=e.message;}
 }
 async function register(){
   const name=document.getElementById('reg-name').value.trim(),email=document.getElementById('reg-email').value.trim(),phone=document.getElementById('reg-phone').value.trim(),password=document.getElementById('reg-password').value,vehicle_type=document.getElementById('reg-vehicle').value;
@@ -523,7 +559,12 @@ function enterApp(name){
   const d=document.getElementById('route-depart');if(d)d.value=local;
   loadMyJobs();
 }
-function showView(id){document.querySelectorAll('.view').forEach(v=>v.classList.remove('active'));document.getElementById(id).classList.add('active');if(id==='view-home')loadMyJobs();}
+function showView(id){
+  document.querySelectorAll('.view').forEach(v=>v.classList.remove('active'));
+  document.getElementById(id).classList.add('active');
+  if(id==='view-home')loadMyJobs();
+  if(id==='view-post')setTimeout(initStripeElements,100);
+}
 function setNavActive(el){document.querySelectorAll('.nav-item').forEach(n=>n.classList.remove('active'));el.classList.add('active');}
 function selectJobType(type,el){
   document.querySelectorAll('.type-opt').forEach(o=>o.classList.remove('active'));el.classList.add('active');
@@ -729,6 +770,14 @@ async function postJob(){
   if(jobType==='marketplace'&&listingInput?.files?.length)Array.from(listingInput.files).forEach(f=>fd.append('listing_photos',f));
   const fields={job_type:jobType,title,description:document.getElementById('job-desc').value.trim(),item_size,item_weight:document.getElementById('job-weight').value,fragile:document.getElementById('job-fragile').checked?'1':'',needs_disassembly:document.getElementById('job-disassembly').checked?'1':'',pickup_address,pickup_city,pickup_state,dropoff_address,dropoff_city,dropoff_state,offered_price,notes:document.getElementById('job-notes').value.trim(),seller_name:document.getElementById('seller-name')?.value.trim()||'',seller_phone:document.getElementById('seller-phone')?.value.trim()||'',buyer_name:document.getElementById('buyer-name')?.value.trim()||'',buyer_phone:document.getElementById('buyer-phone')?.value.trim()||'',store_name:document.getElementById('store-name')?.value.trim()||'',item_to_pickup:document.getElementById('item-to-pickup')?.value.trim()||''};
   if(window._requestedDriverRouteId){fields.requested_driver_route_id=window._requestedDriverRouteId;window._requestedDriverRouteId=null;}
+
+  // Tokenize card with Stripe
+  if(stripeInstance&&stripeCard){
+    const {paymentMethod,error}=await stripeInstance.createPaymentMethod({type:'card',card:stripeCard});
+    if(error){document.getElementById('stripe-card-error').textContent=error.message;return;}
+    fields.payment_method_id=paymentMethod.id;
+  }
+
   Object.entries(fields).forEach(([k,v])=>{if(v)fd.append(k,v);});
   try{
     const res=await fetch('/api/jobs',{method:'POST',body:fd,credentials:'include'});
@@ -804,7 +853,18 @@ async function api(method,url,body){const opts={method,headers:{'Content-Type':'
 function escHtml(str){if(!str)return'';return String(str).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');}
 let toastTimer;
 function toast(msg){const el=document.getElementById('toast');el.textContent=msg;el.classList.add('show');clearTimeout(toastTimer);toastTimer=setTimeout(()=>el.classList.remove('show'),3200);}
+
+// Restore saved email and keep-signed-in preference
+(function(){
+  const savedEmail=localStorage.getItem('detour_email');
+  const savedKeep=localStorage.getItem('detour_keep');
+  if(savedEmail)document.getElementById('login-email').value=savedEmail;
+  if(savedKeep!==null)document.getElementById('keep-signed-in').checked=savedKeep==='1';
+})();
+
+// Check if already logged in
 (async()=>{try{const user=await api('GET','/api/auth/me');currentUser=user;enterApp(user.name);}catch(e){}})();
+
 </script>
 </body>
 </html>
