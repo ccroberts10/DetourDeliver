@@ -30,6 +30,18 @@ app.use('/api/auth', require('./routes/auth'));
 app.use('/api/jobs', require('./routes/jobs'));
 app.use('/api/stripe', require('./routes/stripe'));
 
+// Debug session endpoint - remove after fixing
+app.get('/api/debug/session', (req, res) => {
+  res.json({
+    sessionID: req.sessionID,
+    userId: req.session.userId,
+    session: req.session,
+    cookies: req.headers.cookie,
+    ip: req.ip,
+    protocol: req.protocol
+  });
+});
+
 // Landing page at root
 app.get('/', (req, res) => {
   res.sendFile(path.join(__dirname, 'public', 'landing.html'));
