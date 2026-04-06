@@ -16,7 +16,12 @@ app.use(session({
   secret: process.env.SESSION_SECRET || 'detour-dev-secret-change-in-prod',
   resave: false,
   saveUninitialized: false,
-  cookie: { secure: process.env.NODE_ENV === 'production', maxAge: 7 * 24 * 60 * 60 * 1000 }
+  cookie: {
+    secure: false,
+    httpOnly: true,
+    maxAge: 7 * 24 * 60 * 60 * 1000,
+    sameSite: 'lax'
+  }
 }));
 
 app.use('/api/auth', require('./routes/auth'));
