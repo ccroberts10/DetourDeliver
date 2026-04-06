@@ -1,0 +1,38 @@
+{
+  "name": "Detour",
+  "short_name": "Detour",
+  "description": "Your commute pays now. Earn on drives you're already making.",
+  "start_url": "/app",
+  "display": "standalone",
+  "background_color": "#080808",
+  "theme_color": "#00C2A8",
+  "orientation": "portrait",
+  "icons": [
+    {
+      "src": "/icons/icon-192.png",
+      "sizes": "192x192",
+      "type": "image/png",
+      "purpose": "any maskable"
+    },
+    {
+      "src": "/icons/icon-512.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "any maskable"
+    }
+  ],
+  "screenshots": [],
+  "categories": ["business", "productivity", "travel"],
+  "shortcuts": [
+    {
+      "name": "Post a Delivery",
+      "url": "/app",
+      "description": "Post a new delivery job"
+    },
+    {
+      "name": "Find a Delivery",
+      "url": "/app",
+      "description": "Browse delivery jobs along your route"
+    }
+  ]
+}
