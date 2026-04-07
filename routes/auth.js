@@ -19,15 +19,15 @@ function requireAuth(req, res, next) {
 }
 
 router.post('/register', async (req, res) => {
-  const { name, email, phone, password, vehicle_type, vehicle_description, haul_types } = req.body;
+  const { name, email, phone, password, vehicle_type, vehicle_description, haul_types, license_plate } = req.body;
   if (!name || !email || !password) return res.status(400).json({ error: 'Name, email, and password required' });
   const existing = db.prepare('SELECT id FROM users WHERE email = ?').get(email);
   if (existing) return res.status(400).json({ error: 'Email already registered' });
   const hash = await bcrypt.hash(password, 10);
   const id = uuidv4();
   const haulArr = haul_types ? JSON.stringify(haul_types) : '["envelope","small_box","medium_box"]';
-  db.prepare(`INSERT INTO users (id, name, email, phone, password_hash, vehicle_type, vehicle_description, haul_types)
-    VALUES (?, ?, ?, ?, ?, ?, ?, ?)`).run(id, name, email, phone || null, hash, vehicle_type || null, vehicle_description || null, haulArr);
+  db.prepare(`INSERT INTO users (id, name, email, phone, password_hash, vehicle_type, vehicle_description, haul_types, license_plate)
+    VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)`).run(id, name, email, phone || null, hash, vehicle_type || null, vehicle_description || null, haulArr, license_plate || null);
   req.session.userId = id;
   req.session.userName = name;
   res.json({ success: true, userId: id, name });
