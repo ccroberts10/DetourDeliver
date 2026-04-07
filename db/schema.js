@@ -116,3 +116,4 @@ migrate(`ALTER TABLE users ADD COLUMN insurance_verified INTEGER DEFAULT 0`);
 migrate(`ALTER TABLE users ADD COLUMN insurance_submitted_at DATETIME`);
 migrate(`ALTER TABLE users ADD COLUMN driver_approved INTEGER DEFAULT 0`);
 migrate(`ALTER TABLE users ADD COLUMN license_photo TEXT`);
+migrate(`ALTER TABLE users ADD COLUMN license_plate TEXT`);
