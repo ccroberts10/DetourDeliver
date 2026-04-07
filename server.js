@@ -2,6 +2,26 @@ require('dotenv').config();
 const express = require('express');
 const session = require('express-session');
 const path = require('path');
+const fs = require('fs');
+
+const app = express();
+const PORT = process.env.PORT || 3000;
+
+// Verify database is on persistent volume before starting
+const DB_PATH = path.join(process.env.RAILWAY_VOLUME_MOUNT_PATH || './db', 'detour.db');
+console.log(`Database at: ${DB_PATH}`);
+console.log(`Volume path exists: ${fs.existsSync(process.env.RAILWAY_VOLUME_MOUNT_PATH || './db')}`);
+if (process.env.RAILWAY_VOLUME_MOUNT_PATH && !fs.existsSync(process.env.RAILWAY_VOLUME_MOUNT_PATH)) {
+  console.error('FATAL: Volume mount path not found. Waiting...');
+  // Wait up to 10 seconds for volume to mount
+  let waited = 0;
+  while (!fs.existsSync(process.env.RAILWAY_VOLUME_MOUNT_PATH) && waited < 10000) {
+    const start = Date.now();
+    while (Date.now() - start < 500) {} // sleep 500ms
+    waited += 500;
+    console.log(`Waiting for volume... ${waited}ms`);
+  }
+}
 
 const app = express();
 const PORT = process.env.PORT || 3000;
@@ -44,6 +64,27 @@ app.get('/api/debug/session', (req, res) => {
     ip: req.ip,
     protocol: req.protocol
   });
+});
+
+// Database health check
+app.get('/api/debug/db', (req, res) => {
+  try {
+    const db = require('./db/schema');
+    const userCount = db.prepare('SELECT COUNT(*) as count FROM users').get();
+    const jobCount = db.prepare('SELECT COUNT(*) as count FROM jobs').get();
+    const dbPath = process.env.RAILWAY_VOLUME_MOUNT_PATH 
+      ? require('path').join(process.env.RAILWAY_VOLUME_MOUNT_PATH, 'detour.db')
+      : './db/detour.db';
+    res.json({
+      status: 'ok',
+      db_path: dbPath,
+      volume_path: process.env.RAILWAY_VOLUME_MOUNT_PATH || 'not set',
+      users: userCount.count,
+      jobs: jobCount.count
+    });
+  } catch(e) {
+    res.status(500).json({ status: 'error', error: e.message });
+  }
 });
 
 // Static files
