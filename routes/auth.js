@@ -21,13 +21,14 @@ function requireAuth(req, res, next) {
 router.post('/register', async (req, res) => {
   const { name, email, phone, password, vehicle_type, vehicle_description, haul_types, license_plate } = req.body;
   if (!name || !email || !password) return res.status(400).json({ error: 'Name, email, and password required' });
-  const existing = db.prepare('SELECT id FROM users WHERE email = ?').get(email);
+  const normalizedEmail = email.toLowerCase().trim();
+  const existing = db.prepare('SELECT id FROM users WHERE LOWER(email) = ?').get(normalizedEmail);
   if (existing) return res.status(400).json({ error: 'Email already registered' });
   const hash = await bcrypt.hash(password, 10);
   const id = uuidv4();
   const haulArr = haul_types ? JSON.stringify(haul_types) : '["envelope","small_box","medium_box"]';
   db.prepare(`INSERT INTO users (id, name, email, phone, password_hash, vehicle_type, vehicle_description, haul_types, license_plate)
-    VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)`).run(id, name, email, phone || null, hash, vehicle_type || null, vehicle_description || null, haulArr, license_plate || null);
+    VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)`).run(id, name, normalizedEmail, phone || null, hash, vehicle_type || null, vehicle_description || null, haulArr, license_plate || null);
   req.session.userId = id;
   req.session.userName = name;
   res.json({ success: true, userId: id, name });
@@ -36,7 +37,8 @@ router.post('/register', async (req, res) => {
 router.post('/login', async (req, res) => {
   const { email, password, keepSignedIn } = req.body;
   if (!email || !password) return res.status(400).json({ error: 'Email and password required' });
-  const user = db.prepare('SELECT * FROM users WHERE email = ?').get(email);
+  const normalizedEmail = email.toLowerCase().trim();
+  const user = db.prepare('SELECT * FROM users WHERE LOWER(email) = ?').get(normalizedEmail);
   if (!user) return res.status(401).json({ error: 'Invalid credentials' });
   const valid = await bcrypt.compare(password, user.password_hash);
   if (!valid) return res.status(401).json({ error: 'Invalid credentials' });
