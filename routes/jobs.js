@@ -13,7 +13,7 @@ const storage = multer.diskStorage({
 const upload = multer({ storage, limits: { fileSize: 10 * 1024 * 1024 } });
 
 function requireAuth(req, res, next) {
-  console.log('requireAuth check - sessionID:', req.sessionID, 'userId:', req.session.userId, 'cookie:', req.headers.cookie ? 'present' : 'missing');
+  console.log('requireAuth - sessionID:', req.sessionID, 'userId:', req.session.userId, 'cookie:', req.headers.cookie ? 'present' : 'MISSING');
   if (!req.session.userId) return res.status(401).json({ error: 'Login required' });
   next();
 }
