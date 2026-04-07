@@ -30,6 +30,7 @@ app.use(session({
 app.use('/api/auth', require('./routes/auth'));
 app.use('/api/jobs', require('./routes/jobs'));
 app.use('/api/stripe', require('./routes/stripe'));
+app.use('/api/admin', require('./routes/admin'));
 
 // Debug endpoint
 app.get('/api/debug/session', (req, res) => {
@@ -57,6 +58,10 @@ app.get('/terms', (req, res) => {
 
 app.get('/privacy', (req, res) => {
   res.sendFile(path.join(__dirname, 'public', 'privacy.html'));
+});
+
+app.get('/admin', (req, res) => {
+  res.sendFile(path.join(__dirname, 'public', 'admin.html'));
 });
 
 app.get('/app', (req, res) => {
