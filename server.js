@@ -18,11 +18,13 @@ app.use(session({
   resave: true,
   saveUninitialized: false,
   rolling: true,
+  name: 'detour.sid',
   cookie: {
     secure: false,
-    httpOnly: true,
-    maxAge: 7 * 24 * 60 * 60 * 1000,
-    sameSite: 'lax'
+    httpOnly: false,
+    maxAge: 30 * 24 * 60 * 60 * 1000,
+    sameSite: 'lax',
+    path: '/'
   }
 }));
 
