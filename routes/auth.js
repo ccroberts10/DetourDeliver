@@ -5,6 +5,7 @@ const { v4: uuidv4 } = require('uuid');
 const db = require('../db/schema');
 const multer = require('multer');
 const path = require('path');
+const { notifyAdminDriverSubmitted } = require('../utils/email');
 
 const storage = multer.diskStorage({
   destination: (req, file, cb) => cb(null, path.join(__dirname, '../public/uploads')),
@@ -65,20 +66,36 @@ router.get('/me', (req, res) => {
 });
 
 // Upload insurance card
-router.post('/insurance', requireAuth, upload.single('insurance_card'), (req, res) => {
+router.post('/insurance', requireAuth, upload.single('insurance_card'), async (req, res) => {
   if (!req.file) return res.status(400).json({ error: 'No file uploaded' });
   const photoPath = `/uploads/${req.file.filename}`;
   db.prepare('UPDATE users SET insurance_photo = ?, insurance_submitted_at = CURRENT_TIMESTAMP, insurance_verified = 0, driver_approved = 0 WHERE id = ?')
     .run(photoPath, req.session.userId);
+  // Check if both docs are now present — if so notify admin
+  const user = db.prepare('SELECT name, email, phone, vehicle_type, license_photo FROM users WHERE id = ?').get(req.session.userId);
+  if (user.license_photo) {
+    notifyAdminDriverSubmitted({
+      driverName: user.name, driverEmail: user.email,
+      phone: user.phone, vehicle: user.vehicle_type
+    }).catch(e => console.error('Email error:', e.message));
+  }
   res.json({ success: true, photo: photoPath });
 });
 
 // Upload driver license
-router.post('/license', requireAuth, upload.single('license_card'), (req, res) => {
+router.post('/license', requireAuth, upload.single('license_card'), async (req, res) => {
   if (!req.file) return res.status(400).json({ error: 'No file uploaded' });
   const photoPath = `/uploads/${req.file.filename}`;
   db.prepare('UPDATE users SET license_photo = ?, driver_approved = 0 WHERE id = ?')
     .run(photoPath, req.session.userId);
+  // Check if both docs are now present — if so notify admin
+  const user = db.prepare('SELECT name, email, phone, vehicle_type, insurance_photo FROM users WHERE id = ?').get(req.session.userId);
+  if (user.insurance_photo) {
+    notifyAdminDriverSubmitted({
+      driverName: user.name, driverEmail: user.email,
+      phone: user.phone, vehicle: user.vehicle_type
+    }).catch(e => console.error('Email error:', e.message));
+  }
   res.json({ success: true, photo: photoPath });
 });
 
