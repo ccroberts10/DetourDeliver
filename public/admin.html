@@ -95,19 +95,28 @@ h2{font-family:'Syne',sans-serif;font-size:22px;font-weight:800;margin-bottom:24
 </div>
 
 <script>
-const ADMIN_PW = 'detour-admin-2025';
-let authed = false;
+let ADMIN_PW = '';
 
 function adminLogin() {
   const pw = document.getElementById('admin-pw').value;
-  if (pw === ADMIN_PW) {
-    authed = true;
-    document.getElementById('login-screen').style.display = 'none';
-    document.getElementById('admin-panel').style.display = 'block';
-    loadData();
-  } else {
-    document.getElementById('login-error').textContent = 'Incorrect password';
-  }
+  if (!pw) { document.getElementById('login-error').textContent = 'Enter password'; return; }
+  ADMIN_PW = pw;
+  // Verify against server instead of client-side check
+  fetch('/api/admin/drivers', {
+    headers: { 'Content-Type': 'application/json', 'x-admin-password': pw },
+    credentials: 'include'
+  }).then(res => {
+    if (res.status === 401) {
+      ADMIN_PW = '';
+      document.getElementById('login-error').textContent = 'Incorrect password';
+    } else {
+      document.getElementById('login-screen').style.display = 'none';
+      document.getElementById('admin-panel').style.display = 'block';
+      res.json().then(data => renderAll(data));
+    }
+  }).catch(() => {
+    document.getElementById('login-error').textContent = 'Connection error — try again';
+  });
 }
 
 function viewImg(src) {
@@ -144,19 +153,21 @@ async function rejectDriver(userId) {
 async function loadData() {
   const data = await apiAdmin('GET', '/api/admin/drivers');
   if (data.error) { alert('API error: ' + data.error); return; }
+  renderAll(data);
+}
 
-  const pending = data.filter(u => u.insurance_photo && !u.driver_approved);
+function renderAll(data) {
+  const pending = data.filter(u => (u.insurance_photo || u.license_photo) && !u.driver_approved);
   const approved = data.filter(u => u.driver_approved);
-  const all = data;
 
-  document.getElementById('stat-total').textContent = all.length;
-  document.getElementById('stat-drivers').textContent = all.filter(u => u.vehicle_type).length;
+  document.getElementById('stat-total').textContent = data.length;
+  document.getElementById('stat-drivers').textContent = data.filter(u => u.vehicle_type).length;
   document.getElementById('stat-pending').textContent = pending.length;
   document.getElementById('stat-approved').textContent = approved.length;
 
   renderList('pending-list', pending, true);
   renderList('approved-list', approved, false);
-  renderAllUsers('all-users-list', all);
+  renderAllUsers('all-users-list', data);
 }
 
 function renderList(elId, users, showActions) {
