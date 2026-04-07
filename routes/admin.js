@@ -3,7 +3,7 @@ const router = express.Router();
 const db = require('../db/schema');
 const { notifyDriverApproved, notifyDriverRejected } = require('../utils/email');
 
-const ADMIN_PASSWORD = process.env.ADMIN_PASSWORD || 'Loicjack10!';
+const ADMIN_PASSWORD = (process.env.ADMIN_PASSWORD || 'detour-admin-2025').replace(/^["']|["']$/g, '');
 
 function requireAdmin(req, res, next) {
   const auth = req.headers['x-admin-password'] || req.query.pw;
@@ -14,7 +14,7 @@ function requireAdmin(req, res, next) {
 // Get all drivers / users for admin panel
 router.get('/drivers', requireAdmin, (req, res) => {
   const users = db.prepare(`
-    SELECT id, name, email, phone, vehicle_type, vehicle_description,
+    SELECT id, name, email, phone, vehicle_type, vehicle_description, license_plate,
     insurance_photo, insurance_verified, insurance_submitted_at, driver_approved,
     license_photo, rating_total, rating_count, background_check, created_at
     FROM users ORDER BY created_at DESC
