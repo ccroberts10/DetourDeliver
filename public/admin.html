@@ -1,0 +1,226 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Detour Admin</title>
+<link href="https://fonts.googleapis.com/css2?family=Syne:wght@700;800&family=DM+Sans:wght@400;500&display=swap" rel="stylesheet">
+<style>
+*{margin:0;padding:0;box-sizing:border-box}
+body{background:#080808;color:#fff;font-family:'DM Sans',sans-serif;font-size:14px;line-height:1.6}
+.admin-header{background:#111;border-bottom:1px solid rgba(255,255,255,0.08);padding:16px 28px;display:flex;align-items:center;justify-content:space-between}
+.admin-logo{font-family:'Syne',sans-serif;font-size:18px;font-weight:800;letter-spacing:-0.5px}
+.admin-logo span{color:#00C2A8}
+.admin-badge{background:rgba(0,194,168,0.15);color:#00C2A8;font-size:11px;padding:4px 10px;border-radius:20px;letter-spacing:0.05em}
+.container{max-width:1100px;margin:0 auto;padding:32px 24px}
+h2{font-family:'Syne',sans-serif;font-size:22px;font-weight:800;margin-bottom:24px}
+.stats-row{display:grid;grid-template-columns:repeat(4,1fr);gap:16px;margin-bottom:36px}
+.stat{background:#111;border:1px solid rgba(255,255,255,0.07);border-radius:12px;padding:20px}
+.stat-num{font-family:'Syne',sans-serif;font-size:32px;font-weight:800;color:#00C2A8}
+.stat-label{font-size:12px;color:#666;margin-top:4px}
+.section-title{font-family:'Syne',sans-serif;font-size:14px;font-weight:700;color:#00C2A8;text-transform:uppercase;letter-spacing:0.08em;margin-bottom:16px}
+.driver-card{background:#111;border:1px solid rgba(255,255,255,0.07);border-radius:12px;padding:20px;margin-bottom:14px;display:flex;gap:20px;align-items:flex-start}
+.driver-info{flex:1}
+.driver-name{font-family:'Syne',sans-serif;font-size:16px;font-weight:700}
+.driver-meta{font-size:12px;color:#666;margin-top:3px}
+.driver-detail{font-size:13px;color:rgba(255,255,255,0.6);margin-top:8px}
+.insurance-img{width:200px;height:130px;object-fit:cover;border-radius:8px;border:1px solid rgba(255,255,255,0.1);cursor:pointer;transition:transform 0.2s}
+.insurance-img:hover{transform:scale(1.02)}
+.actions{display:flex;flex-direction:column;gap:8px;min-width:120px}
+.btn-approve{background:#00C2A8;color:#000;border:none;padding:10px 16px;border-radius:8px;font-size:13px;font-weight:600;cursor:pointer;font-family:'DM Sans',sans-serif;transition:background 0.2s}
+.btn-approve:hover{background:#00DDB8}
+.btn-reject{background:rgba(240,85,85,0.15);color:#F05555;border:1px solid rgba(240,85,85,0.3);padding:10px 16px;border-radius:8px;font-size:13px;font-weight:500;cursor:pointer;font-family:'DM Sans',sans-serif}
+.btn-reject:hover{background:rgba(240,85,85,0.25)}
+.status-badge{display:inline-block;padding:3px 10px;border-radius:20px;font-size:11px;font-weight:500;letter-spacing:0.05em}
+.status-pending{background:rgba(251,191,36,0.15);color:#FBBF24}
+.status-approved{background:rgba(0,194,168,0.15);color:#00C2A8}
+.status-rejected{background:rgba(240,85,85,0.15);color:#F05555}
+.empty{text-align:center;padding:48px;color:#444;font-size:15px}
+.login-wrap{display:flex;align-items:center;justify-content:center;min-height:100vh}
+.login-box{background:#111;border:1px solid rgba(255,255,255,0.08);border-radius:16px;padding:36px;width:320px}
+.login-title{font-family:'Syne',sans-serif;font-size:22px;font-weight:800;margin-bottom:24px;text-align:center}
+.field{margin-bottom:14px}
+.field label{display:block;font-size:11px;color:#666;text-transform:uppercase;letter-spacing:0.07em;margin-bottom:5px}
+.field input{width:100%;background:#1C1C1C;border:1px solid rgba(255,255,255,0.1);border-radius:8px;color:#fff;font-size:14px;padding:10px 12px;font-family:'DM Sans',sans-serif;outline:none}
+.field input:focus{border-color:#00C2A8}
+.btn-login{width:100%;background:#00C2A8;color:#000;border:none;padding:12px;border-radius:8px;font-size:14px;font-weight:600;cursor:pointer;font-family:'DM Sans',sans-serif;margin-top:8px}
+.error{color:#F05555;font-size:13px;margin-top:8px;text-align:center}
+.modal{display:none;position:fixed;inset:0;background:rgba(0,0,0,0.85);z-index:1000;align-items:center;justify-content:center}
+.modal.active{display:flex}
+.modal img{max-width:90vw;max-height:85vh;border-radius:8px}
+.modal-close{position:fixed;top:20px;right:20px;color:#fff;font-size:28px;cursor:pointer;background:rgba(0,0,0,0.5);width:40px;height:40px;border-radius:50%;display:flex;align-items:center;justify-content:center}
+</style>
+</head>
+<body>
+
+<!-- IMAGE MODAL -->
+<div id="img-modal" class="modal" onclick="closeModal()">
+  <div class="modal-close">×</div>
+  <img id="modal-img" src="" alt="Insurance card">
+</div>
+
+<!-- LOGIN SCREEN -->
+<div id="login-screen" class="login-wrap">
+  <div class="login-box">
+    <div class="login-title">De<span style="color:#00C2A8">tour</span> Admin</div>
+    <div class="field"><label>Password</label><input type="password" id="admin-pw" placeholder="Enter admin password" onkeydown="if(event.key==='Enter')adminLogin()"></div>
+    <button class="btn-login" onclick="adminLogin()">Sign In →</button>
+    <div id="login-error" class="error"></div>
+  </div>
+</div>
+
+<!-- ADMIN PANEL -->
+<div id="admin-panel" style="display:none">
+  <div class="admin-header">
+    <div class="admin-logo">De<span>tour</span></div>
+    <div class="admin-badge">Admin Panel</div>
+  </div>
+  <div class="container">
+    <div class="stats-row" id="stats-row">
+      <div class="stat"><div class="stat-num" id="stat-total">—</div><div class="stat-label">Total Users</div></div>
+      <div class="stat"><div class="stat-num" id="stat-drivers">—</div><div class="stat-label">Drivers</div></div>
+      <div class="stat"><div class="stat-num" id="stat-pending">—</div><div class="stat-label">Pending Review</div></div>
+      <div class="stat"><div class="stat-num" id="stat-approved">—</div><div class="stat-label">Approved Drivers</div></div>
+    </div>
+
+    <div class="section-title">⏳ Pending Insurance Review</div>
+    <div id="pending-list"></div>
+
+    <div class="section-title" style="margin-top:32px;">✅ Approved Drivers</div>
+    <div id="approved-list"></div>
+
+    <div class="section-title" style="margin-top:32px;">👥 All Users</div>
+    <div id="all-users-list"></div>
+  </div>
+</div>
+
+<script>
+const ADMIN_PW = 'detour-admin-2025';
+let authed = false;
+
+function adminLogin() {
+  const pw = document.getElementById('admin-pw').value;
+  if (pw === ADMIN_PW) {
+    authed = true;
+    document.getElementById('login-screen').style.display = 'none';
+    document.getElementById('admin-panel').style.display = 'block';
+    loadData();
+  } else {
+    document.getElementById('login-error').textContent = 'Incorrect password';
+  }
+}
+
+function viewImg(src) {
+  document.getElementById('modal-img').src = src;
+  document.getElementById('img-modal').classList.add('active');
+}
+
+function closeModal() {
+  document.getElementById('img-modal').classList.remove('active');
+}
+
+async function apiAdmin(method, url, body) {
+  const opts = {
+    method,
+    headers: { 'Content-Type': 'application/json', 'x-admin-password': ADMIN_PW },
+    credentials: 'include'
+  };
+  if (body) opts.body = JSON.stringify(body);
+  const res = await fetch(url, opts);
+  return res.json();
+}
+
+async function approveDriver(userId) {
+  await apiAdmin('POST', `/api/admin/drivers/${userId}/approve`);
+  loadData();
+}
+
+async function rejectDriver(userId) {
+  const reason = prompt('Reason for rejection (sent to driver):') || 'Insurance card unclear or expired';
+  await apiAdmin('POST', `/api/admin/drivers/${userId}/reject`, { reason });
+  loadData();
+}
+
+async function loadData() {
+  const data = await apiAdmin('GET', '/api/admin/drivers');
+  if (data.error) { alert('API error: ' + data.error); return; }
+
+  const pending = data.filter(u => u.insurance_photo && !u.driver_approved);
+  const approved = data.filter(u => u.driver_approved);
+  const all = data;
+
+  document.getElementById('stat-total').textContent = all.length;
+  document.getElementById('stat-drivers').textContent = all.filter(u => u.vehicle_type).length;
+  document.getElementById('stat-pending').textContent = pending.length;
+  document.getElementById('stat-approved').textContent = approved.length;
+
+  renderList('pending-list', pending, true);
+  renderList('approved-list', approved, false);
+  renderAllUsers('all-users-list', all);
+}
+
+function renderList(elId, users, showActions) {
+  const el = document.getElementById(elId);
+  if (!users.length) { el.innerHTML = `<div class="empty">None yet</div>`; return; }
+  el.innerHTML = users.map(u => `
+    <div class="driver-card">
+      <div style="display:flex;flex-direction:column;gap:8px;">
+        <div style="font-size:10px;color:#666;text-transform:uppercase;letter-spacing:0.05em;">Driver's License</div>
+        ${u.license_photo ? `<img class="insurance-img" src="${u.license_photo}" onclick="viewImg('${u.license_photo}')" title="Click to enlarge">` : '<div style="width:200px;height:130px;background:#1C1C1C;border-radius:8px;display:flex;align-items:center;justify-content:center;color:#444;font-size:12px;">Not uploaded</div>'}
+        <div style="font-size:10px;color:#666;text-transform:uppercase;letter-spacing:0.05em;margin-top:4px;">Insurance Card</div>
+        ${u.insurance_photo ? `<img class="insurance-img" src="${u.insurance_photo}" onclick="viewImg('${u.insurance_photo}')" title="Click to enlarge">` : '<div style="width:200px;height:130px;background:#1C1C1C;border-radius:8px;display:flex;align-items:center;justify-content:center;color:#444;font-size:12px;">Not uploaded</div>'}
+      </div>
+      <div class="driver-info">
+        <div class="driver-name">${u.name}</div>
+        <div class="driver-meta">${u.email} · ${u.phone || 'No phone'}</div>
+        <div class="driver-detail" style="margin-top:10px;">
+          🚗 ${u.vehicle_type || 'No vehicle'} ${u.vehicle_description ? '· ' + u.vehicle_description : ''}<br>
+          📅 Submitted: ${u.insurance_submitted_at ? new Date(u.insurance_submitted_at).toLocaleDateString() : 'Not submitted'}<br>
+          🪪 License: ${u.license_photo ? '✓ Uploaded' : '✗ Missing'}<br>
+          📋 Insurance: ${u.insurance_photo ? '✓ Uploaded' : '✗ Missing'}<br>
+          ⭐ Rating: ${u.rating_count > 0 ? (u.rating_total/u.rating_count).toFixed(1) + ' (' + u.rating_count + ' reviews)' : 'No ratings yet'}
+        </div>
+        <div style="margin-top:8px;">
+          <span class="status-badge ${u.driver_approved ? 'status-approved' : u.insurance_photo ? 'status-pending' : 'status-rejected'}">
+            ${u.driver_approved ? '✓ Approved' : u.insurance_photo ? '⏳ Pending Review' : 'No Documents'}
+          </span>
+        </div>
+      </div>
+      ${showActions ? `
+      <div class="actions">
+        <button class="btn-approve" onclick="approveDriver('${u.id}')">✓ Approve</button>
+        <button class="btn-reject" onclick="rejectDriver('${u.id}')">✗ Reject</button>
+      </div>` : ''}
+    </div>
+  `).join('');
+}
+
+function renderAllUsers(elId, users) {
+  const el = document.getElementById(elId);
+  el.innerHTML = `<table style="width:100%;border-collapse:collapse;">
+    <tr style="border-bottom:1px solid rgba(255,255,255,0.08);font-size:11px;color:#666;text-transform:uppercase;letter-spacing:0.05em;">
+      <th style="text-align:left;padding:8px 12px;">Name</th>
+      <th style="text-align:left;padding:8px 12px;">Email</th>
+      <th style="text-align:left;padding:8px 12px;">Vehicle</th>
+      <th style="text-align:left;padding:8px 12px;">Insurance</th>
+      <th style="text-align:left;padding:8px 12px;">Status</th>
+      <th style="text-align:left;padding:8px 12px;">Joined</th>
+    </tr>
+    ${users.map(u => `
+    <tr style="border-bottom:1px solid rgba(255,255,255,0.04);">
+      <td style="padding:10px 12px;font-weight:500;">${u.name}</td>
+      <td style="padding:10px 12px;color:#666;">${u.email}</td>
+      <td style="padding:10px 12px;color:#666;">${u.vehicle_type || '—'}</td>
+      <td style="padding:10px 12px;">${u.insurance_photo ? `<a href="${u.insurance_photo}" target="_blank" style="color:#00C2A8;font-size:12px;">View</a>` : '<span style="color:#444;">None</span>'}</td>
+      <td style="padding:10px 12px;">
+        <span class="status-badge ${u.driver_approved ? 'status-approved' : u.insurance_photo ? 'status-pending' : ''}">
+          ${u.driver_approved ? 'Approved' : u.insurance_photo ? 'Pending' : 'Shipper'}
+        </span>
+      </td>
+      <td style="padding:10px 12px;color:#666;font-size:12px;">${new Date(u.created_at).toLocaleDateString()}</td>
+    </tr>`).join('')}
+  </table>`;
+}
+</script>
+</body>
+</html>
