@@ -3,6 +3,19 @@ const router = express.Router();
 const bcrypt = require('bcryptjs');
 const { v4: uuidv4 } = require('uuid');
 const db = require('../db/schema');
+const multer = require('multer');
+const path = require('path');
+
+const storage = multer.diskStorage({
+  destination: (req, file, cb) => cb(null, path.join(__dirname, '../public/uploads')),
+  filename: (req, file, cb) => cb(null, `insurance-${uuidv4()}-${file.originalname}`)
+});
+const upload = multer({ storage, limits: { fileSize: 10 * 1024 * 1024 } });
+
+function requireAuth(req, res, next) {
+  if (!req.session.userId) return res.status(401).json({ error: 'Login required' });
+  next();
+}
 
 router.post('/register', async (req, res) => {
   const { name, email, phone, password, vehicle_type, vehicle_description, haul_types } = req.body;
@@ -20,7 +33,7 @@ router.post('/register', async (req, res) => {
 });
 
 router.post('/login', async (req, res) => {
-  const { email, password } = req.body;
+  const { email, password, keepSignedIn } = req.body;
   if (!email || !password) return res.status(400).json({ error: 'Email and password required' });
   const user = db.prepare('SELECT * FROM users WHERE email = ?').get(email);
   if (!user) return res.status(401).json({ error: 'Invalid credentials' });
@@ -28,6 +41,9 @@ router.post('/login', async (req, res) => {
   if (!valid) return res.status(401).json({ error: 'Invalid credentials' });
   req.session.userId = user.id;
   req.session.userName = user.name;
+  if (keepSignedIn) {
+    req.session.cookie.maxAge = 30 * 24 * 60 * 60 * 1000;
+  }
   res.json({ success: true, userId: user.id, name: user.name });
 });
 
@@ -38,11 +54,32 @@ router.post('/logout', (req, res) => {
 
 router.get('/me', (req, res) => {
   if (!req.session.userId) return res.status(401).json({ error: 'Not logged in' });
-  const user = db.prepare('SELECT id, name, email, phone, vehicle_type, vehicle_description, haul_types, rating_total, rating_count, background_check FROM users WHERE id = ?').get(req.session.userId);
+  const user = db.prepare(`SELECT id, name, email, phone, vehicle_type, vehicle_description, haul_types,
+    rating_total, rating_count, background_check, insurance_photo, insurance_verified,
+    insurance_submitted_at, driver_approved, license_photo, stripe_connect_id, stripe_connect_verified
+    FROM users WHERE id = ?`).get(req.session.userId);
   if (!user) return res.status(404).json({ error: 'User not found' });
   user.haul_types = JSON.parse(user.haul_types || '[]');
   user.avg_rating = user.rating_count > 0 ? (user.rating_total / user.rating_count).toFixed(1) : null;
   res.json(user);
+});
+
+// Upload insurance card
+router.post('/insurance', requireAuth, upload.single('insurance_card'), (req, res) => {
+  if (!req.file) return res.status(400).json({ error: 'No file uploaded' });
+  const photoPath = `/uploads/${req.file.filename}`;
+  db.prepare('UPDATE users SET insurance_photo = ?, insurance_submitted_at = CURRENT_TIMESTAMP, insurance_verified = 0, driver_approved = 0 WHERE id = ?')
+    .run(photoPath, req.session.userId);
+  res.json({ success: true, photo: photoPath });
+});
+
+// Upload driver license
+router.post('/license', requireAuth, upload.single('license_card'), (req, res) => {
+  if (!req.file) return res.status(400).json({ error: 'No file uploaded' });
+  const photoPath = `/uploads/${req.file.filename}`;
+  db.prepare('UPDATE users SET license_photo = ?, driver_approved = 0 WHERE id = ?')
+    .run(photoPath, req.session.userId);
+  res.json({ success: true, photo: photoPath });
 });
 
 module.exports = router;
