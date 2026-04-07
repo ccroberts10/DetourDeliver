@@ -1,7 +1,18 @@
 const Database = require('better-sqlite3');
 const path = require('path');
+const fs = require('fs');
 
-const db = new Database(path.join(__dirname, '../db/ihaul.db'));
+// Use persistent volume on Railway, fallback to local for dev
+const DB_DIR = process.env.RAILWAY_VOLUME_MOUNT_PATH || path.join(__dirname, '../db');
+const DB_PATH = path.join(DB_DIR, 'detour.db');
+
+// Ensure directory exists
+if (!fs.existsSync(DB_DIR)) {
+  fs.mkdirSync(DB_DIR, { recursive: true });
+}
+
+const db = new Database(DB_PATH);
+console.log(`Database at: ${DB_PATH}`);
 
 db.exec(`
   CREATE TABLE IF NOT EXISTS users (
@@ -19,6 +30,10 @@ db.exec(`
     rating_total INTEGER DEFAULT 0,
     rating_count INTEGER DEFAULT 0,
     background_check TEXT DEFAULT 'pending',
+    insurance_photo TEXT,
+    insurance_verified INTEGER DEFAULT 0,
+    insurance_submitted_at DATETIME,
+    driver_approved INTEGER DEFAULT 0,
     created_at DATETIME DEFAULT CURRENT_TIMESTAMP
   );
 
@@ -93,3 +108,11 @@ db.exec(`
 `);
 
 module.exports = db;
+
+// Safe migrations — add new columns if they don't exist
+const migrate = (sql) => { try { db.exec(sql); } catch(e) { /* column already exists */ } };
+migrate(`ALTER TABLE users ADD COLUMN insurance_photo TEXT`);
+migrate(`ALTER TABLE users ADD COLUMN insurance_verified INTEGER DEFAULT 0`);
+migrate(`ALTER TABLE users ADD COLUMN insurance_submitted_at DATETIME`);
+migrate(`ALTER TABLE users ADD COLUMN driver_approved INTEGER DEFAULT 0`);
+migrate(`ALTER TABLE users ADD COLUMN license_photo TEXT`);
