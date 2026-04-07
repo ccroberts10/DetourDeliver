@@ -401,6 +401,33 @@ textarea{resize:none}
         <button class="btn-primary btn-large" onclick="postDriverRoute()">Post My Drive →</button>
         <div class="section-head" style="margin-top:22px;"><span>Your Active Routes</span></div>
         <div id="my-routes-list" class="jobs-list"><div class="empty-state">No active routes posted</div></div>
+
+        <!-- DRIVER VERIFICATION -->
+        <div class="form-section" style="margin-top:24px;">
+          <div class="form-section-title">🛡️ Driver Verification</div>
+          <div id="verification-status" style="margin-bottom:14px;"></div>
+          <div id="insurance-upload-section">
+            <div style="font-size:13px;color:rgba(255,255,255,0.5);margin-bottom:14px;line-height:1.6;">Upload your driver's license and proof of insurance before accepting jobs. Your account will be reviewed within 24 hours.</div>
+
+            <!-- Driver License -->
+            <div class="field-group" style="margin-bottom:14px;">
+              <label>Driver's License <span class="req">*</span></label>
+              <div id="license-preview" style="display:none;margin-bottom:8px;"><img id="license-thumb" style="width:100%;border-radius:8px;border:1px solid rgba(255,255,255,0.1);" src=""></div>
+              <input type="file" id="license-file" accept="image/*" style="display:none" onchange="uploadDoc('license',this)">
+              <button class="btn-secondary" style="width:100%;" onclick="document.getElementById('license-file').click()">🪪 Upload Driver's License</button>
+            </div>
+
+            <!-- Insurance Card -->
+            <div class="field-group">
+              <label>Proof of Insurance <span class="req">*</span></label>
+              <div id="insurance-preview" style="display:none;margin-bottom:8px;"><img id="insurance-thumb" style="width:100%;border-radius:8px;border:1px solid rgba(255,255,255,0.1);" src=""></div>
+              <input type="file" id="insurance-file" accept="image/*" style="display:none" onchange="uploadDoc('insurance',this)">
+              <button class="btn-secondary" style="width:100%;" onclick="document.getElementById('insurance-file').click()">📋 Upload Insurance Card</button>
+            </div>
+
+            <div style="font-size:11px;color:rgba(255,255,255,0.25);margin-top:10px;line-height:1.5;">Documents are reviewed by Detour staff and never shared publicly. Both documents required before accepting jobs.</div>
+          </div>
+        </div>
       </div>
       <div id="drive-browse-panel" style="display:none">
 
@@ -805,6 +832,60 @@ async function deleteJob(jobId){
     showView('view-home');
   }catch(e){toast(e.message||'Could not delete listing');}
 }
+
+async function uploadDoc(type, input){
+  if(!input.files?.length)return;
+  const fd=new FormData();
+  fd.append(type==='license'?'license_card':'insurance_card', input.files[0]);
+  const url = type==='license' ? '/api/auth/license' : '/api/auth/insurance';
+  try{
+    const res=await fetch(url,{method:'POST',body:fd,credentials:'include'});
+    const data=await res.json();
+    if(!res.ok)throw new Error(data.error||'Upload failed');
+    const label = type==='license' ? 'License' : 'Insurance card';
+    toast(`${label} uploaded! Under review — usually approved within 24 hours. ✓`);
+    const thumbId = type==='license' ? 'license-thumb' : 'insurance-thumb';
+    const previewId = type==='license' ? 'license-preview' : 'insurance-preview';
+    const thumb=document.getElementById(thumbId);
+    const preview=document.getElementById(previewId);
+    if(thumb&&preview){thumb.src=data.photo;preview.style.display='block';}
+    // Refresh user to update status
+    const user=await api('GET','/api/auth/me');
+    updateVerificationStatus(user);
+  }catch(e){toast(e.message||'Upload failed');}
+}
+
+function updateVerificationStatus(user){
+  const el=document.getElementById('verification-status');
+  if(!el)return;
+  const hasLicense=!!user.license_photo;
+  const hasInsurance=!!user.insurance_photo;
+  const hasBoth=hasLicense&&hasInsurance;
+
+  // Show existing document thumbnails
+  if(user.license_photo){
+    const t=document.getElementById('license-thumb');
+    const p=document.getElementById('license-preview');
+    if(t&&p){t.src=user.license_photo;p.style.display='block';}
+  }
+  if(user.insurance_photo){
+    const t=document.getElementById('insurance-thumb');
+    const p=document.getElementById('insurance-preview');
+    if(t&&p){t.src=user.insurance_photo;p.style.display='block';}
+  }
+
+  if(user.driver_approved){
+    el.innerHTML=`<div style="background:rgba(0,194,168,0.1);border:1px solid rgba(0,194,168,0.3);border-radius:8px;padding:12px 14px;font-size:13px;color:#00C2A8;">✅ Verified driver — you can accept delivery jobs</div>`;
+    document.getElementById('insurance-upload-section').style.display='none';
+  }else if(hasBoth){
+    el.innerHTML=`<div style="background:rgba(251,191,36,0.1);border:1px solid rgba(251,191,36,0.3);border-radius:8px;padding:12px 14px;font-size:13px;color:#FBBF24;">⏳ Documents submitted — under review. You'll be approved within 24 hours.</div>`;
+  }else{
+    const missing=[];
+    if(!hasLicense)missing.push("driver's license");
+    if(!hasInsurance)missing.push("proof of insurance");
+    el.innerHTML=`<div style="background:rgba(240,85,85,0.1);border:1px solid rgba(240,85,85,0.3);border-radius:8px;padding:12px 14px;font-size:13px;color:#F05555;">⚠️ Upload your ${missing.join(' and ')} to start accepting jobs</div>`;
+  }
+}
 async function sendMsg(jobId){
   const input=document.getElementById('msg-input'),content=input.value.trim();if(!content)return;input.value='';
   try{const msg=await api('POST',`/api/jobs/${jobId}/messages`,{content});const thread=document.getElementById('msg-thread');if(thread){const div=document.createElement('div');div.innerHTML=`<div class="msg-name">${escHtml(msg.sender_name)}</div><div class="msg-bubble msg-out">${escHtml(msg.content)}</div>`;thread.appendChild(div);thread.scrollTop=thread.scrollHeight;}}
@@ -873,7 +954,14 @@ function toast(msg){const el=document.getElementById('toast');el.textContent=msg
 })();
 
 // Check if already logged in
-(async()=>{try{const user=await api('GET','/api/auth/me');currentUser=user;enterApp(user.name);}catch(e){}})();
+(async()=>{
+  try{
+    const user=await api('GET','/api/auth/me');
+    currentUser=user;
+    enterApp(user.name);
+    updateVerificationStatus(user);
+  }catch(e){}
+})();
 
 </script>
 </body>
