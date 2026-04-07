@@ -186,6 +186,7 @@ function renderList(elId, users, showActions) {
         <div class="driver-meta">${u.email} · ${u.phone || 'No phone'}</div>
         <div class="driver-detail" style="margin-top:10px;">
           🚗 ${u.vehicle_type || 'No vehicle'} ${u.vehicle_description ? '· ' + u.vehicle_description : ''}<br>
+          🔢 Plate: ${u.license_plate || 'Not provided'}<br>
           📅 Submitted: ${u.insurance_submitted_at ? new Date(u.insurance_submitted_at).toLocaleDateString() : 'Not submitted'}<br>
           🪪 License: ${u.license_photo ? '✓ Uploaded' : '✗ Missing'}<br>
           📋 Insurance: ${u.insurance_photo ? '✓ Uploaded' : '✗ Missing'}<br>
