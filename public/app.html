@@ -459,16 +459,16 @@ textarea{resize:none}
             <div class="field-group" style="margin-bottom:14px;">
               <label>Driver's License <span class="req">*</span></label>
               <div id="license-preview" style="display:none;margin-bottom:8px;"><img id="license-thumb" style="width:100%;border-radius:8px;border:1px solid rgba(255,255,255,0.1);" src=""></div>
-              <input type="file" id="license-file" accept="image/*" style="display:none" onchange="uploadDoc('license',this)">
-              <button class="btn-secondary" style="width:100%;" onclick="document.getElementById('license-file').click()">🪪 Upload Driver's License</button>
+              <input type="file" id="license-file" accept="image/jpeg,image/jpg,image/png,image/heic,image/heif,image/*" style="display:none" onchange="uploadDoc('license',this)">
+              <button class="btn-secondary" style="width:100%;margin-bottom:6px;" onclick="document.getElementById('license-file').click()">🪪 Upload Driver's License</button>
             </div>
 
             <!-- Insurance Card -->
             <div class="field-group">
               <label>Proof of Insurance <span class="req">*</span></label>
               <div id="insurance-preview" style="display:none;margin-bottom:8px;"><img id="insurance-thumb" style="width:100%;border-radius:8px;border:1px solid rgba(255,255,255,0.1);" src=""></div>
-              <input type="file" id="insurance-file" accept="image/*" style="display:none" onchange="uploadDoc('insurance',this)">
-              <button class="btn-secondary" style="width:100%;" onclick="document.getElementById('insurance-file').click()">📋 Upload Insurance Card</button>
+              <input type="file" id="insurance-file" accept="image/jpeg,image/jpg,image/png,image/heic,image/heif,image/*" style="display:none" onchange="uploadDoc('insurance',this)">
+              <button class="btn-secondary" style="width:100%;margin-bottom:6px;" onclick="document.getElementById('insurance-file').click()">📋 Upload Insurance Card</button>
             </div>
 
             <div style="font-size:11px;color:rgba(255,255,255,0.25);margin-top:10px;line-height:1.5;">Documents are reviewed by Detour staff and never shared publicly. Both documents required before accepting jobs.</div>
