@@ -376,12 +376,14 @@ textarea{resize:none}
           <div class="field-group"><label>Pickup Address <span class="req">*</span></label><input type="text" id="job-pickup-addr" required placeholder="225 E 8th Ave"></div>
           <div class="field-row">
             <div class="field-group"><label>Pickup City <span class="req">*</span></label><input type="text" id="job-pickup-city" required placeholder="Durango" value="Durango"></div>
-            <div class="field-group"><label>Pickup State <span class="req">*</span></label><input type="text" id="job-pickup-state" required placeholder="CO" maxlength="2" style="text-transform:uppercase;" value="CO"></div>
+            <div class="field-group"><label>State</label><input type="text" id="job-pickup-state" required placeholder="CO" maxlength="2" style="text-transform:uppercase;" value="CO"></div>
+            <div class="field-group"><label>Zip</label><input type="text" id="job-pickup-zip" placeholder="81301" maxlength="5" style="width:100%;" inputmode="numeric"></div>
           </div>
           <div class="field-group"><label>Dropoff Address <span class="req">*</span></label><input type="text" id="job-dropoff-addr" required placeholder="123 Main St"></div>
           <div class="field-row">
             <div class="field-group"><label>Dropoff City <span class="req">*</span></label><input type="text" id="job-dropoff-city" required placeholder="Telluride" oninput="updatePriceSuggestion()"></div>
-            <div class="field-group"><label>Dropoff State <span class="req">*</span></label><input type="text" id="job-dropoff-state" required placeholder="CO" maxlength="2" style="text-transform:uppercase;" value="CO"></div>
+            <div class="field-group"><label>State</label><input type="text" id="job-dropoff-state" required placeholder="CO" maxlength="2" style="text-transform:uppercase;" value="CO"></div>
+            <div class="field-group"><label>Zip</label><input type="text" id="job-dropoff-zip" placeholder="81435" maxlength="5" style="width:100%;" inputmode="numeric"></div>
           </div>
         </div>
         <div class="form-section">
@@ -594,6 +596,7 @@ textarea{resize:none}
       <div style="display:flex;gap:8px;">
         <div class="field-group" style="flex:2;margin:0;"><input type="text" id="qp-from" placeholder="City" value="Durango" style="font-size:14px;"></div>
         <div class="field-group" style="flex:1;margin:0;"><input type="text" id="qp-from-state" placeholder="State" value="CO" maxlength="2" style="font-size:14px;text-transform:uppercase;"></div>
+        <div class="field-group" style="flex:1;margin:0;"><input type="text" id="qp-from-zip" placeholder="Zip" maxlength="5" style="font-size:14px;" inputmode="numeric"></div>
       </div>
     </div>
     <div style="background:var(--dark2);border-radius:var(--rs);padding:12px 14px;margin-bottom:14px;">
@@ -602,6 +605,7 @@ textarea{resize:none}
       <div style="display:flex;gap:8px;">
         <div class="field-group" style="flex:2;margin:0;"><input type="text" id="qp-to" placeholder="City" style="font-size:14px;"></div>
         <div class="field-group" style="flex:1;margin:0;"><input type="text" id="qp-to-state" placeholder="State" value="CO" maxlength="2" style="font-size:14px;text-transform:uppercase;"></div>
+        <div class="field-group" style="flex:1;margin:0;"><input type="text" id="qp-to-zip" placeholder="Zip" maxlength="5" style="font-size:14px;" inputmode="numeric"></div>
       </div>
     </div>
     <div class="field-group">
@@ -1007,9 +1011,11 @@ async function postJob(){
   const pickup_address=document.getElementById('job-pickup-addr').value.trim();
   const pickup_city=document.getElementById('job-pickup-city').value.trim();
   const pickup_state=document.getElementById('job-pickup-state').value.trim().toUpperCase();
+  const pickup_zip=document.getElementById('job-pickup-zip').value.trim();
   const dropoff_address=document.getElementById('job-dropoff-addr').value.trim();
   const dropoff_city=document.getElementById('job-dropoff-city').value.trim();
   const dropoff_state=document.getElementById('job-dropoff-state').value.trim().toUpperCase();
+  const dropoff_zip=document.getElementById('job-dropoff-zip').value.trim();
   const offered_price=document.getElementById('job-price').value;
 
   if(!title){errEl.textContent='Please add a title for your delivery.';return;}
@@ -1027,7 +1033,7 @@ async function postJob(){
 
   const fd=new FormData();
   if(jobType==='marketplace'&&listingInput?.files?.length)Array.from(listingInput.files).forEach(f=>fd.append('listing_photos',f));
-  const fields={job_type:jobType,title,description:document.getElementById('job-desc').value.trim(),item_size,item_weight:document.getElementById('job-weight').value,fragile:document.getElementById('job-fragile').checked?'1':'',needs_disassembly:document.getElementById('job-disassembly').checked?'1':'',pickup_address,pickup_city,pickup_state,dropoff_address,dropoff_city,dropoff_state,offered_price,notes:document.getElementById('job-notes').value.trim(),seller_name:document.getElementById('seller-name')?.value.trim()||'',seller_phone:document.getElementById('seller-phone')?.value.trim()||'',buyer_name:document.getElementById('buyer-name')?.value.trim()||'',buyer_phone:document.getElementById('buyer-phone')?.value.trim()||'',store_name:document.getElementById('store-name')?.value.trim()||'',item_to_pickup:document.getElementById('item-to-pickup')?.value.trim()||''};
+  const fields={job_type:jobType,title,description:document.getElementById('job-desc').value.trim(),item_size,item_weight:document.getElementById('job-weight').value,fragile:document.getElementById('job-fragile').checked?'1':'',needs_disassembly:document.getElementById('job-disassembly').checked?'1':'',pickup_address,pickup_city,pickup_state,pickup_zip,dropoff_address,dropoff_city,dropoff_state,dropoff_zip,offered_price,notes:document.getElementById('job-notes').value.trim(),seller_name:document.getElementById('seller-name')?.value.trim()||'',seller_phone:document.getElementById('seller-phone')?.value.trim()||'',buyer_name:document.getElementById('buyer-name')?.value.trim()||'',buyer_phone:document.getElementById('buyer-phone')?.value.trim()||'',store_name:document.getElementById('store-name')?.value.trim()||'',item_to_pickup:document.getElementById('item-to-pickup')?.value.trim()||''};
   if(window._requestedDriverRouteId){fields.requested_driver_route_id=window._requestedDriverRouteId;window._requestedDriverRouteId=null;}
 
   // Tokenize card with Stripe
@@ -1068,9 +1074,11 @@ async function submitQuickPost(){
   const pickupAddr=document.getElementById('qp-pickup-addr').value.trim();
   const from=document.getElementById('qp-from').value.trim()||'Durango';
   const fromState=document.getElementById('qp-from-state').value.trim().toUpperCase()||'CO';
+  const fromZip=document.getElementById('qp-from-zip')?.value.trim()||'';
   const dropoffAddr=document.getElementById('qp-dropoff-addr').value.trim();
   const to=document.getElementById('qp-to').value.trim();
   const toState=document.getElementById('qp-to-state').value.trim().toUpperCase()||'CO';
+  const toZip=document.getElementById('qp-to-zip')?.value.trim()||'';
   const price=document.getElementById('qp-price').value;
   const size=document.getElementById('qp-size').value;
   const errEl=document.getElementById('qp-error');
@@ -1086,9 +1094,11 @@ async function submitQuickPost(){
   fd.append('pickup_address',pickupAddr);
   fd.append('pickup_city',from);
   fd.append('pickup_state',fromState);
+  fd.append('pickup_zip',fromZip);
   fd.append('dropoff_address',dropoffAddr);
   fd.append('dropoff_city',to);
   fd.append('dropoff_state',toState);
+  fd.append('dropoff_zip',toZip);
   fd.append('item_size',size);
   fd.append('offered_price',price);
   try{
