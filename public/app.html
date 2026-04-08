@@ -1213,7 +1213,7 @@ async function updateVehicle(){
 }
 function updateVerificationStatus(user){
   const el=document.getElementById('verification-status');
-  // Pre-fill vehicle fields
+  const uploadSection=document.getElementById('insurance-upload-section');
   const vt=document.getElementById('driver-vehicle-type');
   const vd=document.getElementById('driver-vehicle-desc');
   const lp=document.getElementById('driver-license-plate');
@@ -1221,32 +1221,20 @@ function updateVerificationStatus(user){
   if(vd&&user.vehicle_description)vd.value=user.vehicle_description;
   if(lp&&user.license_plate)lp.value=user.license_plate;
   if(!el)return;
-  const hasLicense=!!user.license_photo;
-  const hasInsurance=!!user.insurance_photo;
-  const hasBoth=hasLicense&&hasInsurance;
-
-  // Show existing document thumbnails
-  if(user.license_photo){
-    const t=document.getElementById('license-thumb');
-    const p=document.getElementById('license-preview');
-    if(t&&p){t.src=user.license_photo;p.style.display='block';}
-  }
-  if(user.insurance_photo){
-    const t=document.getElementById('insurance-thumb');
-    const p=document.getElementById('insurance-preview');
-    if(t&&p){t.src=user.insurance_photo;p.style.display='block';}
-  }
-
   if(user.driver_approved){
-    el.innerHTML=`<div style="background:rgba(0,194,168,0.1);border:1px solid rgba(0,194,168,0.3);border-radius:8px;padding:12px 14px;font-size:13px;color:#00C2A8;">✅ Verified driver — you can accept delivery jobs</div>`;
-    document.getElementById('insurance-upload-section').style.display='none';
-  }else if(hasBoth){
-    el.innerHTML=`<div style="background:rgba(251,191,36,0.1);border:1px solid rgba(251,191,36,0.3);border-radius:8px;padding:12px 14px;font-size:13px;color:#FBBF24;">⏳ Documents submitted — under review. You'll be approved within 24 hours.</div>`;
+    if(uploadSection)uploadSection.style.display='none';
+    el.innerHTML=`<div style="background:rgba(61,204,120,0.1);border:1.5px solid rgba(61,204,120,0.4);border-radius:12px;padding:16px 18px;display:flex;align-items:center;gap:14px;"><div style="font-size:32px;line-height:1;">✅</div><div><div style="font-family:'Syne',sans-serif;font-size:16px;font-weight:800;color:var(--green);margin-bottom:2px;">Verified Driver</div><div style="font-size:13px;color:rgba(255,255,255,0.5);line-height:1.5;">Your documents have been reviewed and approved. You're cleared to accept delivery jobs.</div></div></div>`;
+  }else if(user.license_photo&&user.insurance_photo){
+    if(uploadSection)uploadSection.style.display='none';
+    el.innerHTML=`<div style="background:rgba(251,191,36,0.08);border:1px solid rgba(251,191,36,0.3);border-radius:12px;padding:16px 18px;display:flex;align-items:center;gap:14px;"><div style="font-size:28px;">⏳</div><div><div style="font-size:14px;font-weight:600;color:#FBBF24;margin-bottom:2px;">Under Review</div><div style="font-size:13px;color:rgba(255,255,255,0.5);">Documents submitted — usually approved within 24 hours.</div></div></div>`;
   }else{
+    if(uploadSection)uploadSection.style.display='block';
+    if(user.license_photo){const t=document.getElementById('license-thumb');const p=document.getElementById('license-preview');if(t&&p){t.src=user.license_photo;p.style.display='block';}}
+    if(user.insurance_photo){const t=document.getElementById('insurance-thumb');const p=document.getElementById('insurance-preview');if(t&&p){t.src=user.insurance_photo;p.style.display='block';}}
     const missing=[];
-    if(!hasLicense)missing.push("driver's license");
-    if(!hasInsurance)missing.push("proof of insurance");
-    el.innerHTML=`<div style="background:rgba(240,85,85,0.1);border:1px solid rgba(240,85,85,0.3);border-radius:8px;padding:12px 14px;font-size:13px;color:#F05555;">⚠️ Upload your ${missing.join(' and ')} to start accepting jobs</div>`;
+    if(!user.license_photo)missing.push("driver's license");
+    if(!user.insurance_photo)missing.push("proof of insurance");
+    el.innerHTML=`<div style="background:rgba(240,85,85,0.08);border:1px solid rgba(240,85,85,0.25);border-radius:12px;padding:14px 16px;font-size:13px;color:var(--red);">⚠️ Upload your ${missing.join(' and ')} to start accepting jobs</div>`;
   }
 }
 async function sendMsg(jobId){
