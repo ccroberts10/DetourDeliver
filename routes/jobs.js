@@ -21,6 +21,10 @@ const upload = multer({ storage, limits: { fileSize: 10 * 1024 * 1024 } });
 function requireAuth(req, res, next) {
   const userId = req.session.userId || req.headers['x-user-id'];
   if (!userId) return res.status(401).json({ error: 'Login required' });
+  if (!req.session.userId && req.headers['x-user-id']) {
+    const user = db.prepare('SELECT id FROM users WHERE id = ?').get(userId);
+    if (!user) return res.status(401).json({ error: 'Login required' });
+  }
   req.session.userId = userId;
   next();
 }
