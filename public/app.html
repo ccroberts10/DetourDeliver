@@ -560,10 +560,22 @@ textarea{resize:none}
   <div class="modal-sheet">
     <div class="modal-sheet-handle"></div>
     <div class="modal-sheet-title">⚡ Quick Post</div>
-    <div class="field-group"><label>What needs delivering? <span class="req">*</span></label><input type="text" id="qp-title" placeholder="e.g. Sofa to Telluride, Coffee beans..."></div>
-    <div class="field-row">
-      <div class="field-group"><label>From City</label><input type="text" id="qp-from" placeholder="Durango" value="Durango"></div>
-      <div class="field-group"><label>To City <span class="req">*</span></label><input type="text" id="qp-to" placeholder="Telluride"></div>
+    <div class="field-group"><label>What needs delivering? <span class="req">*</span></label><input type="text" id="qp-title" placeholder="e.g. Sofa, Coffee beans, Bike..."></div>
+    <div style="background:var(--dark2);border-radius:var(--rs);padding:12px 14px;margin-bottom:14px;">
+      <div style="font-size:10px;color:var(--teal);text-transform:uppercase;letter-spacing:0.08em;margin-bottom:10px;">📍 Pickup Location</div>
+      <div class="field-group" style="margin-bottom:8px;"><input type="text" id="qp-pickup-addr" placeholder="Street address or neighborhood" style="font-size:14px;"></div>
+      <div style="display:flex;gap:8px;">
+        <div class="field-group" style="flex:2;margin:0;"><input type="text" id="qp-from" placeholder="City" value="Durango" style="font-size:14px;"></div>
+        <div class="field-group" style="flex:1;margin:0;"><input type="text" id="qp-from-state" placeholder="State" value="CO" maxlength="2" style="font-size:14px;text-transform:uppercase;"></div>
+      </div>
+    </div>
+    <div style="background:var(--dark2);border-radius:var(--rs);padding:12px 14px;margin-bottom:14px;">
+      <div style="font-size:10px;color:var(--green);text-transform:uppercase;letter-spacing:0.08em;margin-bottom:10px;">🏁 Dropoff Location</div>
+      <div class="field-group" style="margin-bottom:8px;"><input type="text" id="qp-dropoff-addr" placeholder="Street address or neighborhood" style="font-size:14px;"></div>
+      <div style="display:flex;gap:8px;">
+        <div class="field-group" style="flex:2;margin:0;"><input type="text" id="qp-to" placeholder="City" style="font-size:14px;"></div>
+        <div class="field-group" style="flex:1;margin:0;"><input type="text" id="qp-to-state" placeholder="State" value="CO" maxlength="2" style="font-size:14px;text-transform:uppercase;"></div>
+      </div>
     </div>
     <div class="field-group">
       <label>Your offer to driver</label>
@@ -940,24 +952,30 @@ function updateQPBreakdown(){
 }
 async function submitQuickPost(){
   const title=document.getElementById('qp-title').value.trim();
+  const pickupAddr=document.getElementById('qp-pickup-addr').value.trim();
   const from=document.getElementById('qp-from').value.trim()||'Durango';
+  const fromState=document.getElementById('qp-from-state').value.trim().toUpperCase()||'CO';
+  const dropoffAddr=document.getElementById('qp-dropoff-addr').value.trim();
   const to=document.getElementById('qp-to').value.trim();
+  const toState=document.getElementById('qp-to-state').value.trim().toUpperCase()||'CO';
   const price=document.getElementById('qp-price').value;
   const size=document.getElementById('qp-size').value;
   const errEl=document.getElementById('qp-error');
   errEl.textContent='';
   if(!title){errEl.textContent='Please add a title';return;}
+  if(!pickupAddr){errEl.textContent='Please enter a pickup address or neighborhood';return;}
   if(!to){errEl.textContent='Please enter a destination city';return;}
+  if(!dropoffAddr){errEl.textContent='Please enter a dropoff address or neighborhood';return;}
   if(!price||parseFloat(price)<5){errEl.textContent='Minimum offer is $5';return;}
   const fd=new FormData();
   fd.append('job_type','standard');
   fd.append('title',title);
+  fd.append('pickup_address',pickupAddr);
   fd.append('pickup_city',from);
-  fd.append('pickup_state','CO');
-  fd.append('pickup_address',from);
+  fd.append('pickup_state',fromState);
+  fd.append('dropoff_address',dropoffAddr);
   fd.append('dropoff_city',to);
-  fd.append('dropoff_state','CO');
-  fd.append('dropoff_address',to);
+  fd.append('dropoff_state',toState);
   fd.append('item_size',size);
   fd.append('offered_price',price);
   try{
@@ -967,6 +985,8 @@ async function submitQuickPost(){
     closeQuickPost();
     toast('Delivery posted! 🎉 Looking for a driver...');
     document.getElementById('qp-title').value='';
+    document.getElementById('qp-pickup-addr').value='';
+    document.getElementById('qp-dropoff-addr').value='';
     document.getElementById('qp-to').value='';
     document.getElementById('qp-price').value='';
     loadOpenJobs();loadMyJobs();
