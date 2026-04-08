@@ -112,7 +112,8 @@ router.delete('/driver-routes/:id', requireAuth, (req, res) => {
 router.post('/', requireAuth, upload.array('listing_photos', 6), async (req, res) => {
   const {
     job_type, title, description, item_size, item_weight, fragile, needs_disassembly,
-    pickup_address, pickup_city, pickup_state, dropoff_address, dropoff_city, dropoff_state,
+    pickup_address, pickup_city, pickup_state, pickup_zip,
+    dropoff_address, dropoff_city, dropoff_state, dropoff_zip,
     offered_price, notes, seller_name, seller_phone, buyer_name, buyer_phone,
     store_name, item_to_pickup, requested_driver_route_id
   } = req.body;
@@ -138,7 +139,8 @@ router.post('/', requireAuth, upload.array('listing_photos', 6), async (req, res
     buyer_name: buyer_name || null, buyer_phone: buyer_phone || null,
     store_name: store_name || null, item_to_pickup: item_to_pickup || null,
     requested_driver_route_id: requested_driver_route_id || null,
-    pickup_state: pickup_state || null, dropoff_state: dropoff_state || null
+    pickup_state: pickup_state || null, dropoff_state: dropoff_state || null,
+    pickup_zip: pickup_zip || null, dropoff_zip: dropoff_zip || null
   });
 
   let paymentIntentId = null;
@@ -175,9 +177,17 @@ router.post('/', requireAuth, upload.array('listing_photos', 6), async (req, res
   // Geocode and match drivers asynchronously (don't block response)
   setImmediate(async () => {
     try {
-      // Geocode pickup and dropoff
-      const pickupQuery = `${pickup_address}, ${pickup_city}, ${pickup_state || 'CO'}`;
-      const dropoffQuery = `${dropoff_address}, ${dropoff_city}, ${dropoff_state || 'CO'}`;
+      const ps = pickup_state || 'CO';
+      const ds = dropoff_state || 'CO';
+      const pz = req.body.pickup_zip;
+      const dz = req.body.dropoff_zip;
+      // Include zip if provided for better accuracy
+      const pickupQuery = pz
+        ? `${pickup_address}, ${pickup_city}, ${ps} ${pz}`
+        : `${pickup_address}, ${pickup_city}, ${ps}`;
+      const dropoffQuery = dz
+        ? `${dropoff_address}, ${dropoff_city}, ${ds} ${dz}`
+        : `${dropoff_address}, ${dropoff_city}, ${ds}`;
       const [pickupCoords, dropoffCoords] = await Promise.all([
         geocode(pickupQuery),
         geocode(dropoffQuery)
