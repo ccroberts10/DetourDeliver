@@ -691,13 +691,28 @@ async function register(){
   catch(e){document.getElementById('reg-error').textContent=e.message;}
 }
 async function logout(){
+  const uid=currentUser?.userId||currentUser?.id||localStorage.getItem('detour_uid');
   await api('POST','/api/auth/logout');
   currentUser=null;
-  localStorage.removeItem('detour_uid');
-  localStorage.removeItem('detour_name');
-  localStorage.removeItem('detour_vehicle');
-  localStorage.removeItem('detour_vehicle_desc');
-  localStorage.removeItem('detour_plate');
+  // Clear all user data from localStorage
+  ['detour_uid','detour_name','detour_vehicle','detour_vehicle_desc','detour_plate',
+   `detour_vehicle_${uid}`,`detour_vehicle_desc_${uid}`,`detour_plate_${uid}`
+  ].forEach(k=>localStorage.removeItem(k));
+  // Clear document previews
+  const lt=document.getElementById('license-thumb');
+  const lp=document.getElementById('license-preview');
+  const it=document.getElementById('insurance-thumb');
+  const ip=document.getElementById('insurance-preview');
+  if(lt)lt.src='';if(lp)lp.style.display='none';
+  if(it)it.src='';if(ip)ip.style.display='none';
+  // Clear vehicle fields
+  const vt=document.getElementById('driver-vehicle-type');
+  const vd=document.getElementById('driver-vehicle-desc');
+  const lpf=document.getElementById('driver-license-plate');
+  if(vt)vt.value='';if(vd)vd.value='';if(lpf)lpf.value='';
+  // Clear verification status
+  const vs=document.getElementById('verification-status');
+  if(vs)vs.innerHTML='';
   document.getElementById('auth-screen').classList.add('active');
   document.getElementById('app-screen').classList.remove('active');
 }
@@ -709,13 +724,21 @@ function enterApp(name){
   const soon=new Date(Date.now()+3600000);
   const local=new Date(soon.getTime()-soon.getTimezoneOffset()*60000).toISOString().slice(0,16);
   const d=document.getElementById('route-depart');if(d)d.value=local;
-  // Restore vehicle info
-  const vt=localStorage.getItem('detour_vehicle');
-  const vd=localStorage.getItem('detour_vehicle_desc');
-  const lp=localStorage.getItem('detour_plate');
+  // Clear any previous user's document previews before loading new user's data
+  const lt=document.getElementById('license-thumb');
+  const lp=document.getElementById('license-preview');
+  const it=document.getElementById('insurance-thumb');
+  const ip=document.getElementById('insurance-preview');
+  if(lt)lt.src='';if(lp)lp.style.display='none';
+  if(it)it.src='';if(ip)ip.style.display='none';
+  // Restore vehicle info from localStorage (keyed per user)
+  const uid=currentUser?.userId||currentUser?.id||localStorage.getItem('detour_uid');
+  const vt=localStorage.getItem(`detour_vehicle_${uid}`);
+  const vd=localStorage.getItem(`detour_vehicle_desc_${uid}`);
+  const lpl=localStorage.getItem(`detour_plate_${uid}`);
   if(vt){const el=document.getElementById('driver-vehicle-type');if(el)el.value=vt;}
   if(vd){const el=document.getElementById('driver-vehicle-desc');if(el)el.value=vd;}
-  if(lp){const el=document.getElementById('driver-license-plate');if(el)el.value=lp;}
+  if(lpl){const el=document.getElementById('driver-license-plate');if(el)el.value=lpl;}
   loadMyJobs();
   loadOpenJobs();
   requestPushPermission();
@@ -1219,12 +1242,11 @@ async function updateVehicle(){
   const vehicle_description=document.getElementById('driver-vehicle-desc').value.trim();
   const license_plate=document.getElementById('driver-license-plate').value.trim().toUpperCase();
   if(!vehicle_type){toast('Please select a vehicle type');return;}
-  // Save to localStorage immediately — works even if server call fails
-  localStorage.setItem('detour_vehicle',vehicle_type);
-  localStorage.setItem('detour_vehicle_desc',vehicle_description);
-  localStorage.setItem('detour_plate',license_plate);
+  const uid=currentUser?.userId||currentUser?.id||localStorage.getItem('detour_uid');
+  localStorage.setItem(`detour_vehicle_${uid}`,vehicle_type);
+  localStorage.setItem(`detour_vehicle_desc_${uid}`,vehicle_description);
+  localStorage.setItem(`detour_plate_${uid}`,license_plate);
   try{
-    const uid=currentUser?.userId||currentUser?.id||localStorage.getItem('detour_uid');
     const res=await fetch('/api/auth/update-profile',{
       method:'POST',
       headers:{'Content-Type':'application/json','x-user-id':uid||''},
@@ -1235,7 +1257,6 @@ async function updateVehicle(){
     if(!res.ok)throw new Error(data.error||'Server error');
     toast('Vehicle info saved ✓');
   }catch(e){
-    // Still show success since localStorage worked
     toast('Vehicle info saved locally ✓');
     console.log('Vehicle server save error:',e.message);
   }
@@ -1255,17 +1276,19 @@ function updateVerificationStatus(user){
   // Always show the upload section so drivers can re-upload
   if(uploadSection)uploadSection.style.display='block';
 
-  // Show existing document previews
-  if(user.license_photo){
-    const t=document.getElementById('license-thumb');
-    const p=document.getElementById('license-preview');
-    if(t&&p){t.src=user.license_photo;p.style.display='block';}
-  }
-  if(user.insurance_photo){
-    const t=document.getElementById('insurance-thumb');
-    const p=document.getElementById('insurance-preview');
-    if(t&&p){t.src=user.insurance_photo;p.style.display='block';}
-  }
+  // Show existing document previews — only from server data
+  const licThumb=document.getElementById('license-thumb');
+  const licPreview=document.getElementById('license-preview');
+  const insThumb=document.getElementById('insurance-thumb');
+  const insPreview=document.getElementById('insurance-preview');
+  // Always reset first
+  if(licThumb)licThumb.src='';
+  if(licPreview)licPreview.style.display='none';
+  if(insThumb)insThumb.src='';
+  if(insPreview)insPreview.style.display='none';
+  // Then show this user's photos if they exist
+  if(user.license_photo&&licThumb&&licPreview){licThumb.src=user.license_photo;licPreview.style.display='block';}
+  if(user.insurance_photo&&insThumb&&insPreview){insThumb.src=user.insurance_photo;insPreview.style.display='block';}
 
   // Show status banner
   if(user.driver_approved){
