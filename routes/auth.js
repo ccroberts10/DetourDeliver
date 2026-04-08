@@ -135,9 +135,20 @@ router.post('/license', requireAuth, upload.single('license_card'), async (req, 
 router.post('/update-profile', (req, res) => {
   const userId = req.session.userId || req.headers['x-user-id'];
   if (!userId) return res.status(401).json({ error: 'Login required' });
-  const { vehicle_type, vehicle_description, license_plate } = req.body;
-  db.prepare('UPDATE users SET vehicle_type = ?, vehicle_description = ?, license_plate = ? WHERE id = ?')
-    .run(vehicle_type || null, vehicle_description || null, license_plate || null, userId);
+  const { vehicle_type, vehicle_description, license_plate, home_address } = req.body;
+  db.prepare('UPDATE users SET vehicle_type = ?, vehicle_description = ?, license_plate = ?, home_address = ? WHERE id = ?')
+    .run(vehicle_type || null, vehicle_description || null, license_plate || null, home_address || null, userId);
+  // Geocode home address if provided
+  if (home_address) {
+    const { geocode } = require('../utils/matching');
+    geocode(home_address).then(coords => {
+      if (coords) {
+        db.prepare('UPDATE users SET home_lat = ?, home_lng = ? WHERE id = ?')
+          .run(coords.lat, coords.lng, userId);
+        console.log(`Geocoded home for user ${userId}: ${coords.lat},${coords.lng}`);
+      }
+    }).catch(e => console.error('Home geocode error:', e.message));
+  }
   res.json({ success: true });
 });
 
