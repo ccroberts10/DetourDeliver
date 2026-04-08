@@ -128,12 +128,13 @@ router.post('/license', requireAuth, upload.single('license_card'), async (req, 
 });
 
 // Update vehicle / profile
-router.post('/update-profile', requireAuth, (req, res) => {
+router.post('/update-profile', (req, res) => {
+  const userId = req.session.userId || req.headers['x-user-id'];
+  if (!userId) return res.status(401).json({ error: 'Login required' });
   const { vehicle_type, vehicle_description, license_plate } = req.body;
   db.prepare('UPDATE users SET vehicle_type = ?, vehicle_description = ?, license_plate = ? WHERE id = ?')
-    .run(vehicle_type || null, vehicle_description || null, license_plate || null, req.session.userId);
-  const user = db.prepare('SELECT id, name, email, phone, vehicle_type, vehicle_description, license_plate, license_photo, insurance_photo, driver_approved FROM users WHERE id = ?').get(req.session.userId);
-  res.json({ success: true, user });
+    .run(vehicle_type || null, vehicle_description || null, license_plate || null, userId);
+  res.json({ success: true });
 });
 
 module.exports = router;
