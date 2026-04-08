@@ -1285,7 +1285,24 @@ async function checkAndShowConnectPrompt(){
   }
 }
 (function(){const params=new URLSearchParams(window.location.search);if(params.get('onboard')==='complete'){setTimeout(()=>toast("Payout account connected! You're ready to earn. 🎉"),800);window.history.replaceState({},'','/');}else if(params.get('onboard')==='error'){setTimeout(()=>toast('Something went wrong. Try connecting again.'),800);window.history.replaceState({},'','/');}})();
-async function api(method,url,body){const opts={method,headers:{'Content-Type':'application/json'},credentials:'include'};if(body&&method!=='GET')opts.body=JSON.stringify(body);const res=await fetch(url,opts);const data=await res.json();if(!res.ok)throw new Error(data.error||'Request failed');return data;}
+async function api(method,url,body){
+  const opts={method,headers:{'Content-Type':'application/json'},credentials:'include'};
+  if(body&&method!=='GET')opts.body=JSON.stringify(body);
+  const res=await fetch(url,opts);
+  const data=await res.json();
+  if(res.status===401){
+    // Session expired - redirect to login
+    toast('Session expired — please sign in again');
+    setTimeout(()=>{
+      currentUser=null;
+      document.getElementById('auth-screen').classList.add('active');
+      document.getElementById('app-screen').classList.remove('active');
+    },1500);
+    throw new Error('Please sign in again');
+  }
+  if(!res.ok)throw new Error(data.error||'Request failed');
+  return data;
+}
 function escHtml(str){if(!str)return'';return String(str).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');}
 let toastTimer;
 function toast(msg){const el=document.getElementById('toast');el.textContent=msg;el.classList.add('show');clearTimeout(toastTimer);toastTimer=setTimeout(()=>el.classList.remove('show'),3200);}
