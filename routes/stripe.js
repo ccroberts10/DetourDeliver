@@ -6,6 +6,11 @@ const db = require('../db/schema');
 function requireAuth(req, res, next) {
   const userId = req.session.userId || req.headers['x-user-id'];
   if (!userId) return res.status(401).json({ error: 'Login required' });
+  if (!req.session.userId && req.headers['x-user-id']) {
+    const db = require('./db/schema');
+    const user = db.prepare('SELECT id FROM users WHERE id = ?').get(userId);
+    if (!user) return res.status(401).json({ error: 'Login required' });
+  }
   req.session.userId = userId;
   next();
 }
