@@ -35,6 +35,11 @@ router.post('/connect/onboard', requireAuth, async (req, res) => {
           transfers: { requested: true }
         },
         business_type: 'individual',
+        business_profile: {
+          url: 'https://detourdeliver.com',
+          mcc: '4215', // Courier services
+          product_description: 'Peer-to-peer delivery marketplace — drivers deliver items for shippers along their existing commute routes.'
+        },
         metadata: { ihaul_user_id: user.id }
       });
       accountId = account.id;
