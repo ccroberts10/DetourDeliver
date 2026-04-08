@@ -105,6 +105,14 @@ db.exec(`
     created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
     FOREIGN KEY(job_id) REFERENCES jobs(id)
   );
+
+  CREATE TABLE IF NOT EXISTS job_matches (
+    id TEXT PRIMARY KEY,
+    job_id TEXT NOT NULL,
+    driver_id TEXT NOT NULL,
+    notified_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+    UNIQUE(job_id, driver_id)
+  );
 `);
 
 module.exports = db;
@@ -117,3 +125,14 @@ migrate(`ALTER TABLE users ADD COLUMN insurance_submitted_at DATETIME`);
 migrate(`ALTER TABLE users ADD COLUMN driver_approved INTEGER DEFAULT 0`);
 migrate(`ALTER TABLE users ADD COLUMN license_photo TEXT`);
 migrate(`ALTER TABLE users ADD COLUMN license_plate TEXT`);
+migrate(`ALTER TABLE users ADD COLUMN home_address TEXT`);
+migrate(`ALTER TABLE users ADD COLUMN home_lat REAL`);
+migrate(`ALTER TABLE users ADD COLUMN home_lng REAL`);
+migrate(`ALTER TABLE jobs ADD COLUMN pickup_lat REAL`);
+migrate(`ALTER TABLE jobs ADD COLUMN pickup_lng REAL`);
+migrate(`ALTER TABLE jobs ADD COLUMN dropoff_lat REAL`);
+migrate(`ALTER TABLE jobs ADD COLUMN dropoff_lng REAL`);
+migrate(`ALTER TABLE driver_routes ADD COLUMN origin_lat REAL`);
+migrate(`ALTER TABLE driver_routes ADD COLUMN origin_lng REAL`);
+migrate(`ALTER TABLE driver_routes ADD COLUMN destination_lat REAL`);
+migrate(`ALTER TABLE driver_routes ADD COLUMN destination_lng REAL`);
