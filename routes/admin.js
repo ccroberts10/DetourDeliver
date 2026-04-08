@@ -11,7 +11,40 @@ function requireAdmin(req, res, next) {
   next();
 }
 
-// Get all drivers / users for admin panel
+// Test email
+router.post('/test-email', requireAdmin, async (req, res) => {
+  const { notifyAdminDriverSubmitted } = require('../utils/email');
+  const emailPass = process.env.EMAIL_PASS;
+  const emailUser = process.env.EMAIL_USER;
+  if (!emailPass) {
+    return res.json({ 
+      success: false, 
+      error: 'EMAIL_PASS not set in Railway Variables',
+      email_user: emailUser || 'not set',
+      email_pass: 'NOT SET'
+    });
+  }
+  try {
+    await notifyAdminDriverSubmitted({
+      driverName: 'Test Driver',
+      driverEmail: 'test@example.com',
+      phone: '555-1234',
+      vehicle: 'Test Vehicle'
+    });
+    res.json({ success: true, message: `Test email sent to ${process.env.ADMIN_EMAIL}`, email_user: emailUser });
+  } catch(e) {
+    res.json({ success: false, error: e.message, email_user: emailUser });
+  }
+});
+
+// Get pending drivers count
+router.get('/stats', requireAdmin, (req, res) => {
+  const db = require('../db/schema');
+  const pending = db.prepare('SELECT COUNT(*) as count FROM users WHERE (license_photo IS NOT NULL OR insurance_photo IS NOT NULL) AND driver_approved = 0').get();
+  const approved = db.prepare('SELECT COUNT(*) as count FROM users WHERE driver_approved = 1').get();
+  const total = db.prepare('SELECT COUNT(*) as count FROM users').get();
+  res.json({ pending: pending.count, approved: approved.count, total: total.count });
+});
 router.get('/drivers', requireAdmin, (req, res) => {
   const users = db.prepare(`
     SELECT id, name, email, phone, vehicle_type, vehicle_description, license_plate,
