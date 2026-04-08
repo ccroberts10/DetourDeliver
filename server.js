@@ -33,10 +33,10 @@ app.use(session({
   rolling: true,
   name: 'detour.sid',
   cookie: {
-    secure: false,
+    secure: 'auto', // auto-detect based on connection
     httpOnly: false,
     maxAge: 30 * 24 * 60 * 60 * 1000,
-    sameSite: 'lax',
+    sameSite: 'none', // required for Cloudflare proxy cross-origin requests
     path: '/'
   }
 }));
