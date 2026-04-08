@@ -16,11 +16,16 @@ function distanceMiles(lat1, lng1, lat2, lng2) {
 // ── GEOCODING ───────────────────────────────────────────────────────────────
 function geocode(address) {
   return new Promise((resolve) => {
-    const query = encodeURIComponent(address + ', USA');
+    const query = encodeURIComponent(address);
+    const url = `https://nominatim.openstreetmap.org/search?q=${query}&format=json&limit=1&countrycodes=us`;
+    console.log(`Geocoding: ${address}`);
     const options = {
       hostname: 'nominatim.openstreetmap.org',
-      path: `/search?q=${query}&format=json&limit=1`,
-      headers: { 'User-Agent': 'DetourDeliver/1.0 (hello@detourdeliver.com)' }
+      path: `/search?q=${query}&format=json&limit=1&countrycodes=us`,
+      headers: {
+        'User-Agent': 'DetourDeliver/1.0 (hello@detourdeliver.com)',
+        'Accept': 'application/json'
+      }
     };
     const req = https.get(options, (res) => {
       let data = '';
@@ -28,14 +33,28 @@ function geocode(address) {
       res.on('end', () => {
         try {
           const results = JSON.parse(data);
-          if (results.length > 0) {
+          if (results && results.length > 0) {
+            console.log(`Geocoded "${address}": ${results[0].lat}, ${results[0].lon}`);
             resolve({ lat: parseFloat(results[0].lat), lng: parseFloat(results[0].lon) });
-          } else { resolve(null); }
-        } catch(e) { resolve(null); }
+          } else {
+            console.log(`Geocode no results for: ${address}`);
+            resolve(null);
+          }
+        } catch(e) {
+          console.error(`Geocode parse error for "${address}":`, e.message);
+          resolve(null);
+        }
       });
     });
-    req.on('error', () => resolve(null));
-    req.setTimeout(5000, () => { req.destroy(); resolve(null); });
+    req.on('error', (e) => {
+      console.error(`Geocode request error for "${address}":`, e.message);
+      resolve(null);
+    });
+    req.setTimeout(8000, () => {
+      console.error(`Geocode timeout for: ${address}`);
+      req.destroy();
+      resolve(null);
+    });
   });
 }
 
