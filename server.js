@@ -85,7 +85,46 @@ app.get('/api/debug/db', (req, res) => {
   }
 });
 
-// Serve uploads from persistent volume
+// Test geocoding
+app.get('/api/debug/geocode', async (req, res) => {
+  try {
+    const { geocode } = require('./utils/matching');
+    const address = req.query.address || 'Durango, CO';
+    const result = await geocode(address);
+    res.json({ address, result });
+  } catch(e) {
+    res.status(500).json({ error: e.message });
+  }
+});
+
+// Backfill coordinates for existing jobs
+app.post('/api/debug/backfill', async (req, res) => {
+  try {
+    const { geocode } = require('./utils/matching');
+    const db = require('./db/schema');
+    const jobs = db.prepare('SELECT * FROM jobs WHERE pickup_lat IS NULL').all();
+    console.log(`Backfilling ${jobs.length} jobs...`);
+    let done = 0;
+    for (const job of jobs) {
+      const extra = JSON.parse(job.extra_data || '{}');
+      const ps = extra.pickup_state || 'CO';
+      const ds = extra.dropoff_state || 'CO';
+      const [p, d] = await Promise.all([
+        geocode(`${job.pickup_address}, ${job.pickup_city}, ${ps}`),
+        geocode(`${job.dropoff_address}, ${job.dropoff_city}, ${ds}`)
+      ]);
+      if (p && d) {
+        db.prepare('UPDATE jobs SET pickup_lat=?,pickup_lng=?,dropoff_lat=?,dropoff_lng=? WHERE id=?')
+          .run(p.lat, p.lng, d.lat, d.lng, job.id);
+        done++;
+      }
+      await new Promise(r => setTimeout(r, 1100)); // Nominatim rate limit: 1 req/sec
+    }
+    res.json({ total: jobs.length, geocoded: done });
+  } catch(e) {
+    res.status(500).json({ error: e.message });
+  }
+});
 const uploadsPath = VOLUME_PATH ? path.join(VOLUME_PATH, 'uploads') : path.join(__dirname, 'public/uploads');
 if (!fs.existsSync(uploadsPath)) fs.mkdirSync(uploadsPath, { recursive: true });
 app.use('/uploads', express.static(uploadsPath));
