@@ -165,6 +165,40 @@ textarea{resize:none}
 .error-msg{color:var(--red);font-size:13px;min-height:16px;margin-bottom:4px}
 .toast{position:fixed;bottom:88px;left:50%;transform:translateX(-50%) translateY(14px);background:var(--dark3);border:0.5px solid rgba(255,255,255,0.12);color:var(--white);padding:11px 18px;border-radius:30px;font-size:13px;opacity:0;transition:all 0.28s;pointer-events:none;white-space:nowrap;z-index:200;max-width:90vw;text-align:center}
 .toast.show{opacity:1;transform:translateX(-50%) translateY(0)}
+
+/* UX IMPROVEMENTS */
+/* Quick post button */
+.quick-post-btn{width:100%;padding:16px;background:linear-gradient(135deg,var(--teal),var(--teal2));color:#000;border:none;border-radius:var(--r);font-size:16px;font-family:'Syne',sans-serif;font-weight:800;cursor:pointer;margin-bottom:10px;display:flex;align-items:center;justify-content:center;gap:8px;letter-spacing:-0.3px}
+/* Swipe job cards */
+.job-card-wrap{position:relative;overflow:hidden;border-radius:var(--r);margin-bottom:10px}
+.job-card-wrap .job-card{margin-bottom:0;border-radius:var(--r)}
+.swipe-hint{position:absolute;right:0;top:0;bottom:0;width:80px;background:linear-gradient(to left,rgba(61,204,120,0.9),transparent);display:flex;align-items:center;justify-content:flex-end;padding-right:14px;font-size:22px;opacity:0;transition:opacity 0.2s;pointer-events:none;border-radius:0 var(--r) var(--r) 0}
+/* Status timeline */
+.delivery-timeline{display:flex;align-items:center;margin:12px 0;padding:12px 14px;background:rgba(0,194,168,0.05);border-radius:var(--rs);border:0.5px solid rgba(0,194,168,0.15)}
+.timeline-step{display:flex;flex-direction:column;align-items:center;flex:1;position:relative}
+.timeline-dot{width:24px;height:24px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:11px;margin-bottom:4px;flex-shrink:0}
+.timeline-dot.done{background:var(--teal);color:#000}
+.timeline-dot.active{background:rgba(0,194,168,0.2);border:2px solid var(--teal);color:var(--teal)}
+.timeline-dot.pending{background:var(--dark2);border:1px solid rgba(255,255,255,0.1);color:var(--gray)}
+.timeline-label{font-size:9px;color:var(--gray);text-align:center;line-height:1.3}
+.timeline-label.done{color:var(--teal)}
+.timeline-label.active{color:var(--white)}
+.timeline-line{flex:1;height:2px;background:rgba(255,255,255,0.08);margin:0 2px;margin-bottom:16px}
+.timeline-line.done{background:var(--teal)}
+/* Price suggestion */
+.price-suggestion{font-size:12px;color:rgba(255,255,255,0.4);padding:6px 0;margin-top:-4px}
+.price-suggestion span{color:var(--teal);cursor:pointer;font-weight:500}
+/* Im here button */
+.im-here-btn{width:100%;padding:14px;background:rgba(61,204,120,0.1);color:var(--green);border:1px solid rgba(61,204,120,0.3);border-radius:var(--r);font-size:15px;font-family:'DM Sans',sans-serif;font-weight:500;cursor:pointer;margin-top:8px;display:flex;align-items:center;justify-content:center;gap:8px}
+/* Quick post modal */
+.modal-overlay{position:fixed;inset:0;background:rgba(0,0,0,0.7);z-index:300;display:flex;align-items:flex-end;backdrop-filter:blur(4px)}
+.modal-sheet{background:var(--dark);border-radius:24px 24px 0 0;padding:24px 20px 48px;width:100%;max-height:85vh;overflow-y:auto}
+.modal-sheet-handle{width:40px;height:4px;background:rgba(255,255,255,0.2);border-radius:2px;margin:0 auto 20px}
+.modal-sheet-title{font-family:'Syne',sans-serif;font-size:20px;font-weight:800;margin-bottom:18px}
+/* Notification badge */
+.nav-badge{position:absolute;top:2px;right:8px;width:8px;height:8px;background:var(--red);border-radius:50%;border:2px solid var(--dark)}
+.nav-item{position:relative}
+.toast.show{opacity:1;transform:translateX(-50%) translateY(0)}
 ::-webkit-scrollbar{width:3px}
 ::-webkit-scrollbar-thumb{background:var(--dark3);border-radius:2px}
 </style>
@@ -246,16 +280,18 @@ textarea{resize:none}
         <div class="home-greeting">Hey, <span id="home-name"></span> 👋</div>
         <div class="home-sub">What do you need today?</div>
       </div>
+      <!-- Quick Post Button -->
+      <button class="quick-post-btn" onclick="showQuickPost()">⚡ Quick Post a Delivery</button>
       <div class="action-grid">
         <div class="action-card shipper-card" onclick="showView('view-post')">
           <div class="action-icon">📦</div>
-          <div class="action-title">I need something delivered</div>
-          <div class="action-sub">Post a job, set your price</div>
+          <div class="action-title">Full delivery form</div>
+          <div class="action-sub">All options & payment</div>
         </div>
-        <div class="action-card driver-card" onclick="showView('view-drive')">
+        <div class="action-card driver-card" onclick="showView('view-drive');setNavActive(document.querySelectorAll('.nav-item')[2])">
           <div class="action-icon">🚗</div>
           <div class="action-title">I'm making a drive</div>
-          <div class="action-sub">Post route or find deliveries</div>
+          <div class="action-sub">Post route or browse jobs</div>
         </div>
       </div>
       <div class="section-head" style="margin-top:20px;"><span>Open Deliveries Near You</span><button class="btn-ghost" onclick="loadOpenJobs()">Refresh</button></div>
@@ -334,13 +370,13 @@ textarea{resize:none}
           <div class="form-section-title">Route</div>
           <div class="field-group"><label>Pickup Address <span class="req">*</span></label><input type="text" id="job-pickup-addr" required placeholder="225 E 8th Ave"></div>
           <div class="field-row">
-            <div class="field-group"><label>Pickup City <span class="req">*</span></label><input type="text" id="job-pickup-city" required placeholder="Durango"></div>
-            <div class="field-group"><label>Pickup State <span class="req">*</span></label><input type="text" id="job-pickup-state" required placeholder="CO" maxlength="2" style="text-transform:uppercase;"></div>
+            <div class="field-group"><label>Pickup City <span class="req">*</span></label><input type="text" id="job-pickup-city" required placeholder="Durango" value="Durango"></div>
+            <div class="field-group"><label>Pickup State <span class="req">*</span></label><input type="text" id="job-pickup-state" required placeholder="CO" maxlength="2" style="text-transform:uppercase;" value="CO"></div>
           </div>
           <div class="field-group"><label>Dropoff Address <span class="req">*</span></label><input type="text" id="job-dropoff-addr" required placeholder="123 Main St"></div>
           <div class="field-row">
-            <div class="field-group"><label>Dropoff City <span class="req">*</span></label><input type="text" id="job-dropoff-city" required placeholder="Telluride"></div>
-            <div class="field-group"><label>Dropoff State <span class="req">*</span></label><input type="text" id="job-dropoff-state" required placeholder="CO" maxlength="2" style="text-transform:uppercase;"></div>
+            <div class="field-group"><label>Dropoff City <span class="req">*</span></label><input type="text" id="job-dropoff-city" required placeholder="Telluride" oninput="updatePriceSuggestion()"></div>
+            <div class="field-group"><label>Dropoff State <span class="req">*</span></label><input type="text" id="job-dropoff-state" required placeholder="CO" maxlength="2" style="text-transform:uppercase;" value="CO"></div>
           </div>
         </div>
         <div class="form-section">
@@ -350,6 +386,7 @@ textarea{resize:none}
               <span class="price-dollar">$</span>
               <input type="number" id="job-price" placeholder="28.00" min="5" step="0.50" required oninput="updatePriceBreakdown()">
             </div>
+            <div class="price-suggestion" id="price-suggestion" style="display:none">Suggested: <span onclick="applyPriceSuggestion()"></span> based on route distance</div>
           </div>
           <div id="price-breakdown" class="price-breakdown" style="display:none">
             <div class="price-row"><span>Driver earns</span><span id="pb-driver" class="price-val green"></span></div>
@@ -517,6 +554,40 @@ textarea{resize:none}
 </div>
 
 <div id="toast" class="toast"></div>
+
+<!-- QUICK POST MODAL -->
+<div id="quick-post-modal" class="modal-overlay" style="display:none" onclick="if(event.target===this)closeQuickPost()">
+  <div class="modal-sheet">
+    <div class="modal-sheet-handle"></div>
+    <div class="modal-sheet-title">⚡ Quick Post</div>
+    <div class="field-group"><label>What needs delivering? <span class="req">*</span></label><input type="text" id="qp-title" placeholder="e.g. Sofa to Telluride, Coffee beans..."></div>
+    <div class="field-row">
+      <div class="field-group"><label>From City</label><input type="text" id="qp-from" placeholder="Durango" value="Durango"></div>
+      <div class="field-group"><label>To City <span class="req">*</span></label><input type="text" id="qp-to" placeholder="Telluride"></div>
+    </div>
+    <div class="field-group">
+      <label>Your offer to driver</label>
+      <div class="price-input-wrap">
+        <span class="price-dollar">$</span>
+        <input type="number" id="qp-price" placeholder="35" min="5" step="5" oninput="updateQPBreakdown()">
+      </div>
+      <div id="qp-breakdown" style="display:none;font-size:12px;color:rgba(255,255,255,0.5);margin-top:6px;"></div>
+    </div>
+    <div class="field-group">
+      <label>Item Size</label>
+      <select id="qp-size">
+        <option value="small_box">Small Box</option>
+        <option value="medium_box">Medium Box</option>
+        <option value="large_box">Large Box</option>
+        <option value="envelope">Envelope / Doc</option>
+        <option value="oversized">Oversized / Furniture</option>
+      </select>
+    </div>
+    <div id="qp-error" class="error-msg"></div>
+    <button class="btn-primary btn-large" onclick="submitQuickPost()">Post Delivery →</button>
+    <button class="btn-secondary" onclick="closeQuickPost()" style="margin-top:8px;">Cancel</button>
+  </div>
+</div>
 <script src="https://js.stripe.com/v3/"></script>
 <script>
 // Register service worker for PWA
@@ -604,6 +675,8 @@ function enterApp(name){
   const d=document.getElementById('route-depart');if(d)d.value=local;
   loadMyJobs();
   loadOpenJobs();
+  requestPushPermission();
+  startJobPolling();
 }
 function showView(id){
   document.querySelectorAll('.view').forEach(v=>v.classList.remove('active'));
@@ -757,7 +830,13 @@ function jobCard(job,isDriver=false){
   const payout=((job.offered_price||0)*0.75).toFixed(2);
   const pickupLoc=job.pickup_state?`${escHtml(job.pickup_city)}, ${escHtml(job.pickup_state)}`:escHtml(job.pickup_city);
   const dropoffLoc=job.dropoff_state?`${escHtml(job.dropoff_city)}, ${escHtml(job.dropoff_state)}`:escHtml(job.dropoff_city);
-  return`<div class="job-card" onclick="openJob('${job.id}','${isDriver?'driver':'shipper'}')"><div class="job-card-header"><div class="job-card-title">${escHtml(job.title)}</div><div class="job-price">$${parseFloat(job.offered_price).toFixed(2)}</div></div><div class="job-route"><div class="route-dot start"></div><div class="route-city">${pickupLoc}</div><div class="route-line"></div><div class="route-city">${dropoffLoc}</div><div class="route-dot end"></div></div><div class="job-meta"><span class="status-badge status-${job.status}">${ST[job.status]||job.status}</span><span>${TL[job.job_type]||'📦 General'}</span><span>${SZ[job.item_size]||job.item_size}</span>${job.fragile?'<span>⚠️ Fragile</span>':''}${isDriver?`<span style="color:var(--green);font-weight:600;">Earn $${payout}</span>`:''}</div></div>`;
+  const card=`<div class="job-card" onclick="openJob('${job.id}','${isDriver?'driver':'shipper'}')"><div class="job-card-header"><div class="job-card-title">${escHtml(job.title)}</div><div class="job-price">$${parseFloat(job.offered_price).toFixed(2)}</div></div><div class="job-route"><div class="route-dot start"></div><div class="route-city">${pickupLoc}</div><div class="route-line"></div><div class="route-city">${dropoffLoc}</div><div class="route-dot end"></div></div><div class="job-meta"><span class="status-badge status-${job.status}">${ST[job.status]||job.status}</span><span>${TL[job.job_type]||'📦 General'}</span><span>${SZ[job.item_size]||job.item_size}</span>${job.fragile?'<span>⚠️ Fragile</span>':''}${isDriver?`<span style="color:var(--green);font-weight:600;">Earn $${payout}</span><span style="color:rgba(255,255,255,0.3);font-size:10px;">← swipe to accept</span>`:''}</div></div>`;
+  if(isDriver&&job.status==='open'){
+    const id=`sw-${job.id}`;
+    setTimeout(()=>{const el=document.getElementById(id);if(el)makeSwipeable(el,job.id);},50);
+    return`<div class="job-card-wrap" id="${id}"><div class="swipe-hint">✓</div>${card}</div>`;
+  }
+  return`<div style="margin-bottom:10px;">${card}</div>`;
 }
 async function openJob(jobId,perspective='shipper'){
   currentJobId=jobId;currentJobPerspective=perspective;
@@ -774,12 +853,13 @@ async function loadJobDetail(silent=false){
 function renderJobDetail(job,messages){
   const isShipper=job.shipper_id===currentUser?.userId,isDriver=job.driver_id===currentUser?.userId;
   const extra=job.extra_data||{},dp=parseFloat(job.driver_payout||job.offered_price*0.75).toFixed(2);
-  let h=`<div class="job-detail-card"><div style="display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:10px;"><div><div style="font-size:11px;color:var(--teal);margin-bottom:4px;">${TL[job.job_type]||'📦 General'}</div><div style="font-family:'Syne',sans-serif;font-size:18px;font-weight:800;margin-bottom:6px;">${escHtml(job.title)}</div><span class="status-badge status-${job.status}">${ST[job.status]}</span></div><div style="text-align:right;"><div style="font-family:'Syne',sans-serif;font-size:26px;font-weight:800;color:var(--teal);">$${parseFloat(job.offered_price).toFixed(2)}</div>${isDriver?`<div style="font-size:12px;color:var(--green);">You earn $${dp}</div>`:''}</div></div>${job.description?`<p style="font-size:14px;color:rgba(255,255,255,0.55);margin-bottom:10px;">${escHtml(job.description)}</p>`:''}<div class="detail-grid"><div><div class="detail-label">Size</div><div class="detail-val">${SZ[job.item_size]||job.item_size}</div></div><div><div class="detail-label">Weight</div><div class="detail-val">${job.item_weight?job.item_weight+' lbs':'—'}</div></div></div>${job.fragile?'<div class="alert-box danger">⚠️ Fragile — handle with care</div>':''}${job.needs_disassembly?'<div class="alert-box warn">🔧 Requires disassembly / reassembly</div>':''}</div>`;
+  let h=`<div class="job-detail-card"><div style="display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:10px;"><div><div style="font-size:11px;color:var(--teal);margin-bottom:4px;">${TL[job.job_type]||'📦 General'}</div><div style="font-family:'Syne',sans-serif;font-size:18px;font-weight:800;margin-bottom:6px;">${escHtml(job.title)}</div><span class="status-badge status-${job.status}">${ST[job.status]}</span></div><div style="text-align:right;"><div style="font-family:'Syne',sans-serif;font-size:26px;font-weight:800;color:var(--teal);">$${parseFloat(job.offered_price).toFixed(2)}</div>${isDriver?`<div style="font-size:12px;color:var(--green);">You earn $${dp}</div>`:''}</div></div>${renderTimeline(job.status)}${job.description?`<p style="font-size:14px;color:rgba(255,255,255,0.55);margin-bottom:10px;">${escHtml(job.description)}</p>`:''}<div class="detail-grid"><div><div class="detail-label">Size</div><div class="detail-val">${SZ[job.item_size]||job.item_size}</div></div><div><div class="detail-label">Weight</div><div class="detail-val">${job.item_weight?job.item_weight+' lbs':'—'}</div></div></div>${job.fragile?'<div class="alert-box danger">⚠️ Fragile — handle with care</div>':''}${job.needs_disassembly?'<div class="alert-box warn">🔧 Requires disassembly / reassembly</div>':''}</div>`;
   if(job.listing_photos?.length)h+=`<div class="job-detail-card"><div class="detail-label" style="margin-bottom:10px;">Item Photos</div><div class="photo-upload-row">${job.listing_photos.map(p=>`<img class="photo-thumb" src="${p}">`).join('')}</div></div>`;
   if(job.job_type==='marketplace'&&(extra.seller_name||extra.buyer_name))h+=`<div class="job-detail-card"><div class="detail-label" style="margin-bottom:10px;">Marketplace Parties</div>${extra.seller_name?`<div class="detail-grid"><div><div class="detail-label">Seller</div><div class="detail-val">${escHtml(extra.seller_name)}</div></div>${extra.seller_phone?`<div><div class="detail-label">Phone</div><div class="detail-val">${escHtml(extra.seller_phone)}</div></div>`:''}</div>`:''}${extra.buyer_name?`<div class="detail-grid" style="margin-top:8px;"><div><div class="detail-label">Buyer</div><div class="detail-val">${escHtml(extra.buyer_name)}</div></div>${extra.buyer_phone?`<div><div class="detail-label">Phone</div><div class="detail-val">${escHtml(extra.buyer_phone)}</div></div>`:''}</div>`:''}</div>`;
   if(job.job_type==='errand'&&(extra.store_name||extra.item_to_pickup))h+=`<div class="job-detail-card"><div class="detail-label" style="margin-bottom:10px;">Errand Details</div>${extra.store_name?`<div><div class="detail-label">Store</div><div class="detail-val">${escHtml(extra.store_name)}</div></div>`:''}${extra.item_to_pickup?`<div style="margin-top:8px;"><div class="detail-label">Item to pick up</div><div class="detail-val" style="font-size:13px;">${escHtml(extra.item_to_pickup)}</div></div>`:''}</div>`;
   h+=`<div class="job-detail-card"><div class="detail-label" style="margin-bottom:10px;">Route</div><div class="job-route" style="margin-bottom:10px;"><div class="route-dot start"></div><div class="route-city">${escHtml(job.pickup_city)}</div><div class="route-line"></div><div class="route-city">${escHtml(job.dropoff_city)}</div><div class="route-dot end"></div></div><div class="detail-grid"><div><div class="detail-label">Pickup</div><div class="detail-val" style="font-size:13px;">${escHtml(job.pickup_address)}</div></div><div><div class="detail-label">Dropoff</div><div class="detail-val" style="font-size:13px;">${escHtml(job.dropoff_address)}</div></div></div>${job.notes?`<div style="margin-top:8px;"><div class="detail-label">Notes</div><div class="detail-val" style="font-size:13px;">${escHtml(job.notes)}</div></div>`:''} ${(isDriver||currentJobPerspective==='driver')?mapsButtons(job):''}</div>`;
   if(job.status==='open'&&currentJobPerspective==='driver'&&!isShipper)h+=`<button class="btn-primary btn-large" onclick="acceptJob('${job.id}')">Accept — Earn $${dp} →</button>`;
+  if(job.status==='accepted'&&isDriver)h+=`<button class="im-here-btn" onclick="imHere('${job.id}')">📍 I'm here — notify shipper</button>`;
   if(job.status==='open'&&isShipper)h+=`<button class="btn-secondary btn-large" style="background:rgba(240,85,85,0.1);border-color:rgba(240,85,85,0.3);color:var(--red);margin-top:8px;" onclick="deleteJob('${job.id}')">🗑 Delete This Listing</button>`;
   if(job.status!=='open'&&(isShipper||isDriver)){
     h+=`<div class="job-detail-card"><div class="detail-label" style="margin-bottom:10px;">Messages with ${isShipper?(job.driver_name||'Driver'):(job.shipper_name||'Shipper')}</div><div class="messages-thread" id="msg-thread">${messages.length?messages.map(m=>`<div><div class="msg-name">${escHtml(m.sender_name)}</div><div class="msg-bubble ${m.sender_id===currentUser?.userId?'msg-out':'msg-in'}">${escHtml(m.content)}</div></div>`).join(''):'<div style="color:var(--gray);font-size:13px;text-align:center;padding:10px;">No messages yet</div>'}</div><div class="msg-input-row"><input type="text" id="msg-input" placeholder="Send a message..." onkeydown="if(event.key==='Enter')sendMsg('${job.id}')"><button class="msg-send-btn" onclick="sendMsg('${job.id}')">↑</button></div></div>`;
@@ -848,7 +928,194 @@ async function postJob(){
     showView('view-home');
   }catch(e){errEl.textContent=e.message;}
 }
-async function acceptJob(jobId){try{await api('POST',`/api/jobs/${jobId}/accept`);toast('Job accepted! Check messages to coordinate pickup.');await loadJobDetail();}catch(e){toast(e.message||'Could not accept job');}}
+// ── QUICK POST ──
+function showQuickPost(){document.getElementById('quick-post-modal').style.display='flex';}
+function closeQuickPost(){document.getElementById('quick-post-modal').style.display='none';}
+function updateQPBreakdown(){
+  const price=parseFloat(document.getElementById('qp-price').value);
+  const bd=document.getElementById('qp-breakdown');
+  if(isNaN(price)||price<5){bd.style.display='none';return;}
+  bd.style.display='block';
+  bd.innerHTML=`Driver earns <strong style="color:var(--green)">$${(price*0.75).toFixed(2)}</strong> · Detour fee $${(price*0.25).toFixed(2)}`;
+}
+async function submitQuickPost(){
+  const title=document.getElementById('qp-title').value.trim();
+  const from=document.getElementById('qp-from').value.trim()||'Durango';
+  const to=document.getElementById('qp-to').value.trim();
+  const price=document.getElementById('qp-price').value;
+  const size=document.getElementById('qp-size').value;
+  const errEl=document.getElementById('qp-error');
+  errEl.textContent='';
+  if(!title){errEl.textContent='Please add a title';return;}
+  if(!to){errEl.textContent='Please enter a destination city';return;}
+  if(!price||parseFloat(price)<5){errEl.textContent='Minimum offer is $5';return;}
+  const fd=new FormData();
+  fd.append('job_type','standard');
+  fd.append('title',title);
+  fd.append('pickup_city',from);
+  fd.append('pickup_state','CO');
+  fd.append('pickup_address',from);
+  fd.append('dropoff_city',to);
+  fd.append('dropoff_state','CO');
+  fd.append('dropoff_address',to);
+  fd.append('item_size',size);
+  fd.append('offered_price',price);
+  try{
+    const res=await fetch('/api/jobs',{method:'POST',body:fd,credentials:'include'});
+    const data=await res.json();
+    if(!res.ok)throw new Error(data.error||'Failed');
+    closeQuickPost();
+    toast('Delivery posted! 🎉 Looking for a driver...');
+    document.getElementById('qp-title').value='';
+    document.getElementById('qp-to').value='';
+    document.getElementById('qp-price').value='';
+    loadOpenJobs();loadMyJobs();
+  }catch(e){errEl.textContent=e.message;}
+}
+
+// ── PRICE SUGGESTION ──
+function updatePriceSuggestion(){
+  const from=document.getElementById('job-pickup-city').value.trim().toLowerCase();
+  const to=document.getElementById('job-dropoff-city').value.trim().toLowerCase();
+  if(!from||!to)return;
+  // Distance-based suggestions for common Durango corridors
+  const routes={
+    'durango-telluride':45,'durango-cortez':25,'durango-pagosa springs':30,
+    'durango-albuquerque':80,'durango-denver':120,'durango-silverton':25,
+    'durango-farmington':30,'durango-santa fe':90,'durango-grand junction':70
+  };
+  const key=`${from}-${to}`;
+  const reverseKey=`${to}-${from}`;
+  const suggested=routes[key]||routes[reverseKey];
+  const sugg=document.getElementById('price-suggestion');
+  if(suggested&&sugg){
+    sugg.style.display='block';
+    sugg.querySelector('span').textContent=`$${suggested}`;
+    sugg.querySelector('span').onclick=()=>{
+      document.getElementById('job-price').value=suggested;
+      updatePriceBreakdown();
+    };
+  }
+}
+function applyPriceSuggestion(){
+  const span=document.getElementById('price-suggestion')?.querySelector('span');
+  if(span){
+    const val=parseInt(span.textContent.replace('$',''));
+    if(val){document.getElementById('job-price').value=val;updatePriceBreakdown();}
+  }
+}
+
+// ── DELIVERY TIMELINE ──
+function renderTimeline(status){
+  const steps=[
+    {key:'open',label:'Posted',icon:'📦'},
+    {key:'accepted',label:'Driver\nFound',icon:'🚗'},
+    {key:'in_transit',label:'Picked\nUp',icon:'📸'},
+    {key:'completed',label:'Delivered',icon:'✅'}
+  ];
+  const order=['open','accepted','in_transit','completed'];
+  const current=order.indexOf(status);
+  let html='<div class="delivery-timeline">';
+  steps.forEach((s,i)=>{
+    const done=i<current;
+    const active=i===current;
+    const cls=done?'done':active?'active':'pending';
+    html+=`<div class="timeline-step">
+      <div class="timeline-dot ${cls}">${done?'✓':s.icon}</div>
+      <div class="timeline-label ${cls}">${s.label}</div>
+    </div>`;
+    if(i<steps.length-1){
+      html+=`<div class="timeline-line ${done?'done':''}"></div>`;
+    }
+  });
+  html+='</div>';
+  return html;
+}
+
+// ── I'M HERE BUTTON ──
+async function imHere(jobId){
+  try{
+    await api('POST',`/api/jobs/${jobId}/messages`,{content:"🚗 I'm here! Ready for pickup."});
+    toast("Driver notified you're here! ✓");
+    await loadJobDetail(true);
+  }catch(e){toast('Could not send notification');}
+}
+
+// ── SWIPE TO ACCEPT ──
+function makeSwipeable(el,jobId){
+  let startX=0,currentX=0,swiping=false;
+  el.addEventListener('touchstart',e=>{startX=e.touches[0].clientX;swiping=true;},{passive:true});
+  el.addEventListener('touchmove',e=>{
+    if(!swiping)return;
+    currentX=e.touches[0].clientX-startX;
+    if(currentX<0)currentX=0;
+    const card=el.querySelector('.job-card');
+    const hint=el.querySelector('.swipe-hint');
+    if(card)card.style.transform=`translateX(${Math.min(currentX,100)}px)`;
+    if(hint)hint.style.opacity=Math.min(currentX/80,1);
+  },{passive:true});
+  el.addEventListener('touchend',()=>{
+    swiping=false;
+    const card=el.querySelector('.job-card');
+    const hint=el.querySelector('.swipe-hint');
+    if(currentX>60){
+      if(card)card.style.transform='translateX(100px)';
+      setTimeout(()=>{acceptJob(jobId);if(card)card.style.transform='';},200);
+    }else{
+      if(card)card.style.transform='';
+      if(hint)hint.style.opacity=0;
+    }
+    currentX=0;
+  },{passive:true});
+}
+
+async function acceptJob(jobId){
+  try{
+    await api('POST',`/api/jobs/${jobId}/accept`);
+    toast('Job accepted! Check messages to coordinate pickup.');
+    await loadJobDetail();
+  }catch(e){toast(e.message||'Could not accept job');}
+}
+
+// ── PUSH NOTIFICATIONS ──
+async function requestPushPermission(){
+  if(!('Notification' in window))return;
+  if(Notification.permission==='granted')return;
+  if(Notification.permission!=='denied'){
+    await Notification.requestPermission();
+  }
+}
+
+function showPushNotification(title,body){
+  if(Notification.permission==='granted'&&document.hidden){
+    new Notification(title,{body,icon:'/icons/icon-192.png',badge:'/icons/icon-192.png'});
+  }
+}
+
+// Poll for new jobs and notify driver
+let lastJobCount=0;
+function startJobPolling(){
+  setInterval(async()=>{
+    try{
+      const jobs=await api('GET','/api/jobs');
+      if(jobs.length>lastJobCount&&lastJobCount>0){
+        const newest=jobs[0];
+        showPushNotification(
+          '📦 New delivery available!',
+          `${newest.title} — ${newest.pickup_city} → ${newest.dropoff_city} — Earn $${(newest.offered_price*0.75).toFixed(0)}`
+        );
+        // Update nav badge
+        const driveNav=document.querySelectorAll('.nav-item')[2];
+        if(driveNav&&!driveNav.querySelector('.nav-badge')){
+          const badge=document.createElement('div');
+          badge.className='nav-badge';
+          driveNav.appendChild(badge);
+        }
+      }
+      lastJobCount=jobs.length;
+    }catch(e){}
+  },30000); // check every 30 seconds
+}
 
 async function deleteJob(jobId){
   if(!confirm('Delete this listing? This cannot be undone. Any payment authorization will be cancelled.'))return;
