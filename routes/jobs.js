@@ -1,1330 +1,323 @@
-<!DOCTYPE html>
-<html lang="en">
-<head>
-<meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-<title>Detour</title>
+const express = require('express');
+const router = express.Router();
+const { v4: uuidv4 } = require('uuid');
+const db = require('../db/schema');
+const stripe = require('stripe')(process.env.STRIPE_SECRET_KEY);
+const multer = require('multer');
+const path = require('path');
 
-<!-- PWA -->
-<link rel="manifest" href="/manifest.json">
-<meta name="theme-color" content="#00C2A8">
-<meta name="mobile-web-app-capable" content="yes">
-<meta name="apple-mobile-web-app-capable" content="yes">
-<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
-<meta name="apple-mobile-web-app-title" content="Detour">
-<link rel="apple-touch-icon" href="/icons/icon-192.png">
-<link rel="icon" type="image/png" sizes="192x192" href="/icons/icon-192.png">
-<link rel="icon" type="image/png" sizes="512x512" href="/icons/icon-512.png">
-<meta name="stripe-pk" content="pk_live_51HsdjEHr60zI2cLPJB3fA6O1sX0HI45REiwT7DfGYvJ0oiL5sLkU608l8DevXTkcSEOjlYpxrejhcXtpVdxqRrsn00KLZzc6di">
-<link href="https://fonts.googleapis.com/css2?family=Syne:wght@700;800&family=DM+Sans:wght@400;500&display=swap" rel="stylesheet">
-<style>
-:root{--teal:#00C2A8;--teal2:#00DDB8;--black:#080808;--dark:#111111;--dark2:#1C1C1C;--dark3:#242424;--white:#FFFFFF;--gray:#777777;--gray2:#444444;--green:#3DCC78;--red:#F05555;--r:14px;--rs:8px}
-*{margin:0;padding:0;box-sizing:border-box;-webkit-tap-highlight-color:transparent}
-html,body{height:100%;background:var(--black);color:var(--white);font-family:'DM Sans',sans-serif;font-size:15px;line-height:1.5;overflow:hidden}
-.screen{display:none;height:100vh;flex-direction:column}
-.screen.active{display:flex}
-.auth-wrap{display:flex;flex-direction:column;height:100vh;background:var(--black)}
-.auth-top{flex:1;display:flex;flex-direction:column;align-items:center;justify-content:center;padding:40px 28px 28px}
-.auth-logo{font-family:'Syne',sans-serif;font-size:80px;font-weight:800;letter-spacing:-4px;line-height:1;color:var(--white)}
-.auth-logo span{color:var(--teal)}
-.auth-tagline{font-size:16px;color:var(--gray);margin-top:14px;text-align:center}
-.auth-pills{display:flex;gap:8px;margin-top:24px;flex-wrap:wrap;justify-content:center}
-.auth-pill{background:rgba(255,255,255,0.05);border:0.5px solid rgba(255,255,255,0.1);border-radius:30px;padding:6px 14px;font-size:12px;color:rgba(255,255,255,0.4)}
-.auth-bottom{background:var(--dark);border-radius:28px 28px 0 0;border-top:0.5px solid rgba(255,255,255,0.08);padding:24px 24px 40px;overflow-y:auto}
-.tab-switch{display:flex;background:var(--dark2);border-radius:var(--rs);padding:4px;margin-bottom:22px;gap:4px}
-.tab-btn{flex:1;padding:9px;border:none;background:none;color:var(--gray);font-size:14px;font-family:'DM Sans',sans-serif;font-weight:500;border-radius:6px;cursor:pointer;transition:all 0.2s}
-.tab-btn.active{background:var(--teal);color:var(--white)}
-.field-group{margin-bottom:14px}
-.field-group label{display:block;font-size:11px;font-weight:500;color:rgba(255,255,255,0.4);text-transform:uppercase;letter-spacing:0.07em;margin-bottom:5px}
-.field-group input,.field-group select,.field-group textarea{width:100%;background:var(--dark2);border:0.5px solid rgba(255,255,255,0.1);border-radius:var(--rs);color:var(--white);font-size:15px;font-family:'DM Sans',sans-serif;padding:11px 14px;outline:none;transition:border-color 0.2s;-webkit-appearance:none;appearance:none}
-.field-group input:focus,.field-group select:focus,.field-group textarea:focus{border-color:var(--teal)}
-.field-group select option{background:var(--dark2)}
-textarea{resize:none}
-.field-row{display:flex;gap:10px}
-.field-row .field-group{flex:1}
-.req{color:var(--teal)}
-.btn-primary{width:100%;padding:14px;background:var(--teal);color:var(--white);border:none;border-radius:var(--r);font-size:15px;font-family:'DM Sans',sans-serif;font-weight:500;cursor:pointer;margin-top:6px;transition:opacity 0.15s,transform 0.1s}
-.btn-primary:active{opacity:0.82;transform:scale(0.99)}
-.btn-primary.btn-large{padding:16px;font-size:16px;margin-top:14px}
-.btn-primary.btn-sm{width:auto;padding:11px 18px;margin-top:0;white-space:nowrap}
-.btn-secondary{width:100%;padding:12px;background:transparent;color:var(--teal);border:0.5px solid rgba(0,194,168,0.5);border-radius:var(--r);font-size:14px;font-family:'DM Sans',sans-serif;font-weight:500;cursor:pointer;margin-top:6px;transition:all 0.2s}
-.btn-ghost{background:none;border:none;color:var(--teal);font-size:13px;font-family:'DM Sans',sans-serif;cursor:pointer;padding:4px 6px}
-#app-screen{background:var(--black)}
-.app-header{background:var(--black);border-bottom:0.5px solid rgba(255,255,255,0.07);padding:14px 20px;display:flex;align-items:center;justify-content:space-between;flex-shrink:0}
-.header-logo{font-family:'Syne',sans-serif;font-size:22px;font-weight:800;letter-spacing:-1px;color:var(--white)}
-.header-logo span{color:var(--teal)}
-.header-user{display:flex;align-items:center;gap:6px;font-size:13px;color:var(--gray)}
-.app-body{flex:1;overflow:hidden;position:relative}
-.view{display:none;height:100%;overflow-y:auto;padding:20px 20px 100px}
-.view.active{display:block}
-.view-header{display:flex;align-items:center;gap:10px;margin-bottom:22px}
-.view-header h2{font-family:'Syne',sans-serif;font-size:22px;font-weight:800;letter-spacing:-0.5px}
-.back-btn{background:none;border:none;color:var(--teal);font-size:14px;font-family:'DM Sans',sans-serif;cursor:pointer;padding:0;white-space:nowrap}
-.home-hero{margin-bottom:22px}
-.home-greeting{font-family:'Syne',sans-serif;font-size:26px;font-weight:800;letter-spacing:-0.5px}
-.home-sub{font-size:15px;color:var(--gray);margin-top:3px}
-.action-grid{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:26px}
-.action-card{background:var(--dark);border:0.5px solid rgba(255,255,255,0.07);border-radius:var(--r);padding:18px 14px;cursor:pointer;transition:border-color 0.2s,transform 0.1s}
-.action-card:active{transform:scale(0.97)}
-.shipper-card:hover{border-color:rgba(0,194,168,0.5)}
-.driver-card:hover{border-color:rgba(61,204,120,0.5)}
-.action-icon{font-size:26px;margin-bottom:10px}
-.action-title{font-family:'Syne',sans-serif;font-size:14px;font-weight:700;line-height:1.25;margin-bottom:4px}
-.action-sub{font-size:12px;color:var(--gray);line-height:1.4}
-.section-head{display:flex;justify-content:space-between;align-items:center;font-size:11px;font-weight:500;color:rgba(255,255,255,0.4);text-transform:uppercase;letter-spacing:0.09em;margin-bottom:10px}
-.jobs-list{display:flex;flex-direction:column;gap:10px}
-.job-card{background:var(--dark);border:0.5px solid rgba(255,255,255,0.07);border-radius:var(--r);padding:14px;cursor:pointer;transition:border-color 0.2s}
-.job-card:hover{border-color:rgba(0,194,168,0.35)}
-.job-card-header{display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:9px}
-.job-card-title{font-family:'Syne',sans-serif;font-size:14px;font-weight:700;flex:1;margin-right:10px;line-height:1.3}
-.job-price{font-family:'Syne',sans-serif;font-size:18px;font-weight:800;color:var(--teal);flex-shrink:0}
-.job-route{display:flex;align-items:center;gap:7px;margin-bottom:8px}
-.route-dot{width:7px;height:7px;border-radius:50%;flex-shrink:0}
-.route-dot.start{background:var(--green)}
-.route-dot.end{background:var(--teal)}
-.route-line{flex:1;height:1px;border-top:1px dashed rgba(255,255,255,0.12)}
-.route-city{font-size:12px;color:rgba(255,255,255,0.65);font-weight:500}
-.job-meta{font-size:11px;color:var(--gray);display:flex;gap:10px;flex-wrap:wrap;align-items:center}
-.status-badge{display:inline-block;padding:3px 9px;border-radius:20px;font-size:10px;font-weight:600;letter-spacing:0.03em}
-.status-open{background:rgba(61,204,120,0.12);color:var(--green)}
-.status-accepted{background:rgba(0,194,168,0.12);color:var(--teal2)}
-.status-in_transit{background:rgba(96,165,250,0.12);color:#60A5FA}
-.status-completed{background:rgba(255,255,255,0.06);color:var(--gray)}
-.form-section{background:var(--dark);border:0.5px solid rgba(255,255,255,0.07);border-radius:var(--r);padding:16px;margin-bottom:12px}
-.form-section-title{font-size:11px;font-weight:500;color:rgba(255,255,255,0.4);text-transform:uppercase;letter-spacing:0.09em;margin-bottom:14px}
-.type-picker{display:flex;gap:6px;flex-wrap:wrap;margin-bottom:10px}
-.type-opt{display:flex;flex-direction:column;align-items:center;gap:3px;padding:10px 8px;background:var(--dark2);border:0.5px solid rgba(255,255,255,0.08);border-radius:var(--rs);cursor:pointer;transition:all 0.2s;flex:1;min-width:50px}
-.type-opt.active{background:rgba(0,194,168,0.1);border-color:var(--teal)}
-.type-emoji{font-size:17px}
-.type-name{font-size:10px;color:rgba(255,255,255,0.5);text-align:center}
-.type-opt.active .type-name{color:var(--teal)}
-.type-hint{font-size:12px;color:var(--gray);line-height:1.5;padding:6px 2px 0}
-.toggle-row{display:flex;justify-content:space-between;align-items:center;padding:4px 0}
-.toggle-row label:first-child{font-size:14px;color:rgba(255,255,255,0.65);text-transform:none;letter-spacing:0}
-.toggle{position:relative;display:inline-block;width:44px;height:24px}
-.toggle input{opacity:0;width:0;height:0}
-.toggle-slider{position:absolute;inset:0;background:var(--dark2);border:0.5px solid rgba(255,255,255,0.15);border-radius:24px;cursor:pointer;transition:background 0.2s}
-.toggle-slider:before{content:'';position:absolute;width:18px;height:18px;left:3px;top:3px;background:var(--gray);border-radius:50%;transition:transform 0.2s,background 0.2s}
-.toggle input:checked+.toggle-slider{background:rgba(0,194,168,0.18);border-color:var(--teal)}
-.toggle input:checked+.toggle-slider:before{transform:translateX(20px);background:var(--teal)}
-.price-input-wrap{display:flex;align-items:center;background:var(--dark2);border:0.5px solid rgba(255,255,255,0.1);border-radius:var(--rs);overflow:hidden}
-.price-dollar{padding:11px 4px 11px 14px;font-size:18px;color:var(--teal);font-weight:600}
-.price-input-wrap input{border:none;background:none;padding:11px 14px 11px 4px;font-size:18px;font-weight:600;flex:1;color:var(--white)}
-.price-input-wrap input:focus{outline:none}
-.price-breakdown{background:rgba(0,194,168,0.05);border:0.5px solid rgba(0,194,168,0.18);border-radius:var(--rs);padding:11px 13px;margin-top:-6px;margin-bottom:12px}
-.price-row{display:flex;justify-content:space-between;font-size:13px;padding:4px 0;color:rgba(255,255,255,0.65);border-bottom:0.5px solid rgba(255,255,255,0.05)}
-.price-row:last-child{border-bottom:none}
-.price-row.total{font-weight:600;color:var(--white);padding-top:7px}
-.price-val.green{color:var(--green)}
-.price-val.muted{color:var(--gray)}
-.drive-mode-switch{display:flex;gap:8px;margin-bottom:18px}
-.drive-mode-btn{flex:1;padding:11px;background:var(--dark);border:0.5px solid rgba(255,255,255,0.08);border-radius:var(--r);color:var(--gray);font-size:13px;font-family:'DM Sans',sans-serif;font-weight:500;cursor:pointer;transition:all 0.2s}
-.drive-mode-btn.active{background:rgba(0,194,168,0.08);border-color:var(--teal);color:var(--white)}
-.haul-types{display:flex;flex-wrap:wrap;gap:7px;margin-top:6px}
-.haul-tag{display:flex;align-items:center;gap:6px;background:var(--dark2);border:0.5px solid rgba(255,255,255,0.08);border-radius:20px;padding:6px 11px;font-size:12px;color:rgba(255,255,255,0.65);cursor:pointer}
-.haul-tag input{accent-color:var(--teal)}
-.route-filter{display:flex;gap:8px;align-items:flex-end;margin-bottom:18px}
-.driver-route-card{border-color:rgba(61,204,120,0.15)}
-.driver-route-card:hover{border-color:rgba(61,204,120,0.4)}
-.tags-row{display:flex;flex-wrap:wrap;gap:5px}
-.size-tag{font-size:10px;padding:3px 8px;background:rgba(255,255,255,0.05);border:0.5px solid rgba(255,255,255,0.08);border-radius:20px;color:rgba(255,255,255,0.45)}
-.filter-row{display:flex;gap:8px;flex-wrap:wrap}
-.filter-group{flex:1;min-width:80px}
-.filter-group label{display:block;font-size:10px;font-weight:500;color:rgba(255,255,255,0.4);text-transform:uppercase;letter-spacing:0.07em;margin-bottom:4px}
-.filter-group select{width:100%;background:var(--dark2);border:0.5px solid rgba(255,255,255,0.1);border-radius:var(--rs);color:var(--white);font-size:12px;font-family:'DM Sans',sans-serif;padding:8px 10px;outline:none;-webkit-appearance:none;appearance:none}
-.job-detail-card{background:var(--dark);border:0.5px solid rgba(255,255,255,0.07);border-radius:var(--r);padding:16px;margin-bottom:12px}
-.detail-label{font-size:11px;color:var(--gray);text-transform:uppercase;letter-spacing:0.06em;margin-bottom:4px}
-.detail-val{font-size:15px;color:var(--white);font-weight:500}
-.detail-grid{display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-bottom:12px}
-.alert-box{border-radius:var(--rs);padding:8px 11px;font-size:13px;margin-bottom:10px}
-.alert-box.danger{background:rgba(240,85,85,0.08);border:0.5px solid rgba(240,85,85,0.25);color:var(--red)}
-.alert-box.warn{background:rgba(251,191,36,0.08);border:0.5px solid rgba(251,191,36,0.25);color:#FBBF24}
-.messages-thread{display:flex;flex-direction:column;gap:7px;max-height:220px;overflow-y:auto;padding:4px 0;margin-bottom:10px}
-.msg-bubble{max-width:80%;padding:9px 13px;border-radius:15px;font-size:14px;line-height:1.4}
-.msg-in{background:var(--dark2);color:rgba(255,255,255,0.85);border-bottom-left-radius:4px;align-self:flex-start}
-.msg-out{background:var(--teal);color:var(--white);border-bottom-right-radius:4px;align-self:flex-end}
-.msg-name{font-size:10px;color:var(--gray);margin-bottom:2px}
-.msg-input-row{display:flex;gap:7px;align-items:center}
-.msg-input-row input{margin:0;flex:1}
-.msg-send-btn{width:40px;height:40px;background:var(--teal);border:none;border-radius:50%;color:var(--white);font-size:17px;cursor:pointer;flex-shrink:0;display:flex;align-items:center;justify-content:center}
-.photo-upload-row{display:flex;gap:8px;margin-bottom:12px;flex-wrap:wrap}
-.photo-thumb{width:76px;height:76px;border-radius:var(--rs);object-fit:cover;border:0.5px solid rgba(255,255,255,0.08)}
-.photo-add-btn{width:76px;height:76px;background:var(--dark2);border:1px dashed rgba(255,255,255,0.15);border-radius:var(--rs);display:flex;align-items:center;justify-content:center;font-size:22px;color:var(--gray);cursor:pointer}
-.photo-input{display:none}
-.star-row{display:flex;gap:5px;margin:7px 0}
-.star{font-size:26px;cursor:pointer;filter:grayscale(1) opacity(0.3);transition:filter 0.15s}
-.star.active{filter:none}
-.bottom-nav{position:fixed;bottom:0;left:0;right:0;background:var(--dark);border-top:0.5px solid rgba(255,255,255,0.07);display:flex;padding:8px 0 20px;z-index:50}
-.nav-item{flex:1;background:none;border:none;display:flex;flex-direction:column;align-items:center;gap:3px;cursor:pointer;padding:5px 0;opacity:0.35;transition:opacity 0.2s}
-.nav-item.active{opacity:1}
-.filter-btn{padding:6px 14px;border-radius:20px;font-size:12px;font-family:'DM Sans',sans-serif;font-weight:500;cursor:pointer;border:0.5px solid rgba(255,255,255,0.1);background:transparent;color:rgba(255,255,255,0.4);transition:all 0.2s}
-.filter-btn.active{background:rgba(0,194,168,0.12);border-color:var(--teal);color:var(--teal)}
-.nav-icon{font-size:19px}
-.nav-label{font-size:9px;color:var(--white);font-family:'DM Sans',sans-serif;letter-spacing:0.03em}
-.empty-state{text-align:center;color:var(--gray);font-size:14px;padding:36px 20px;line-height:1.6}
-.error-msg{color:var(--red);font-size:13px;min-height:16px;margin-bottom:4px}
-.toast{position:fixed;bottom:88px;left:50%;transform:translateX(-50%) translateY(14px);background:var(--dark3);border:0.5px solid rgba(255,255,255,0.12);color:var(--white);padding:11px 18px;border-radius:30px;font-size:13px;opacity:0;transition:all 0.28s;pointer-events:none;white-space:nowrap;z-index:200;max-width:90vw;text-align:center}
-.toast.show{opacity:1;transform:translateX(-50%) translateY(0)}
+const storage = multer.diskStorage({
+  destination: (req, file, cb) => cb(null, path.join(__dirname, '../public/uploads')),
+  filename: (req, file, cb) => cb(null, `${uuidv4()}-${file.originalname}`)
+});
+const upload = multer({ storage, limits: { fileSize: 10 * 1024 * 1024 } });
 
-/* UX IMPROVEMENTS */
-/* Quick post button */
-.quick-post-btn{width:100%;padding:16px;background:linear-gradient(135deg,var(--teal),var(--teal2));color:#000;border:none;border-radius:var(--r);font-size:16px;font-family:'Syne',sans-serif;font-weight:800;cursor:pointer;margin-bottom:10px;display:flex;align-items:center;justify-content:center;gap:8px;letter-spacing:-0.3px}
-/* Swipe job cards */
-.job-card-wrap{position:relative;overflow:hidden;border-radius:var(--r);margin-bottom:10px}
-.job-card-wrap .job-card{margin-bottom:0;border-radius:var(--r)}
-.swipe-hint{position:absolute;right:0;top:0;bottom:0;width:80px;background:linear-gradient(to left,rgba(61,204,120,0.9),transparent);display:flex;align-items:center;justify-content:flex-end;padding-right:14px;font-size:22px;opacity:0;transition:opacity 0.2s;pointer-events:none;border-radius:0 var(--r) var(--r) 0}
-/* Status timeline */
-.delivery-timeline{display:flex;align-items:center;margin:12px 0;padding:12px 14px;background:rgba(0,194,168,0.05);border-radius:var(--rs);border:0.5px solid rgba(0,194,168,0.15)}
-.timeline-step{display:flex;flex-direction:column;align-items:center;flex:1;position:relative}
-.timeline-dot{width:24px;height:24px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:11px;margin-bottom:4px;flex-shrink:0}
-.timeline-dot.done{background:var(--teal);color:#000}
-.timeline-dot.active{background:rgba(0,194,168,0.2);border:2px solid var(--teal);color:var(--teal)}
-.timeline-dot.pending{background:var(--dark2);border:1px solid rgba(255,255,255,0.1);color:var(--gray)}
-.timeline-label{font-size:9px;color:var(--gray);text-align:center;line-height:1.3}
-.timeline-label.done{color:var(--teal)}
-.timeline-label.active{color:var(--white)}
-.timeline-line{flex:1;height:2px;background:rgba(255,255,255,0.08);margin:0 2px;margin-bottom:16px}
-.timeline-line.done{background:var(--teal)}
-/* Price suggestion */
-.price-suggestion{font-size:12px;color:rgba(255,255,255,0.4);padding:6px 0;margin-top:-4px}
-.price-suggestion span{color:var(--teal);cursor:pointer;font-weight:500}
-/* Im here button */
-.im-here-btn{width:100%;padding:14px;background:rgba(61,204,120,0.1);color:var(--green);border:1px solid rgba(61,204,120,0.3);border-radius:var(--r);font-size:15px;font-family:'DM Sans',sans-serif;font-weight:500;cursor:pointer;margin-top:8px;display:flex;align-items:center;justify-content:center;gap:8px}
-/* Quick post modal */
-.modal-overlay{position:fixed;inset:0;background:rgba(0,0,0,0.7);z-index:300;display:flex;align-items:flex-end;backdrop-filter:blur(4px)}
-.modal-sheet{background:var(--dark);border-radius:24px 24px 0 0;padding:24px 20px 48px;width:100%;max-height:85vh;overflow-y:auto}
-.modal-sheet-handle{width:40px;height:4px;background:rgba(255,255,255,0.2);border-radius:2px;margin:0 auto 20px}
-.modal-sheet-title{font-family:'Syne',sans-serif;font-size:20px;font-weight:800;margin-bottom:18px}
-/* Notification badge */
-.nav-badge{position:absolute;top:2px;right:8px;width:8px;height:8px;background:var(--red);border-radius:50%;border:2px solid var(--dark)}
-.nav-item{position:relative}
-.toast.show{opacity:1;transform:translateX(-50%) translateY(0)}
-::-webkit-scrollbar{width:3px}
-::-webkit-scrollbar-thumb{background:var(--dark3);border-radius:2px}
-</style>
-</head>
-<body>
+function requireAuth(req, res, next) {
+  const userId = req.session.userId;
+  console.log('requireAuth - sessionID:', req.sessionID, 'userId:', userId, 'cookie:', req.headers.cookie ? 'present' : 'MISSING');
+  if (!userId) return res.status(401).json({ error: 'Login required' });
+  next();
+}
 
-<!-- AUTH -->
-<div id="auth-screen" class="screen active">
-  <div class="auth-wrap">
-    <div class="auth-top">
-      <div class="auth-logo">De<span>tour</span></div>
-      <p class="auth-tagline">Make money on drives you're already doing.</p>
-      <div class="auth-pills">
-        <span class="auth-pill">📦 Deliver anything</span>
-        <span class="auth-pill">🚗 Earn on your commute</span>
-        <span class="auth-pill">🛋️ Marketplace pickups</span>
-        <span class="auth-pill">🗺️ Durango · Telluride · Beyond</span>
-      </div>
-    </div>
-    <div class="auth-bottom">
-      <div class="tab-switch">
-        <button class="tab-btn active" onclick="showTab('login')">Sign In</button>
-        <button class="tab-btn" onclick="showTab('register')">Create Account</button>
-      </div>
-      <div id="login-form">
-        <div class="field-group"><label>Email</label><input type="email" id="login-email" placeholder="you@email.com" autocomplete="email"></div>
-        <div class="field-group"><label>Password</label><input type="password" id="login-password" placeholder="••••••••" autocomplete="current-password"></div>
-        <div id="login-error" class="error-msg"></div>
-        <div style="display:flex;align-items:center;gap:10px;margin:10px 0;">
-          <input type="checkbox" id="keep-signed-in" checked style="width:16px;height:16px;accent-color:var(--teal);cursor:pointer;">
-          <label for="keep-signed-in" style="font-size:13px;color:rgba(255,255,255,0.5);cursor:pointer;text-transform:none;letter-spacing:0;">Keep me signed in</label>
-        </div>
-        <button class="btn-primary" onclick="login()">Sign In →</button>
-      </div>
-      <div id="register-form" style="display:none">
-        <div class="field-group"><label>Full Name</label><input type="text" id="reg-name" placeholder="Casey Brown"></div>
-        <div class="field-group"><label>Email</label><input type="email" id="reg-email" placeholder="you@email.com"></div>
-        <div class="field-group"><label>Phone</label><input type="tel" id="reg-phone" placeholder="(970) 555-0100"></div>
-        <div class="field-group"><label>Password</label><input type="password" id="reg-password" placeholder="Min 8 characters"></div>
-        <div class="field-group">
-          <label>Vehicle (if driving)</label>
-          <select id="reg-vehicle">
-            <option value="">Shipper only — no vehicle</option>
-            <option value="sedan">Sedan / Hatchback</option>
-            <option value="suv">SUV / Crossover</option>
-            <option value="truck">Pickup Truck</option>
-            <option value="van">Van / Minivan</option>
-            <option value="cargo_van">Cargo Van</option>
-          </select>
-        </div>
-        <div class="field-group" id="plate-field" style="display:none">
-          <label>License Plate</label>
-          <input type="text" id="reg-plate" placeholder="ABC-1234" style="text-transform:uppercase;">
-        </div>
-        <div id="reg-error" class="error-msg"></div>
-        <div style="display:flex;align-items:flex-start;gap:10px;margin:10px 0;background:var(--dark2);border-radius:var(--rs);padding:12px 14px;">
-          <input type="checkbox" id="reg-terms" style="margin-top:3px;width:16px;height:16px;accent-color:var(--teal);flex-shrink:0;cursor:pointer;">
-          <label for="reg-terms" style="font-size:12px;color:rgba(255,255,255,0.5);line-height:1.5;cursor:pointer;text-transform:none;letter-spacing:0;">
-            I agree to Detour's <a href="/terms" target="_blank" style="color:var(--teal);text-decoration:none;">Terms of Service</a> and <a href="/privacy" target="_blank" style="color:var(--teal);text-decoration:none;">Privacy Policy</a>. I understand Detour is a technology marketplace and not a carrier.
-          </label>
-        </div>
-        <button class="btn-primary" onclick="register()">Create Account →</button>
-      </div>
-    </div>
-  </div>
-</div>
+function calcPricing(offeredPrice) {
+  const fee = Math.round(offeredPrice * 0.25 * 100) / 100;
+  const payout = Math.round((offeredPrice - fee) * 100) / 100;
+  return { platform_fee: fee, driver_payout: payout };
+}
 
-<!-- MAIN APP -->
-<div id="app-screen" class="screen">
-  <div class="app-header">
-    <div class="header-logo">De<span>tour</span></div>
-    <div class="header-user"><span id="header-name"></span><button class="btn-ghost" onclick="logout()">Sign out</button></div>
-  </div>
-  <div class="app-body">
+const VALID_JOB_TYPES = ['business', 'marketplace', 'retail', 'errand', 'standard'];
 
-    <!-- HOME -->
-    <div id="view-home" class="view active">
-      <div class="home-hero">
-        <div class="home-greeting">Hey, <span id="home-name"></span> 👋</div>
-        <div class="home-sub">What do you need today?</div>
-      </div>
-      <!-- Quick Post Button -->
-      <button class="quick-post-btn" onclick="showQuickPost()">⚡ Quick Post a Delivery</button>
-      <div class="action-grid">
-        <div class="action-card shipper-card" onclick="showView('view-post')">
-          <div class="action-icon">📦</div>
-          <div class="action-title">Full delivery form</div>
-          <div class="action-sub">All options & payment</div>
-        </div>
-        <div class="action-card driver-card" onclick="showView('view-drive');setNavActive(document.querySelectorAll('.nav-item')[2])">
-          <div class="action-icon">🚗</div>
-          <div class="action-title">I'm making a drive</div>
-          <div class="action-sub">Post route or browse jobs</div>
-        </div>
-      </div>
-      <div class="section-head" style="margin-top:20px;"><span>Open Deliveries Near You</span><button class="btn-ghost" onclick="loadOpenJobs()">Refresh</button></div>
-      <div id="open-jobs-list" class="jobs-list"><div class="empty-state">Loading open deliveries...</div></div>
+// ─── DRIVER ROUTES (reverse matching) ────────────────────────────────────────
 
-      <div class="section-head" style="margin-top:20px;"><span>My Active Jobs</span><button class="btn-ghost" onclick="loadMyJobs()">Refresh</button></div>
-      <div style="display:flex;gap:8px;margin-bottom:12px;flex-wrap:wrap;">
-        <button class="filter-btn active" onclick="filterJobs('all',this)">All</button>
-        <button class="filter-btn" onclick="filterJobs('open',this)">Open</button>
-        <button class="filter-btn" onclick="filterJobs('accepted',this)">Matched</button>
-        <button class="filter-btn" onclick="filterJobs('in_transit',this)">In Transit</button>
-        <button class="filter-btn" onclick="filterJobs('completed',this)">Completed</button>
-      </div>
-      <div id="my-jobs-list" class="jobs-list"><div class="empty-state">Loading your jobs...</div></div>
-    </div>
+router.post('/driver-routes', requireAuth, (req, res) => {
+  const { origin_city, destination_city, departure_time, max_detour_minutes, vehicle_description, haul_types } = req.body;
+  if (!origin_city || !destination_city || !departure_time) {
+    return res.status(400).json({ error: 'Origin, destination, and departure time required' });
+  }
+  const id = uuidv4();
+  db.prepare(`INSERT INTO driver_routes (id, driver_id, origin_city, destination_city, departure_time, max_detour_minutes, vehicle_description, haul_types)
+    VALUES (?, ?, ?, ?, ?, ?, ?, ?)`).run(
+    id, req.session.userId, origin_city, destination_city, departure_time,
+    max_detour_minutes || 15, vehicle_description || null,
+    haul_types ? JSON.stringify(haul_types) : '["small_box","medium_box"]'
+  );
+  const route = db.prepare(`SELECT dr.*, u.name as driver_name, u.rating_total, u.rating_count, u.vehicle_type
+    FROM driver_routes dr JOIN users u ON dr.driver_id = u.id WHERE dr.id = ?`).get(id);
+  res.json({ success: true, route });
+});
 
-    <!-- POST A JOB -->
-    <div id="view-post" class="view">
-      <div class="view-header">
-        <button class="back-btn" onclick="showView('view-home')">← Back</button>
-        <h2>Post a Delivery</h2>
-      </div>
-      <div class="form-section">
-        <div class="form-section-title">What type of delivery?</div>
-        <div class="type-picker">
-          <div class="type-opt active" data-type="standard" onclick="selectJobType('standard',this)"><span class="type-emoji">📦</span><span class="type-name">General</span></div>
-          <div class="type-opt" data-type="marketplace" onclick="selectJobType('marketplace',this)"><span class="type-emoji">🛋️</span><span class="type-name">Marketplace</span></div>
-          <div class="type-opt" data-type="retail" onclick="selectJobType('retail',this)"><span class="type-emoji">🚴</span><span class="type-name">Retail</span></div>
-          <div class="type-opt" data-type="errand" onclick="selectJobType('errand',this)"><span class="type-emoji">🛍️</span><span class="type-name">Errand</span></div>
-          <div class="type-opt" data-type="business" onclick="selectJobType('business',this)"><span class="type-emoji">🏢</span><span class="type-name">Business</span></div>
-        </div>
-        <div id="type-hint" class="type-hint">Standard delivery between two locations.</div>
-      </div>
-      <form id="post-form">
-        <input type="hidden" id="job-type" value="standard">
-        <div id="marketplace-fields" class="form-section" style="display:none">
-          <div class="form-section-title">Seller & Buyer Details</div>
-          <div class="field-group"><label>Seller Name</label><input type="text" id="seller-name" placeholder="Who has the item?"></div>
-          <div class="field-group"><label>Seller Phone</label><input type="tel" id="seller-phone" placeholder="Driver coordinates pickup"></div>
-          <div class="field-group"><label>Buyer Name</label><input type="text" id="buyer-name" placeholder="Who receives it?"></div>
-          <div class="field-group"><label>Buyer Phone</label><input type="tel" id="buyer-phone" placeholder="Driver coordinates dropoff"></div>
-          <div class="form-section-title" style="margin-top:14px;">Item Photos <span class="req">* Required</span></div>
-          <div class="photo-upload-row" id="listing-photo-row">
-            <div class="photo-add-btn" onclick="document.getElementById('listing-photos-input').click()">+</div>
-            <input type="file" id="listing-photos-input" class="photo-input" accept="image/*" multiple onchange="previewListingPhotos(this)">
-          </div>
-          <div style="font-size:11px;color:var(--gray);margin-top:4px;">Shown to drivers. Protects both parties.</div>
-        </div>
-        <div id="errand-fields" class="form-section" style="display:none">
-          <div class="form-section-title">Errand Details</div>
-          <div class="field-group"><label>Store / Location</label><input type="text" id="store-name" placeholder="Home Depot, Costco, DBP..."></div>
-          <div class="field-group"><label>What to pick up</label><textarea id="item-to-pickup" rows="2" placeholder="2x 8ft 2x4 lumber, receipt #12345..."></textarea></div>
-        </div>
-        <div class="form-section">
-          <div class="form-section-title">Item Details</div>
-          <div class="field-group"><label>Title <span class="req">*</span></label><input type="text" id="job-title" placeholder="e.g. Sofa delivery, Coffee beans, Bike pickup" required></div>
-          <div class="field-group"><label>Description</label><textarea id="job-desc" rows="2" placeholder="Any details the driver needs..."></textarea></div>
-          <div class="field-row">
-            <div class="field-group">
-              <label>Item Size <span class="req">*</span></label>
-              <select id="job-size" required>
-                <option value="">Select</option>
-                <option value="envelope">Envelope / Doc</option>
-                <option value="small_box">Small Box</option>
-                <option value="medium_box">Medium Box</option>
-                <option value="large_box">Large Box</option>
-                <option value="oversized">Oversized / Furniture</option>
-              </select>
-            </div>
-            <div class="field-group"><label>Weight (lbs)</label><input type="number" id="job-weight" placeholder="12" min="0" step="0.5"></div>
-          </div>
-          <div class="toggle-row"><label>Fragile?</label><label class="toggle"><input type="checkbox" id="job-fragile"><span class="toggle-slider"></span></label></div>
-          <div class="toggle-row" id="disassembly-row" style="display:none"><label>Needs disassembly?</label><label class="toggle"><input type="checkbox" id="job-disassembly"><span class="toggle-slider"></span></label></div>
-        </div>
-        <div class="form-section">
-          <div class="form-section-title">Route</div>
-          <div class="field-group"><label>Pickup Address <span class="req">*</span></label><input type="text" id="job-pickup-addr" required placeholder="225 E 8th Ave"></div>
-          <div class="field-row">
-            <div class="field-group"><label>Pickup City <span class="req">*</span></label><input type="text" id="job-pickup-city" required placeholder="Durango" value="Durango"></div>
-            <div class="field-group"><label>Pickup State <span class="req">*</span></label><input type="text" id="job-pickup-state" required placeholder="CO" maxlength="2" style="text-transform:uppercase;" value="CO"></div>
-          </div>
-          <div class="field-group"><label>Dropoff Address <span class="req">*</span></label><input type="text" id="job-dropoff-addr" required placeholder="123 Main St"></div>
-          <div class="field-row">
-            <div class="field-group"><label>Dropoff City <span class="req">*</span></label><input type="text" id="job-dropoff-city" required placeholder="Telluride" oninput="updatePriceSuggestion()"></div>
-            <div class="field-group"><label>Dropoff State <span class="req">*</span></label><input type="text" id="job-dropoff-state" required placeholder="CO" maxlength="2" style="text-transform:uppercase;" value="CO"></div>
-          </div>
-        </div>
-        <div class="form-section">
-          <div class="form-section-title">Your Offer to Driver</div>
-          <div class="field-group">
-            <div class="price-input-wrap">
-              <span class="price-dollar">$</span>
-              <input type="number" id="job-price" placeholder="28.00" min="5" step="0.50" required oninput="updatePriceBreakdown()">
-            </div>
-            <div class="price-suggestion" id="price-suggestion" style="display:none">Suggested: <span onclick="applyPriceSuggestion()"></span> based on route distance</div>
-          </div>
-          <div id="price-breakdown" class="price-breakdown" style="display:none">
-            <div class="price-row"><span>Driver earns</span><span id="pb-driver" class="price-val green"></span></div>
-            <div class="price-row"><span>Detour fee (25%)</span><span id="pb-fee" class="price-val muted"></span></div>
-            <div class="price-row total"><span>You pay total</span><span id="pb-total" class="price-val"></span></div>
-          </div>
-          <div class="field-group" style="margin-top:10px;"><label>Notes for driver</label><textarea id="job-notes" rows="2" placeholder="Meet at back entrance, call on arrival..."></textarea></div>
-        </div>
-        <div class="form-section" style="margin-top:8px;">
-          <div class="form-section-title">Payment Method</div>
-          <div style="font-size:12px;color:rgba(255,255,255,0.4);margin-bottom:12px;">Your card is held securely by Stripe and only charged when a driver accepts your job.</div>
-          <div id="stripe-card-element" style="background:var(--dark2);border:0.5px solid rgba(255,255,255,0.1);border-radius:var(--rs);padding:12px 14px;"></div>
-          <div id="stripe-card-error" class="error-msg" style="margin-top:8px;"></div>
-        </div>
-        <div id="post-error" class="error-msg" style="font-size:14px;padding:10px 0;"></div>
-        <button type="button" onclick="postJob()" class="btn-primary btn-large">Post Delivery Job →</button>
-      </form>
-    </div>
+router.get('/driver-routes/my', requireAuth, (req, res) => {
+  const routes = db.prepare(`SELECT * FROM driver_routes WHERE driver_id = ? AND active = 1 ORDER BY departure_time ASC`).all(req.session.userId);
+  routes.forEach(r => { r.haul_types = JSON.parse(r.haul_types || '[]'); });
+  res.json(routes);
+});
 
-    <!-- DRIVE -->
-    <div id="view-drive" class="view">
-      <div class="view-header">
-        <button class="back-btn" onclick="showView('view-home')">← Back</button>
-        <h2>Drive & Earn</h2>
-      </div>
-      <!-- Connect Bank Account — always visible -->
-      <div id="connect-prompt-top" class="job-detail-card" style="margin-bottom:14px;display:none;"></div>
-      <div class="drive-mode-switch">
-        <button class="drive-mode-btn active" id="dmb-post" onclick="switchDriveMode('post')">📍 Post My Route</button>
-        <button class="drive-mode-btn" id="dmb-browse" onclick="switchDriveMode('browse')">🔍 Browse Jobs</button>
-      </div>
-      <div id="drive-post-panel">
-        <div class="form-section">
-          <div class="form-section-title">Announce your drive</div>
-          <div class="field-row">
-            <div class="field-group"><label>From <span class="req">*</span></label><input type="text" id="route-origin" placeholder="Durango, CO"></div>
-            <div class="field-group"><label>To <span class="req">*</span></label><input type="text" id="route-dest" placeholder="Telluride, CO"></div>
-          </div>
-          <div class="field-row">
-            <div class="field-group"><label>Leaving at <span class="req">*</span></label><input type="datetime-local" id="route-depart"></div>
-            <div class="field-group"><label>Max detour</label>
-              <select id="route-detour">
-                <option value="5">5 min</option><option value="10">10 min</option>
-                <option value="15" selected>15 min</option><option value="20">20 min</option><option value="30">30 min</option>
-              </select>
-            </div>
-          </div>
-          <div class="field-group"><label>Vehicle / notes</label><input type="text" id="route-vehicle" placeholder="Toyota Tacoma, truck bed available"></div>
-          <div class="form-section-title" style="margin-top:14px;">What can you haul?</div>
-          <div class="haul-types">
-            <label class="haul-tag"><input type="checkbox" value="envelope" checked> Envelopes</label>
-            <label class="haul-tag"><input type="checkbox" value="small_box" checked> Small boxes</label>
-            <label class="haul-tag"><input type="checkbox" value="medium_box" checked> Medium boxes</label>
-            <label class="haul-tag"><input type="checkbox" value="large_box"> Large boxes</label>
-            <label class="haul-tag"><input type="checkbox" value="oversized"> Furniture</label>
-          </div>
-        </div>
-        <button class="btn-primary btn-large" onclick="postDriverRoute()">Post My Drive →</button>
-        <div class="section-head" style="margin-top:22px;"><span>Your Active Routes</span></div>
-        <div id="my-routes-list" class="jobs-list"><div class="empty-state">No active routes posted</div></div>
-
-        <!-- DRIVER VERIFICATION -->
-        <div class="form-section" style="margin-top:24px;">
-          <div class="form-section-title">🚗 Your Vehicle</div>
-          <div class="field-group">
-            <select id="driver-vehicle-type">
-              <option value="">Select vehicle type</option>
-              <option value="sedan">Sedan / Hatchback</option>
-              <option value="suv">SUV / Crossover</option>
-              <option value="truck">Pickup Truck</option>
-              <option value="van">Van / Minivan</option>
-              <option value="cargo_van">Cargo Van</option>
-            </select>
-          </div>
-          <div class="field-group"><input type="text" id="driver-vehicle-desc" placeholder="e.g. Toyota Tacoma, truck bed available"></div>
-          <div class="field-group"><input type="text" id="driver-license-plate" placeholder="License plate (e.g. ABC-1234)" style="text-transform:uppercase;"></div>
-          <button class="btn-secondary" style="margin-top:4px;" onclick="updateVehicle()">Save Vehicle Info</button>
-        </div>
-        <div class="form-section" style="margin-top:12px;">
-          <div class="form-section-title">🛡️ Driver Verification</div>
-          <div id="verification-status" style="margin-bottom:14px;"></div>
-          <div id="insurance-upload-section">
-            <div style="font-size:13px;color:rgba(255,255,255,0.5);margin-bottom:14px;line-height:1.6;">Upload your driver's license and proof of insurance before accepting jobs. Your account will be reviewed within 24 hours.</div>
-
-            <!-- Driver License -->
-            <div class="field-group" style="margin-bottom:14px;">
-              <label>Driver's License <span class="req">*</span></label>
-              <div id="license-preview" style="display:none;margin-bottom:8px;"><img id="license-thumb" style="width:100%;border-radius:8px;border:1px solid rgba(255,255,255,0.1);" src=""></div>
-              <input type="file" id="license-file" accept="image/jpeg,image/jpg,image/png,image/heic,image/heif,image/*" style="display:none" onchange="uploadDoc('license',this)">
-              <button class="btn-secondary" style="width:100%;margin-bottom:6px;" onclick="document.getElementById('license-file').click()">🪪 Upload Driver's License</button>
-            </div>
-
-            <!-- Insurance Card -->
-            <div class="field-group">
-              <label>Proof of Insurance <span class="req">*</span></label>
-              <div id="insurance-preview" style="display:none;margin-bottom:8px;"><img id="insurance-thumb" style="width:100%;border-radius:8px;border:1px solid rgba(255,255,255,0.1);" src=""></div>
-              <input type="file" id="insurance-file" accept="image/jpeg,image/jpg,image/png,image/heic,image/heif,image/*" style="display:none" onchange="uploadDoc('insurance',this)">
-              <button class="btn-secondary" style="width:100%;margin-bottom:6px;" onclick="document.getElementById('insurance-file').click()">📋 Upload Insurance Card</button>
-            </div>
-
-            <div style="font-size:11px;color:rgba(255,255,255,0.25);margin-top:10px;line-height:1.5;">Documents are reviewed by Detour staff and never shared publicly. Both documents required before accepting jobs.</div>
-          </div>
-        </div>
-      </div>
-      <div id="drive-browse-panel" style="display:none">
-
-        <!-- BROWSE TABS -->
-        <div class="drive-mode-switch" style="margin-bottom:14px;">
-          <button class="drive-mode-btn active" id="btab-all" onclick="setBrowseTab('all',this)">🌎 All Jobs</button>
-          <button class="drive-mode-btn" id="btab-near" onclick="setBrowseTab('near',this)">📍 Near Me</button>
-          <button class="drive-mode-btn" id="btab-loc" onclick="setBrowseTab('loc',this)">🔍 By Location</button>
-        </div>
-
-        <!-- LOCATION SEARCH (hidden by default) -->
-        <div id="browse-loc-row" style="display:none;margin-bottom:12px;">
-          <div class="route-filter">
-            <div class="field-group" style="margin:0;flex:1"><input type="text" id="browse-destination" placeholder="City or state (e.g. Telluride, CO)"></div>
-            <button class="btn-primary btn-sm" onclick="browseAll()">Search</button>
-          </div>
-        </div>
-
-        <!-- FILTERS -->
-        <div class="form-section" style="padding:12px 14px;margin-bottom:12px;">
-          <div class="filter-row">
-            <div class="filter-group">
-              <label>Job Type</label>
-              <select id="filter-type" onchange="browseAll()">
-                <option value="">All types</option>
-                <option value="standard">📦 General</option>
-                <option value="marketplace">🛋️ Marketplace</option>
-                <option value="retail">🚴 Retail</option>
-                <option value="errand">🛍️ Errand</option>
-                <option value="business">🏢 Business</option>
-              </select>
-            </div>
-            <div class="filter-group">
-              <label>Item Size</label>
-              <select id="filter-size" onchange="browseAll()">
-                <option value="">All sizes</option>
-                <option value="envelope">Envelope</option>
-                <option value="small_box">Small Box</option>
-                <option value="medium_box">Medium Box</option>
-                <option value="large_box">Large Box</option>
-                <option value="oversized">Oversized</option>
-              </select>
-            </div>
-            <div class="filter-group">
-              <label>Sort by Price</label>
-              <select id="filter-sort" onchange="browseAll()">
-                <option value="">Default</option>
-                <option value="high">High → Low</option>
-                <option value="low">Low → High</option>
-              </select>
-            </div>
-          </div>
-        </div>
-
-        <div class="section-head"><span>Available Drivers</span></div>
-        <div id="available-drivers" class="jobs-list"><div class="empty-state">Search or browse to see available drivers</div></div>
-        <div class="section-head" style="margin-top:18px;"><span>Open Deliveries</span></div>
-        <div id="browse-results" class="jobs-list"><div class="empty-state">Search or browse to see open jobs</div></div>
-      </div>
-    </div>
-
-    <!-- JOB DETAIL -->
-    <div id="view-job" class="view">
-      <div class="view-header">
-        <button class="back-btn" id="job-back-btn" onclick="showView('view-home')">← Back</button>
-        <h2>Delivery Details</h2>
-      </div>
-      <div id="job-detail-content"></div>
-    </div>
-
-  </div>
-  <div class="bottom-nav">
-    <button class="nav-item active" onclick="showView('view-home');setNavActive(this)"><span class="nav-icon">🏠</span><span class="nav-label">Home</span></button>
-    <button class="nav-item" onclick="showView('view-post');setNavActive(this)"><span class="nav-icon">📦</span><span class="nav-label">Send</span></button>
-    <button class="nav-item" onclick="showView('view-drive');loadMyRoutes();setNavActive(this)"><span class="nav-icon">🚗</span><span class="nav-label">Drive</span></button>
-    <button class="nav-item" onclick="showView('view-home');loadMyJobs();setNavActive(this)"><span class="nav-icon">📋</span><span class="nav-label">My Jobs</span></button>
-  </div>
-</div>
-
-<div id="toast" class="toast"></div>
-
-<!-- QUICK POST MODAL -->
-<div id="quick-post-modal" class="modal-overlay" style="display:none" onclick="if(event.target===this)closeQuickPost()">
-  <div class="modal-sheet">
-    <div class="modal-sheet-handle"></div>
-    <div class="modal-sheet-title">⚡ Quick Post</div>
-    <div class="field-group"><label>What needs delivering? <span class="req">*</span></label><input type="text" id="qp-title" placeholder="e.g. Sofa, Coffee beans, Bike..."></div>
-    <div style="background:var(--dark2);border-radius:var(--rs);padding:12px 14px;margin-bottom:14px;">
-      <div style="font-size:10px;color:var(--teal);text-transform:uppercase;letter-spacing:0.08em;margin-bottom:10px;">📍 Pickup Location</div>
-      <div class="field-group" style="margin-bottom:8px;"><input type="text" id="qp-pickup-addr" placeholder="Street address or neighborhood" style="font-size:14px;"></div>
-      <div style="display:flex;gap:8px;">
-        <div class="field-group" style="flex:2;margin:0;"><input type="text" id="qp-from" placeholder="City" value="Durango" style="font-size:14px;"></div>
-        <div class="field-group" style="flex:1;margin:0;"><input type="text" id="qp-from-state" placeholder="State" value="CO" maxlength="2" style="font-size:14px;text-transform:uppercase;"></div>
-      </div>
-    </div>
-    <div style="background:var(--dark2);border-radius:var(--rs);padding:12px 14px;margin-bottom:14px;">
-      <div style="font-size:10px;color:var(--green);text-transform:uppercase;letter-spacing:0.08em;margin-bottom:10px;">🏁 Dropoff Location</div>
-      <div class="field-group" style="margin-bottom:8px;"><input type="text" id="qp-dropoff-addr" placeholder="Street address or neighborhood" style="font-size:14px;"></div>
-      <div style="display:flex;gap:8px;">
-        <div class="field-group" style="flex:2;margin:0;"><input type="text" id="qp-to" placeholder="City" style="font-size:14px;"></div>
-        <div class="field-group" style="flex:1;margin:0;"><input type="text" id="qp-to-state" placeholder="State" value="CO" maxlength="2" style="font-size:14px;text-transform:uppercase;"></div>
-      </div>
-    </div>
-    <div class="field-group">
-      <label>Your offer to driver</label>
-      <div class="price-input-wrap">
-        <span class="price-dollar">$</span>
-        <input type="number" id="qp-price" placeholder="35" min="5" step="5" oninput="updateQPBreakdown()">
-      </div>
-      <div id="qp-breakdown" style="display:none;font-size:12px;color:rgba(255,255,255,0.5);margin-top:6px;"></div>
-    </div>
-    <div class="field-group">
-      <label>Item Size</label>
-      <select id="qp-size">
-        <option value="small_box">Small Box</option>
-        <option value="medium_box">Medium Box</option>
-        <option value="large_box">Large Box</option>
-        <option value="envelope">Envelope / Doc</option>
-        <option value="oversized">Oversized / Furniture</option>
-      </select>
-    </div>
-    <div id="qp-error" class="error-msg"></div>
-    <button class="btn-primary btn-large" onclick="submitQuickPost()">Post Delivery →</button>
-    <button class="btn-secondary" onclick="closeQuickPost()" style="margin-top:8px;">Cancel</button>
-  </div>
-</div>
-<script src="https://js.stripe.com/v3/"></script>
-<script>
-// Register service worker for PWA
-if ('serviceWorker' in navigator) {
-  window.addEventListener('load', () => {
-    navigator.serviceWorker.register('/sw.js')
-      .then(reg => console.log('Detour SW registered'))
-      .catch(err => console.log('SW registration failed:', err));
+router.get('/driver-routes', (req, res) => {
+  const { destination } = req.query;
+  let query = `SELECT dr.*, u.name as driver_name, u.rating_total, u.rating_count, u.vehicle_type
+    FROM driver_routes dr JOIN users u ON dr.driver_id = u.id
+    WHERE dr.active = 1 AND dr.departure_time > datetime('now')`;
+  const params = [];
+  if (destination) {
+    query += ` AND (LOWER(dr.destination_city) LIKE ? OR LOWER(dr.origin_city) LIKE ?)`;
+    const term = `%${destination.toLowerCase()}%`;
+    params.push(term, term);
+  }
+  query += ' ORDER BY dr.departure_time ASC LIMIT 20';
+  const routes = db.prepare(query).all(...params);
+  routes.forEach(r => {
+    r.avg_rating = r.rating_count > 0 ? (r.rating_total / r.rating_count).toFixed(1) : null;
+    r.haul_types = JSON.parse(r.haul_types || '[]');
   });
-}
+  res.json(routes);
+});
 
-// Initialize Stripe Elements
-let stripeInstance, stripeCard;
-function initStripeElements(){
-  if(stripeInstance)return;
-  try{
-    stripeInstance=Stripe(document.querySelector('meta[name="stripe-pk"]')?.content||'');
-    const elements=stripeInstance.elements({
-      style:{base:{color:'#fff',fontSize:'15px',fontFamily:'"DM Sans",sans-serif','::placeholder':{color:'rgba(255,255,255,0.3)'}},invalid:{color:'#F05555'}}
-    });
-    stripeCard=elements.create('card',{hidePostalCode:true});
-    stripeCard.mount('#stripe-card-element');
-    stripeCard.on('change',e=>{
-      document.getElementById('stripe-card-error').textContent=e.error?e.error.message:'';
-    });
-  }catch(e){console.log('Stripe init error:',e);}
-}
-</script>
-<script>
-let currentUser=null,currentJobId=null,currentJobPerspective='shipper',jobPollInterval=null;
-const SZ={envelope:'Envelope / Doc',small_box:'Small Box',medium_box:'Medium Box',large_box:'Large Box',oversized:'Oversized / Furniture'};
-const ST={open:'Open',accepted:'Driver Matched',in_transit:'In Transit',completed:'Completed'};
-const TL={standard:'📦 General',marketplace:'🛋️ Marketplace',retail:'🚴 Retail',errand:'🛍️ Errand',business:'🏢 Business'};
-const TH={standard:'Standard delivery between two locations.',marketplace:'Sold an item online? Get it delivered. Buyer or seller can post. Item photos required.',retail:'Shop delivering to a customer, or customer needs a shop purchase brought to them.',errand:'Need someone to pick something up for you from a store.',business:'Business-to-business delivery — products, documents, samples.'};
+router.delete('/driver-routes/:id', requireAuth, (req, res) => {
+  const route = db.prepare('SELECT * FROM driver_routes WHERE id = ?').get(req.params.id);
+  if (!route) return res.status(404).json({ error: 'Route not found' });
+  if (route.driver_id !== req.session.userId) return res.status(403).json({ error: 'Access denied' });
+  db.prepare('UPDATE driver_routes SET active = 0 WHERE id = ?').run(req.params.id);
+  res.json({ success: true });
+});
 
-function showTab(t){
-  document.getElementById('login-form').style.display=t==='login'?'block':'none';
-  document.getElementById('register-form').style.display=t==='register'?'block':'none';
-  document.querySelectorAll('.tab-btn').forEach((b,i)=>b.classList.toggle('active',i===(t==='login'?0:1)));
-}
+// ─── JOBS ─────────────────────────────────────────────────────────────────────
 
-// Show license plate field when vehicle is selected
-document.addEventListener('DOMContentLoaded',()=>{
-  const veh=document.getElementById('reg-vehicle');
-  if(veh)veh.addEventListener('change',()=>{
-    const pf=document.getElementById('plate-field');
-    if(pf)pf.style.display=veh.value?'block':'none';
+router.post('/', requireAuth, upload.array('listing_photos', 6), async (req, res) => {
+  const {
+    job_type, title, description, item_size, item_weight, fragile, needs_disassembly,
+    pickup_address, pickup_city, pickup_state, dropoff_address, dropoff_city, dropoff_state,
+    offered_price, notes, seller_name, seller_phone, buyer_name, buyer_phone,
+    store_name, item_to_pickup, requested_driver_route_id
+  } = req.body;
+
+  if (!title || !item_size || !pickup_address || !pickup_city || !dropoff_address || !dropoff_city || !offered_price) {
+    return res.status(400).json({ error: 'Missing required fields' });
+  }
+
+  const jobType = VALID_JOB_TYPES.includes(job_type) ? job_type : 'standard';
+  const price = parseFloat(offered_price);
+  if (isNaN(price) || price < 5) return res.status(400).json({ error: 'Minimum price is $5' });
+
+  if (jobType === 'marketplace' && (!req.files || req.files.length === 0)) {
+    return res.status(400).json({ error: 'Marketplace jobs require at least one item photo' });
+  }
+
+  const { platform_fee, driver_payout } = calcPricing(price);
+  const id = uuidv4();
+  const listingPhotos = (req.files || []).map(f => `/uploads/${f.filename}`);
+
+  const extraData = JSON.stringify({
+    seller_name: seller_name || null, seller_phone: seller_phone || null,
+    buyer_name: buyer_name || null, buyer_phone: buyer_phone || null,
+    store_name: store_name || null, item_to_pickup: item_to_pickup || null,
+    requested_driver_route_id: requested_driver_route_id || null,
+    pickup_state: pickup_state || null, dropoff_state: dropoff_state || null
+  });
+
+  let paymentIntentId = null;
+  if (process.env.STRIPE_SECRET_KEY && process.env.STRIPE_SECRET_KEY !== 'sk_test_placeholder') {
+    try {
+      const piParams = {
+        amount: Math.round(price * 100), currency: 'usd', capture_method: 'manual',
+        metadata: { job_id: id, shipper_id: req.session.userId, job_type: jobType }
+      };
+      if (req.body.payment_method_id) {
+        piParams.payment_method = req.body.payment_method_id;
+        piParams.confirm = false; // shipper confirms when driver accepts
+      }
+      const pi = await stripe.paymentIntents.create(piParams);
+      paymentIntentId = pi.id;
+    } catch (e) { console.error('Stripe error:', e.message); }
+  }
+
+  db.prepare(`INSERT INTO jobs (id, shipper_id, job_type, title, description, item_size, item_weight,
+    fragile, needs_disassembly, pickup_address, pickup_city, dropoff_address, dropoff_city,
+    offered_price, platform_fee, driver_payout, listing_photos, notes, extra_data, stripe_payment_intent_id)
+    VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`
+  ).run(id, req.session.userId, jobType, title, description || null, item_size,
+    item_weight || null, fragile ? 1 : 0, needs_disassembly ? 1 : 0,
+    pickup_address, pickup_city, dropoff_address, dropoff_city,
+    price, platform_fee, driver_payout, JSON.stringify(listingPhotos),
+    notes || null, extraData, paymentIntentId
+  );
+
+  const job = db.prepare('SELECT * FROM jobs WHERE id = ?').get(id);
+  job.pickup_state = pickup_state || null;
+  job.dropoff_state = dropoff_state || null;
+  res.json({ success: true, job });
+});
+
+router.get('/', (req, res) => {
+  const { destination, job_type, item_size } = req.query;
+  let query = `SELECT j.*, u.name as shipper_name, u.rating_total, u.rating_count
+    FROM jobs j JOIN users u ON j.shipper_id = u.id WHERE j.status = 'open'`;
+  const params = [];
+  if (job_type && VALID_JOB_TYPES.includes(job_type)) { query += ' AND j.job_type = ?'; params.push(job_type); }
+  if (item_size) { query += ' AND j.item_size = ?'; params.push(item_size); }
+  if (destination) {
+    query += ' AND (LOWER(j.dropoff_city) LIKE ? OR LOWER(j.pickup_city) LIKE ? OR LOWER(j.extra_data) LIKE ?)';
+    const term = `%${destination.toLowerCase()}%`;
+    params.push(term, term, term);
+  }
+  query += ' ORDER BY j.created_at DESC';
+  const jobs = db.prepare(query).all(...params);
+  jobs.forEach(j => {
+    j.avg_rating = j.rating_count > 0 ? (j.rating_total / j.rating_count).toFixed(1) : null;
+    j.listing_photos = JSON.parse(j.listing_photos || '[]');
+    j.pickup_photos = JSON.parse(j.pickup_photos || '[]');
+    j.dropoff_photos = JSON.parse(j.dropoff_photos || '[]');
+    const extra = JSON.parse(j.extra_data || '{}');
+    j.extra_data = extra;
+    j.pickup_state = extra.pickup_state || null;
+    j.dropoff_state = extra.dropoff_state || null;
+  });
+  res.json(jobs);
+});
+
+router.get('/my/all', requireAuth, (req, res) => {
+  const userId = req.session.userId;
+  const parse = jobs => jobs.map(j => ({
+    ...j,
+    listing_photos: JSON.parse(j.listing_photos || '[]'),
+    pickup_photos: JSON.parse(j.pickup_photos || '[]'),
+    dropoff_photos: JSON.parse(j.dropoff_photos || '[]'),
+    extra_data: JSON.parse(j.extra_data || '{}')
+  }));
+  res.json({
+    as_shipper: parse(db.prepare(`SELECT j.*, u.name as driver_name FROM jobs j LEFT JOIN users u ON j.driver_id = u.id WHERE j.shipper_id = ? ORDER BY j.created_at DESC`).all(userId)),
+    as_driver: parse(db.prepare(`SELECT j.*, u.name as shipper_name FROM jobs j JOIN users u ON j.shipper_id = u.id WHERE j.driver_id = ? ORDER BY j.created_at DESC`).all(userId))
   });
 });
-async function login(){
-  const email=document.getElementById('login-email').value.trim();
-  const password=document.getElementById('login-password').value;
-  const keepSignedIn=document.getElementById('keep-signed-in').checked;
-  document.getElementById('login-error').textContent='';
-  try{
-    const r=await api('POST','/api/auth/login',{email,password,keepSignedIn});
-    currentUser=r;
-    // Save email for next time, save keepSignedIn preference
-    localStorage.setItem('detour_email',email);
-    localStorage.setItem('detour_keep',keepSignedIn?'1':'0');
-    enterApp(r.name);
-  }catch(e){document.getElementById('login-error').textContent=e.message;}
-}
-async function register(){
-  const name=document.getElementById('reg-name').value.trim(),email=document.getElementById('reg-email').value.trim(),phone=document.getElementById('reg-phone').value.trim(),password=document.getElementById('reg-password').value,vehicle_type=document.getElementById('reg-vehicle').value,license_plate=document.getElementById('reg-plate')?.value.trim().toUpperCase()||'';
-  document.getElementById('reg-error').textContent='';
-  if(!name||!email||!password){document.getElementById('reg-error').textContent='Name, email, and password required';return;}
-  if(password.length<8){document.getElementById('reg-error').textContent='Password must be at least 8 characters';return;}
-  if(!document.getElementById('reg-terms').checked){document.getElementById('reg-error').textContent='Please agree to the Terms of Service to continue';return;}
-  try{const r=await api('POST','/api/auth/register',{name,email,phone,password,vehicle_type,license_plate});currentUser=r;enterApp(r.name);}
-  catch(e){document.getElementById('reg-error').textContent=e.message;}
-}
-async function logout(){
-  await api('POST','/api/auth/logout');currentUser=null;
-  document.getElementById('auth-screen').classList.add('active');
-  document.getElementById('app-screen').classList.remove('active');
-}
-function enterApp(name){
-  document.getElementById('auth-screen').classList.remove('active');
-  document.getElementById('app-screen').classList.add('active');
-  document.getElementById('header-name').textContent=name;
-  document.getElementById('home-name').textContent=name.split(' ')[0];
-  const soon=new Date(Date.now()+3600000);
-  const local=new Date(soon.getTime()-soon.getTimezoneOffset()*60000).toISOString().slice(0,16);
-  const d=document.getElementById('route-depart');if(d)d.value=local;
-  loadMyJobs();
-  loadOpenJobs();
-  requestPushPermission();
-  startJobPolling();
-}
-function showView(id){
-  document.querySelectorAll('.view').forEach(v=>v.classList.remove('active'));
-  document.getElementById(id).classList.add('active');
-  if(id==='view-home'){loadMyJobs();loadOpenJobs();}
-  if(id==='view-post')setTimeout(initStripeElements,100);
-  if(id==='view-drive')checkAndShowConnectPrompt();
-}
-function setNavActive(el){document.querySelectorAll('.nav-item').forEach(n=>n.classList.remove('active'));el.classList.add('active');}
-function selectJobType(type,el){
-  document.querySelectorAll('.type-opt').forEach(o=>o.classList.remove('active'));el.classList.add('active');
-  document.getElementById('job-type').value=type;document.getElementById('type-hint').textContent=TH[type]||'';
-  document.getElementById('marketplace-fields').style.display=type==='marketplace'?'block':'none';
-  document.getElementById('errand-fields').style.display=type==='errand'?'block':'none';
-  document.getElementById('disassembly-row').style.display=(type==='marketplace'||type==='oversized')?'flex':'none';
-}
-function previewListingPhotos(input){
-  const row=document.getElementById('listing-photo-row');
-  Array.from(input.files).forEach(f=>{const img=document.createElement('img');img.className='photo-thumb';img.src=URL.createObjectURL(f);row.insertBefore(img,row.lastElementChild);});
-}
-function switchDriveMode(mode){
-  document.getElementById('drive-post-panel').style.display=mode==='post'?'block':'none';
-  document.getElementById('drive-browse-panel').style.display=mode==='browse'?'block':'none';
-  document.getElementById('dmb-post').classList.toggle('active',mode==='post');
-  document.getElementById('dmb-browse').classList.toggle('active',mode==='browse');
-  if(mode==='post'){loadMyRoutes();checkAndShowConnectPrompt();}
-}
-async function postDriverRoute(){
-  const origin=document.getElementById('route-origin').value.trim(),dest=document.getElementById('route-dest').value.trim(),depart=document.getElementById('route-depart').value,detour=document.getElementById('route-detour').value,vehicle=document.getElementById('route-vehicle').value.trim();
-  const haul_types=Array.from(document.querySelectorAll('.haul-tag input:checked')).map(i=>i.value);
-  if(!origin||!dest||!depart){toast('Please fill in origin, destination, and departure time');return;}
-  if(!haul_types.length){toast('Select at least one item type you can haul');return;}
-  try{await api('POST','/api/jobs/driver-routes',{origin_city:origin,destination_city:dest,departure_time:depart,max_detour_minutes:parseInt(detour),vehicle_description:vehicle,haul_types});toast('Route posted! Shippers heading your way will see you.');loadMyRoutes();}
-  catch(e){toast(e.message||'Could not post route');}
-}
-async function loadMyRoutes(){
-  const list=document.getElementById('my-routes-list');
-  try{const routes=await api('GET','/api/jobs/driver-routes/my');if(!routes.length){list.innerHTML='<div class="empty-state">No active routes. Post a drive above.</div>';return;}list.innerHTML=routes.map(r=>routeCard(r)).join('');}
-  catch(e){list.innerHTML='<div class="empty-state">Could not load routes</div>';}
-}
-function routeCard(r){
-  const dep=new Date(r.departure_time).toLocaleString([],{weekday:'short',month:'short',day:'numeric',hour:'2-digit',minute:'2-digit'});
-  const hauls=JSON.parse(typeof r.haul_types==='string'?r.haul_types:JSON.stringify(r.haul_types||[]));
-  return`<div class="job-card"><div class="job-card-header"><div class="job-card-title">${escHtml(r.origin_city)} → ${escHtml(r.destination_city)}</div><button class="btn-ghost" style="color:var(--red);font-size:12px;" onclick="cancelRoute('${r.id}')">Cancel</button></div><div class="job-meta" style="margin-bottom:6px;"><span>🕐 ${dep}</span><span>↗ max ${r.max_detour_minutes} min detour</span></div>${r.vehicle_description?`<div class="job-meta"><span>🚗 ${escHtml(r.vehicle_description)}</span></div>`:''}<div class="tags-row" style="margin-top:7px;">${hauls.map(h=>`<span class="size-tag">${SZ[h]||h}</span>`).join('')}</div></div>`;
-}
-async function cancelRoute(id){try{await api('DELETE',`/api/jobs/driver-routes/${id}`);toast('Route cancelled');loadMyRoutes();}catch(e){toast('Could not cancel route');}}
-let currentBrowseTab='all';
 
-function setBrowseTab(tab,btn){
-  currentBrowseTab=tab;
-  document.querySelectorAll('#drive-browse-panel .drive-mode-btn').forEach(b=>b.classList.remove('active'));
-  btn.classList.add('active');
-  document.getElementById('browse-loc-row').style.display=tab==='loc'?'flex':'none';
-  if(tab==='near'){getNearMe();}
-  else if(tab==='all'){document.getElementById('browse-destination').value='';browseAll();}
-}
+router.get('/:id', requireAuth, (req, res) => {
+  const job = db.prepare(`SELECT j.*, u.name as shipper_name, d.name as driver_name
+    FROM jobs j JOIN users u ON j.shipper_id = u.id
+    LEFT JOIN users d ON j.driver_id = d.id WHERE j.id = ?`).get(req.params.id);
+  if (!job) return res.status(404).json({ error: 'Job not found' });
+  const isParty = job.shipper_id === req.session.userId || job.driver_id === req.session.userId;
+  if (!isParty && job.status !== 'open') return res.status(403).json({ error: 'Access denied' });
+  job.listing_photos = JSON.parse(job.listing_photos || '[]');
+  job.pickup_photos = JSON.parse(job.pickup_photos || '[]');
+  job.dropoff_photos = JSON.parse(job.dropoff_photos || '[]');
+  job.extra_data = JSON.parse(job.extra_data || '{}');
+  const messages = isParty
+    ? db.prepare(`SELECT m.*, u.name as sender_name FROM messages m JOIN users u ON m.sender_id = u.id WHERE m.job_id = ? ORDER BY m.created_at ASC`).all(req.params.id)
+    : [];
+  res.json({ job, messages });
+});
 
-function getNearMe(){
-  const results=document.getElementById('browse-results');
-  const drivers=document.getElementById('available-drivers');
-  results.innerHTML='<div class="empty-state">Getting your location...</div>';
-  drivers.innerHTML='<div class="empty-state">Getting your location...</div>';
-  if(!navigator.geolocation){results.innerHTML='<div class="empty-state">Location not supported on this device</div>';return;}
-  navigator.geolocation.getCurrentPosition(async(pos)=>{
-    try{
-      const r=await fetch(`https://nominatim.openstreetmap.org/reverse?lat=${pos.coords.latitude}&lon=${pos.coords.longitude}&format=json`);
-      const data=await r.json();
-      const city=data.address.city||data.address.town||data.address.village||'';
-      const state=data.address.state_code||'';
-      document.getElementById('browse-destination').value=`${city}, ${state}`;
-      browseAll();
-    }catch(e){results.innerHTML='<div class="empty-state">Could not determine your city. Try searching by location.</div>';}
-  },()=>{results.innerHTML='<div class="empty-state">Location access denied. Try searching by location instead.</div>';});
-}
+router.post('/:id/accept', requireAuth, async (req, res) => {
+  const job = db.prepare('SELECT * FROM jobs WHERE id = ?').get(req.params.id);
+  if (!job) return res.status(404).json({ error: 'Job not found' });
+  if (job.status !== 'open') return res.status(400).json({ error: 'Job no longer available' });
+  if (job.shipper_id === req.session.userId) return res.status(400).json({ error: 'Cannot accept your own job' });
 
-async function browseAll(){await Promise.all([browseDrivers(),browseJobs()]);}
-
-async function browseDrivers(){
-  const dest=document.getElementById('browse-destination').value.trim(),container=document.getElementById('available-drivers');
-  container.innerHTML='<div class="empty-state">Searching...</div>';
-  try{
-    const url=dest?`/api/jobs/driver-routes?destination=${encodeURIComponent(dest)}`:'/api/jobs/driver-routes';
-    const routes=await api('GET',url);
-    if(!routes.length){container.innerHTML=`<div class="empty-state">No drivers available${dest?' near '+dest:''}.</div>`;return;}
-    container.innerHTML=routes.map(r=>driverCard(r)).join('');
-  }catch(e){container.innerHTML='<div class="empty-state">Could not load drivers</div>';}
-}
-function driverCard(r){
-  const dep=new Date(r.departure_time).toLocaleString([],{weekday:'short',hour:'2-digit',minute:'2-digit'});
-  const rating=r.avg_rating?`⭐ ${r.avg_rating}`:'New driver';
-  const hauls=(typeof r.haul_types==='string'?JSON.parse(r.haul_types):r.haul_types)||[];
-  return`<div class="job-card driver-route-card" onclick="requestDriver('${r.id}','${escHtml(r.driver_name)}','${escHtml(r.destination_city)}')"><div class="job-card-header"><div><div class="job-card-title">🚗 ${escHtml(r.driver_name)}</div><div class="job-meta">${rating} · ${escHtml(r.origin_city)} → ${escHtml(r.destination_city)}</div></div><div style="text-align:right;font-size:12px;color:var(--teal);">Leaving<br>${dep}</div></div><div class="job-meta" style="margin-top:5px;"><span>↗ Up to ${r.max_detour_minutes} min detour</span>${r.vehicle_description?`<span>${escHtml(r.vehicle_description)}</span>`:''}</div><div class="tags-row" style="margin-top:7px;">${hauls.map(h=>`<span class="size-tag">${SZ[h]||h}</span>`).join('')}</div><div style="font-size:12px;color:var(--teal);margin-top:9px;font-weight:500;">Tap to post a job for this driver →</div></div>`;
-}
-function requestDriver(routeId,driverName,destCity){showView('view-post');document.getElementById('job-dropoff-city').value=destCity;document.getElementById('job-notes').value=`Requested for driver: ${driverName}`;window._requestedDriverRouteId=routeId;toast(`Posting a job for ${driverName}'s drive to ${destCity}`);}
-async function browseJobs(){
-  const dest=document.getElementById('browse-destination').value.trim();
-  const jobType=document.getElementById('filter-type').value;
-  const itemSize=document.getElementById('filter-size').value;
-  const sortPrice=document.getElementById('filter-sort').value;
-  const results=document.getElementById('browse-results');
-  results.innerHTML='<div class="empty-state">Searching...</div>';
-  try{
-    let url='/api/jobs?';
-    if(dest)url+=`destination=${encodeURIComponent(dest)}&`;
-    if(jobType)url+=`job_type=${encodeURIComponent(jobType)}&`;
-    if(itemSize)url+=`item_size=${encodeURIComponent(itemSize)}&`;
-    let jobs=await api('GET',url);
-    if(sortPrice==='high')jobs.sort((a,b)=>b.offered_price-a.offered_price);
-    if(sortPrice==='low')jobs.sort((a,b)=>a.offered_price-b.offered_price);
-    if(!jobs.length){results.innerHTML=`<div class="empty-state">No open deliveries found. Try adjusting your filters.</div>`;return;}
-    results.innerHTML=jobs.map(j=>jobCard(j,true)).join('');
-  }catch(e){results.innerHTML='<div class="empty-state">Search failed</div>';}
-}
-let currentFilter='all';
-function filterJobs(filter,btn){
-  currentFilter=filter;
-  document.querySelectorAll('.filter-btn').forEach(b=>b.classList.remove('active'));
-  btn.classList.add('active');
-  loadMyJobs();
-}
-async function loadOpenJobs(){
-  const list=document.getElementById('open-jobs-list');
-  if(!list)return;
-  try{
-    const jobs=await api('GET','/api/jobs');
-    if(!jobs.length){list.innerHTML='<div class="empty-state">No open deliveries right now.\nPost one or check back soon!</div>';return;}
-    list.innerHTML=jobs.map(j=>jobCard(j,true)).join('');
-  }catch(e){list.innerHTML='<div class="empty-state">Could not load deliveries</div>';}
-}
-async function loadMyJobs(){
-  const list=document.getElementById('my-jobs-list');
-  list.innerHTML='<div class="empty-state">Loading...</div>';
-  try{
-    const data=await api('GET','/api/jobs/my/all');
-    const all=[...(data.as_shipper||[]),...(data.as_driver||[])];
-    // Remove duplicates (same job as both shipper and driver edge case)
-    const seen=new Set();
-    const unique=all.filter(j=>{if(seen.has(j.id))return false;seen.add(j.id);return true;});
-    // Apply filter
-    const filtered=currentFilter==='all'?unique:unique.filter(j=>j.status===currentFilter);
-    if(!filtered.length){
-      const msg=currentFilter==='all'?'No active jobs yet.\nPost a delivery or find a drive!':'No '+currentFilter.replace('_',' ')+' jobs.';
-      list.innerHTML=`<div class="empty-state">${msg}</div>`;return;
-    }
-    // Sort — most recent first, active before completed
-    filtered.sort((a,b)=>new Date(b.created_at)-new Date(a.created_at));
-    list.innerHTML=filtered.map(j=>jobCard(j)).join('');
-  }catch(e){list.innerHTML='<div class="empty-state">Could not load jobs</div>';}
-}
-function jobCard(job,isDriver=false){
-  const payout=((job.offered_price||0)*0.75).toFixed(2);
-  const pickupLoc=job.pickup_state?`${escHtml(job.pickup_city)}, ${escHtml(job.pickup_state)}`:escHtml(job.pickup_city);
-  const dropoffLoc=job.dropoff_state?`${escHtml(job.dropoff_city)}, ${escHtml(job.dropoff_state)}`:escHtml(job.dropoff_city);
-  const card=`<div class="job-card" onclick="openJob('${job.id}','${isDriver?'driver':'shipper'}')"><div class="job-card-header"><div class="job-card-title">${escHtml(job.title)}</div><div class="job-price">$${parseFloat(job.offered_price).toFixed(2)}</div></div><div class="job-route"><div class="route-dot start"></div><div class="route-city">${pickupLoc}</div><div class="route-line"></div><div class="route-city">${dropoffLoc}</div><div class="route-dot end"></div></div><div class="job-meta"><span class="status-badge status-${job.status}">${ST[job.status]||job.status}</span><span>${TL[job.job_type]||'📦 General'}</span><span>${SZ[job.item_size]||job.item_size}</span>${job.fragile?'<span>⚠️ Fragile</span>':''}${isDriver?`<span style="color:var(--green);font-weight:600;">Earn $${payout}</span><span style="color:rgba(255,255,255,0.3);font-size:10px;">← swipe to accept</span>`:''}</div></div>`;
-  if(isDriver&&job.status==='open'){
-    const id=`sw-${job.id}`;
-    setTimeout(()=>{const el=document.getElementById(id);if(el)makeSwipeable(el,job.id);},50);
-    return`<div class="job-card-wrap" id="${id}"><div class="swipe-hint">✓</div>${card}</div>`;
-  }
-  return`<div style="margin-bottom:10px;">${card}</div>`;
-}
-async function openJob(jobId,perspective='shipper'){
-  currentJobId=jobId;currentJobPerspective=perspective;
-  const backView=perspective==='driver'?'view-drive':'view-home';
-  document.getElementById('job-back-btn').onclick=()=>{showView(backView);clearInterval(jobPollInterval);};
-  showView('view-job');await loadJobDetail();
-  clearInterval(jobPollInterval);jobPollInterval=setInterval(()=>loadJobDetail(true),5000);
-}
-async function loadJobDetail(silent=false){
-  const c=document.getElementById('job-detail-content');if(!silent)c.innerHTML='<div class="empty-state">Loading...</div>';
-  try{const{job,messages}=await api('GET',`/api/jobs/${currentJobId}`);c.innerHTML=renderJobDetail(job,messages);}
-  catch(e){if(!silent)c.innerHTML='<div class="empty-state">Could not load job</div>';}
-}
-function renderJobDetail(job,messages){
-  const isShipper=job.shipper_id===currentUser?.userId,isDriver=job.driver_id===currentUser?.userId;
-  const extra=job.extra_data||{},dp=parseFloat(job.driver_payout||job.offered_price*0.75).toFixed(2);
-  let h=`<div class="job-detail-card"><div style="display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:10px;"><div><div style="font-size:11px;color:var(--teal);margin-bottom:4px;">${TL[job.job_type]||'📦 General'}</div><div style="font-family:'Syne',sans-serif;font-size:18px;font-weight:800;margin-bottom:6px;">${escHtml(job.title)}</div><span class="status-badge status-${job.status}">${ST[job.status]}</span></div><div style="text-align:right;"><div style="font-family:'Syne',sans-serif;font-size:26px;font-weight:800;color:var(--teal);">$${parseFloat(job.offered_price).toFixed(2)}</div>${isDriver?`<div style="font-size:12px;color:var(--green);">You earn $${dp}</div>`:''}</div></div>${renderTimeline(job.status)}${job.description?`<p style="font-size:14px;color:rgba(255,255,255,0.55);margin-bottom:10px;">${escHtml(job.description)}</p>`:''}<div class="detail-grid"><div><div class="detail-label">Size</div><div class="detail-val">${SZ[job.item_size]||job.item_size}</div></div><div><div class="detail-label">Weight</div><div class="detail-val">${job.item_weight?job.item_weight+' lbs':'—'}</div></div></div>${job.fragile?'<div class="alert-box danger">⚠️ Fragile — handle with care</div>':''}${job.needs_disassembly?'<div class="alert-box warn">🔧 Requires disassembly / reassembly</div>':''}</div>`;
-  if(job.listing_photos?.length)h+=`<div class="job-detail-card"><div class="detail-label" style="margin-bottom:10px;">Item Photos</div><div class="photo-upload-row">${job.listing_photos.map(p=>`<img class="photo-thumb" src="${p}">`).join('')}</div></div>`;
-  if(job.job_type==='marketplace'&&(extra.seller_name||extra.buyer_name))h+=`<div class="job-detail-card"><div class="detail-label" style="margin-bottom:10px;">Marketplace Parties</div>${extra.seller_name?`<div class="detail-grid"><div><div class="detail-label">Seller</div><div class="detail-val">${escHtml(extra.seller_name)}</div></div>${extra.seller_phone?`<div><div class="detail-label">Phone</div><div class="detail-val">${escHtml(extra.seller_phone)}</div></div>`:''}</div>`:''}${extra.buyer_name?`<div class="detail-grid" style="margin-top:8px;"><div><div class="detail-label">Buyer</div><div class="detail-val">${escHtml(extra.buyer_name)}</div></div>${extra.buyer_phone?`<div><div class="detail-label">Phone</div><div class="detail-val">${escHtml(extra.buyer_phone)}</div></div>`:''}</div>`:''}</div>`;
-  if(job.job_type==='errand'&&(extra.store_name||extra.item_to_pickup))h+=`<div class="job-detail-card"><div class="detail-label" style="margin-bottom:10px;">Errand Details</div>${extra.store_name?`<div><div class="detail-label">Store</div><div class="detail-val">${escHtml(extra.store_name)}</div></div>`:''}${extra.item_to_pickup?`<div style="margin-top:8px;"><div class="detail-label">Item to pick up</div><div class="detail-val" style="font-size:13px;">${escHtml(extra.item_to_pickup)}</div></div>`:''}</div>`;
-  h+=`<div class="job-detail-card"><div class="detail-label" style="margin-bottom:10px;">Route</div><div class="job-route" style="margin-bottom:10px;"><div class="route-dot start"></div><div class="route-city">${escHtml(job.pickup_city)}</div><div class="route-line"></div><div class="route-city">${escHtml(job.dropoff_city)}</div><div class="route-dot end"></div></div><div class="detail-grid"><div><div class="detail-label">Pickup</div><div class="detail-val" style="font-size:13px;">${escHtml(job.pickup_address)}</div></div><div><div class="detail-label">Dropoff</div><div class="detail-val" style="font-size:13px;">${escHtml(job.dropoff_address)}</div></div></div>${job.notes?`<div style="margin-top:8px;"><div class="detail-label">Notes</div><div class="detail-val" style="font-size:13px;">${escHtml(job.notes)}</div></div>`:''} ${(isDriver||currentJobPerspective==='driver')?mapsButtons(job):''}</div>`;
-  if(job.status==='open'&&currentJobPerspective==='driver'&&!isShipper)h+=`<button class="btn-primary btn-large" onclick="acceptJob('${job.id}')">Accept — Earn $${dp} →</button>`;
-  if(job.status==='accepted'&&isDriver)h+=`<button class="im-here-btn" onclick="imHere('${job.id}')">📍 I'm here — notify shipper</button>`;
-  if(job.status==='open'&&isShipper)h+=`<button class="btn-secondary btn-large" style="background:rgba(240,85,85,0.1);border-color:rgba(240,85,85,0.3);color:var(--red);margin-top:8px;" onclick="deleteJob('${job.id}')">🗑 Delete This Listing</button>`;
-  if(job.status!=='open'&&(isShipper||isDriver)){
-    h+=`<div class="job-detail-card"><div class="detail-label" style="margin-bottom:10px;">Messages with ${isShipper?(job.driver_name||'Driver'):(job.shipper_name||'Shipper')}</div><div class="messages-thread" id="msg-thread">${messages.length?messages.map(m=>`<div><div class="msg-name">${escHtml(m.sender_name)}</div><div class="msg-bubble ${m.sender_id===currentUser?.userId?'msg-out':'msg-in'}">${escHtml(m.content)}</div></div>`).join(''):'<div style="color:var(--gray);font-size:13px;text-align:center;padding:10px;">No messages yet</div>'}</div><div class="msg-input-row"><input type="text" id="msg-input" placeholder="Send a message..." onkeydown="if(event.key==='Enter')sendMsg('${job.id}')"><button class="msg-send-btn" onclick="sendMsg('${job.id}')">↑</button></div></div>`;
-    setTimeout(()=>{const t=document.getElementById('msg-thread');if(t)t.scrollTop=t.scrollHeight;},100);
-  }
-  if((job.status==='accepted'||job.status==='in_transit')&&(isShipper||isDriver)){
-    const photos=job.pickup_photos||[];
-    h+=`<div class="job-detail-card"><div class="detail-label" style="margin-bottom:10px;">📸 Pickup Photos & Agreement</div><div class="photo-upload-row" id="pickup-photos">${photos.map(p=>`<img class="photo-thumb" src="${p}">`).join('')}${job.status==='accepted'?`<div class="photo-add-btn" onclick="document.getElementById('pickup-file').click()">+</div><input type="file" id="pickup-file" class="photo-input" accept="image/*" multiple onchange="uploadPhotos('${job.id}','pickup',this)">`:''}</div>${job.pickup_signed_at?`<div style="font-size:12px;color:var(--green);margin-top:5px;">✓ Condition agreed ${new Date(job.pickup_signed_at).toLocaleString()}</div>`:''}${job.status==='accepted'&&photos.length>=1?`<button class="btn-primary" onclick="confirmPickup('${job.id}')">✓ Confirm Pickup & Sign Agreement</button>`:''} ${job.status==='accepted'&&!photos.length?`<div style="font-size:12px;color:var(--gray);margin-top:7px;">Add at least 1 photo before confirming pickup</div>`:''}</div>`;
-  }
-  if(job.status==='in_transit'&&isShipper)h+=`<div class="job-detail-card"><div class="detail-label" style="margin-bottom:7px;">✅ Confirm Delivery</div><p style="font-size:13px;color:rgba(255,255,255,0.55);margin-bottom:10px;">Confirm delivery to release $${dp} to the driver.</p><div class="photo-upload-row" id="dropoff-photos"><div class="photo-add-btn" onclick="document.getElementById('dropoff-file').click()">+</div><input type="file" id="dropoff-file" class="photo-input" accept="image/*" multiple onchange="uploadPhotos('${job.id}','dropoff',this)"></div><button class="btn-primary" onclick="confirmDelivery('${job.id}')">Confirm Delivery & Release Payment 🎉</button></div>`;
-  if(job.status==='completed'&&(isShipper||isDriver))h+=`<div class="job-detail-card"><div class="detail-label" style="margin-bottom:7px;">Rate your experience</div><div class="star-row" id="star-row">${[1,2,3,4,5].map(i=>`<span class="star" onclick="setRating(${i})">★</span>`).join('')}</div><input type="text" id="rating-comment" placeholder="Any feedback? (optional)" style="margin-top:7px;"><button class="btn-secondary" style="margin-top:7px;" onclick="submitRating('${job.id}')">Submit Rating</button></div>`;
-  return h;
-}
-async function postJob(){
-  const errEl=document.getElementById('post-error');
-  errEl.textContent='';
-  const jobType=document.getElementById('job-type').value;
-  const title=document.getElementById('job-title').value.trim();
-  const item_size=document.getElementById('job-size').value;
-  const pickup_address=document.getElementById('job-pickup-addr').value.trim();
-  const pickup_city=document.getElementById('job-pickup-city').value.trim();
-  const pickup_state=document.getElementById('job-pickup-state').value.trim().toUpperCase();
-  const dropoff_address=document.getElementById('job-dropoff-addr').value.trim();
-  const dropoff_city=document.getElementById('job-dropoff-city').value.trim();
-  const dropoff_state=document.getElementById('job-dropoff-state').value.trim().toUpperCase();
-  const offered_price=document.getElementById('job-price').value;
-
-  if(!title){errEl.textContent='Please add a title for your delivery.';return;}
-  if(!item_size){errEl.textContent='Please select an item size.';return;}
-  if(!pickup_address){errEl.textContent='Please enter a pickup address.';return;}
-  if(!pickup_city){errEl.textContent='Please enter a pickup city.';return;}
-  if(!pickup_state){errEl.textContent='Please enter a pickup state (e.g. CO).';return;}
-  if(!dropoff_address){errEl.textContent='Please enter a dropoff address.';return;}
-  if(!dropoff_city){errEl.textContent='Please enter a dropoff city.';return;}
-  if(!dropoff_state){errEl.textContent='Please enter a dropoff state (e.g. CO).';return;}
-  if(!offered_price||parseFloat(offered_price)<5){errEl.textContent='Minimum offer is $5.';return;}
-
-  const listingInput=document.getElementById('listing-photos-input');
-  if(jobType==='marketplace'&&(!listingInput?.files?.length)){errEl.textContent='Marketplace jobs require at least one item photo.';return;}
-
-  const fd=new FormData();
-  if(jobType==='marketplace'&&listingInput?.files?.length)Array.from(listingInput.files).forEach(f=>fd.append('listing_photos',f));
-  const fields={job_type:jobType,title,description:document.getElementById('job-desc').value.trim(),item_size,item_weight:document.getElementById('job-weight').value,fragile:document.getElementById('job-fragile').checked?'1':'',needs_disassembly:document.getElementById('job-disassembly').checked?'1':'',pickup_address,pickup_city,pickup_state,dropoff_address,dropoff_city,dropoff_state,offered_price,notes:document.getElementById('job-notes').value.trim(),seller_name:document.getElementById('seller-name')?.value.trim()||'',seller_phone:document.getElementById('seller-phone')?.value.trim()||'',buyer_name:document.getElementById('buyer-name')?.value.trim()||'',buyer_phone:document.getElementById('buyer-phone')?.value.trim()||'',store_name:document.getElementById('store-name')?.value.trim()||'',item_to_pickup:document.getElementById('item-to-pickup')?.value.trim()||''};
-  if(window._requestedDriverRouteId){fields.requested_driver_route_id=window._requestedDriverRouteId;window._requestedDriverRouteId=null;}
-
-  // Tokenize card with Stripe
-  if(stripeInstance&&stripeCard){
-    const {paymentMethod,error}=await stripeInstance.createPaymentMethod({type:'card',card:stripeCard});
-    if(error){document.getElementById('stripe-card-error').textContent=error.message;return;}
-    fields.payment_method_id=paymentMethod.id;
-  }
-
-  Object.entries(fields).forEach(([k,v])=>{if(v)fd.append(k,v);});
-  try{
-    const res=await fetch('/api/jobs',{method:'POST',body:fd,credentials:'include'});
-    const data=await res.json();
-    if(!res.ok)throw new Error(data.error||'Failed to post job');
-    toast('Delivery posted! Looking for a driver match. 🎉');
-    document.getElementById('post-form').reset();
-    document.getElementById('price-breakdown').style.display='none';
-    document.getElementById('marketplace-fields').style.display='none';
-    document.getElementById('errand-fields').style.display='none';
-    document.querySelectorAll('.type-opt').forEach(o=>o.classList.remove('active'));
-    document.querySelector('[data-type="standard"]').classList.add('active');
-    document.getElementById('job-type').value='standard';
-    showView('view-home');
-  }catch(e){errEl.textContent=e.message;}
-}
-// ── QUICK POST ──
-function showQuickPost(){document.getElementById('quick-post-modal').style.display='flex';}
-function closeQuickPost(){document.getElementById('quick-post-modal').style.display='none';}
-function updateQPBreakdown(){
-  const price=parseFloat(document.getElementById('qp-price').value);
-  const bd=document.getElementById('qp-breakdown');
-  if(isNaN(price)||price<5){bd.style.display='none';return;}
-  bd.style.display='block';
-  bd.innerHTML=`Driver earns <strong style="color:var(--green)">$${(price*0.75).toFixed(2)}</strong> · Detour fee $${(price*0.25).toFixed(2)}`;
-}
-async function submitQuickPost(){
-  const title=document.getElementById('qp-title').value.trim();
-  const pickupAddr=document.getElementById('qp-pickup-addr').value.trim();
-  const from=document.getElementById('qp-from').value.trim()||'Durango';
-  const fromState=document.getElementById('qp-from-state').value.trim().toUpperCase()||'CO';
-  const dropoffAddr=document.getElementById('qp-dropoff-addr').value.trim();
-  const to=document.getElementById('qp-to').value.trim();
-  const toState=document.getElementById('qp-to-state').value.trim().toUpperCase()||'CO';
-  const price=document.getElementById('qp-price').value;
-  const size=document.getElementById('qp-size').value;
-  const errEl=document.getElementById('qp-error');
-  errEl.textContent='';
-  if(!title){errEl.textContent='Please add a title';return;}
-  if(!pickupAddr){errEl.textContent='Please enter a pickup address or neighborhood';return;}
-  if(!to){errEl.textContent='Please enter a destination city';return;}
-  if(!dropoffAddr){errEl.textContent='Please enter a dropoff address or neighborhood';return;}
-  if(!price||parseFloat(price)<5){errEl.textContent='Minimum offer is $5';return;}
-  const fd=new FormData();
-  fd.append('job_type','standard');
-  fd.append('title',title);
-  fd.append('pickup_address',pickupAddr);
-  fd.append('pickup_city',from);
-  fd.append('pickup_state',fromState);
-  fd.append('dropoff_address',dropoffAddr);
-  fd.append('dropoff_city',to);
-  fd.append('dropoff_state',toState);
-  fd.append('item_size',size);
-  fd.append('offered_price',price);
-  try{
-    const res=await fetch('/api/jobs',{method:'POST',body:fd,credentials:'include'});
-    const data=await res.json();
-    if(!res.ok)throw new Error(data.error||'Failed');
-    closeQuickPost();
-    toast('Delivery posted! 🎉 Looking for a driver...');
-    document.getElementById('qp-title').value='';
-    document.getElementById('qp-pickup-addr').value='';
-    document.getElementById('qp-dropoff-addr').value='';
-    document.getElementById('qp-to').value='';
-    document.getElementById('qp-price').value='';
-    loadOpenJobs();loadMyJobs();
-  }catch(e){errEl.textContent=e.message;}
-}
-
-// ── PRICE SUGGESTION ──
-function updatePriceSuggestion(){
-  const from=document.getElementById('job-pickup-city').value.trim().toLowerCase();
-  const to=document.getElementById('job-dropoff-city').value.trim().toLowerCase();
-  if(!from||!to)return;
-  // Distance-based suggestions for common Durango corridors
-  const routes={
-    'durango-telluride':45,'durango-cortez':25,'durango-pagosa springs':30,
-    'durango-albuquerque':80,'durango-denver':120,'durango-silverton':25,
-    'durango-farmington':30,'durango-santa fe':90,'durango-grand junction':70
-  };
-  const key=`${from}-${to}`;
-  const reverseKey=`${to}-${from}`;
-  const suggested=routes[key]||routes[reverseKey];
-  const sugg=document.getElementById('price-suggestion');
-  if(suggested&&sugg){
-    sugg.style.display='block';
-    sugg.querySelector('span').textContent=`$${suggested}`;
-    sugg.querySelector('span').onclick=()=>{
-      document.getElementById('job-price').value=suggested;
-      updatePriceBreakdown();
-    };
-  }
-}
-function applyPriceSuggestion(){
-  const span=document.getElementById('price-suggestion')?.querySelector('span');
-  if(span){
-    const val=parseInt(span.textContent.replace('$',''));
-    if(val){document.getElementById('job-price').value=val;updatePriceBreakdown();}
-  }
-}
-
-// ── DELIVERY TIMELINE ──
-function renderTimeline(status){
-  const steps=[
-    {key:'open',label:'Posted',icon:'📦'},
-    {key:'accepted',label:'Driver\nFound',icon:'🚗'},
-    {key:'in_transit',label:'Picked\nUp',icon:'📸'},
-    {key:'completed',label:'Delivered',icon:'✅'}
-  ];
-  const order=['open','accepted','in_transit','completed'];
-  const current=order.indexOf(status);
-  let html='<div class="delivery-timeline">';
-  steps.forEach((s,i)=>{
-    const done=i<current;
-    const active=i===current;
-    const cls=done?'done':active?'active':'pending';
-    html+=`<div class="timeline-step">
-      <div class="timeline-dot ${cls}">${done?'✓':s.icon}</div>
-      <div class="timeline-label ${cls}">${s.label}</div>
-    </div>`;
-    if(i<steps.length-1){
-      html+=`<div class="timeline-line ${done?'done':''}"></div>`;
-    }
-  });
-  html+='</div>';
-  return html;
-}
-
-// ── I'M HERE BUTTON ──
-async function imHere(jobId){
-  try{
-    await api('POST',`/api/jobs/${jobId}/messages`,{content:"🚗 I'm here! Ready for pickup."});
-    toast("Driver notified you're here! ✓");
-    await loadJobDetail(true);
-  }catch(e){toast('Could not send notification');}
-}
-
-// ── SWIPE TO ACCEPT ──
-function makeSwipeable(el,jobId){
-  let startX=0,currentX=0,swiping=false;
-  el.addEventListener('touchstart',e=>{startX=e.touches[0].clientX;swiping=true;},{passive:true});
-  el.addEventListener('touchmove',e=>{
-    if(!swiping)return;
-    currentX=e.touches[0].clientX-startX;
-    if(currentX<0)currentX=0;
-    const card=el.querySelector('.job-card');
-    const hint=el.querySelector('.swipe-hint');
-    if(card)card.style.transform=`translateX(${Math.min(currentX,100)}px)`;
-    if(hint)hint.style.opacity=Math.min(currentX/80,1);
-  },{passive:true});
-  el.addEventListener('touchend',()=>{
-    swiping=false;
-    const card=el.querySelector('.job-card');
-    const hint=el.querySelector('.swipe-hint');
-    if(currentX>60){
-      if(card)card.style.transform='translateX(100px)';
-      setTimeout(()=>{acceptJob(jobId);if(card)card.style.transform='';},200);
-    }else{
-      if(card)card.style.transform='';
-      if(hint)hint.style.opacity=0;
-    }
-    currentX=0;
-  },{passive:true});
-}
-
-async function acceptJob(jobId){
-  try{
-    await api('POST',`/api/jobs/${jobId}/accept`);
-    toast('Job accepted! Check messages to coordinate pickup.');
-    await loadJobDetail();
-  }catch(e){toast(e.message||'Could not accept job');}
-}
-
-// ── PUSH NOTIFICATIONS ──
-async function requestPushPermission(){
-  if(!('Notification' in window))return;
-  if(Notification.permission==='granted')return;
-  if(Notification.permission!=='denied'){
-    await Notification.requestPermission();
-  }
-}
-
-function showPushNotification(title,body){
-  if(Notification.permission==='granted'&&document.hidden){
-    new Notification(title,{body,icon:'/icons/icon-192.png',badge:'/icons/icon-192.png'});
-  }
-}
-
-// Poll for new jobs and notify driver
-let lastJobCount=0;
-function startJobPolling(){
-  setInterval(async()=>{
-    try{
-      const jobs=await api('GET','/api/jobs');
-      if(jobs.length>lastJobCount&&lastJobCount>0){
-        const newest=jobs[0];
-        showPushNotification(
-          '📦 New delivery available!',
-          `${newest.title} — ${newest.pickup_city} → ${newest.dropoff_city} — Earn $${(newest.offered_price*0.75).toFixed(0)}`
-        );
-        // Update nav badge
-        const driveNav=document.querySelectorAll('.nav-item')[2];
-        if(driveNav&&!driveNav.querySelector('.nav-badge')){
-          const badge=document.createElement('div');
-          badge.className='nav-badge';
-          driveNav.appendChild(badge);
-        }
+  // Check driver verification
+  const driver = db.prepare('SELECT vehicle_type, license_photo, insurance_photo, insurance_verified, driver_approved FROM users WHERE id = ?').get(req.session.userId);
+  if (!driver.license_photo) return res.status(403).json({ error: 'Upload your driver\'s license first. Go to Drive tab → Driver Verification.' });
+  if (!driver.insurance_photo) return res.status(403).json({ error: 'Upload your proof of insurance first. Go to Drive tab → Driver Verification.' });
+  if (!driver.driver_approved) return res.status(403).json({ error: 'Your documents are under review. You\'ll be notified once approved — usually within 24 hours.' });
+  db.prepare('UPDATE jobs SET driver_id = ?, status = "accepted" WHERE id = ?').run(req.session.userId, job.id);
+  if (job.stripe_payment_intent_id && process.env.STRIPE_SECRET_KEY) {
+    try {
+      const pi = await stripe.paymentIntents.retrieve(job.stripe_payment_intent_id);
+      // Confirm first if not already confirmed, then capture
+      if (pi.status === 'requires_confirmation') {
+        await stripe.paymentIntents.confirm(job.stripe_payment_intent_id);
       }
-      lastJobCount=jobs.length;
-    }catch(e){}
-  },30000); // check every 30 seconds
-}
-
-async function deleteJob(jobId){
-  if(!confirm('Delete this listing? This cannot be undone. Any payment authorization will be cancelled.'))return;
-  try{
-    await api('DELETE',`/api/jobs/${jobId}`);
-    toast('Listing deleted.');
-    showView('view-home');
-  }catch(e){toast(e.message||'Could not delete listing');}
-}
-
-async function uploadDoc(type, input){
-  if(!input.files?.length)return;
-  const fd=new FormData();
-  fd.append(type==='license'?'license_card':'insurance_card', input.files[0]);
-  const url = type==='license' ? '/api/auth/license' : '/api/auth/insurance';
-  try{
-    const res=await fetch(url,{method:'POST',body:fd,credentials:'include'});
-    const data=await res.json();
-    if(!res.ok)throw new Error(data.error||'Upload failed');
-    const label = type==='license' ? 'License' : 'Insurance card';
-    toast(`${label} uploaded! Under review — usually approved within 24 hours. ✓`);
-    const thumbId = type==='license' ? 'license-thumb' : 'insurance-thumb';
-    const previewId = type==='license' ? 'license-preview' : 'insurance-preview';
-    const thumb=document.getElementById(thumbId);
-    const preview=document.getElementById(previewId);
-    if(thumb&&preview){thumb.src=data.photo;preview.style.display='block';}
-    // Refresh user to update status
-    const user=await api('GET','/api/auth/me');
-    updateVerificationStatus(user);
-  }catch(e){toast(e.message||'Upload failed');}
-}
-
-async function updateVehicle(){
-  const vehicle_type=document.getElementById('driver-vehicle-type').value;
-  const vehicle_description=document.getElementById('driver-vehicle-desc').value.trim();
-  const license_plate=document.getElementById('driver-license-plate').value.trim().toUpperCase();
-  if(!vehicle_type){toast('Please select a vehicle type');return;}
-  try{
-    await api('POST','/api/auth/update-profile',{vehicle_type,vehicle_description,license_plate});
-    toast('Vehicle info saved ✓');
-  }catch(e){toast(e.message||'Could not save vehicle info');}
-}
-function updateVerificationStatus(user){
-  const el=document.getElementById('verification-status');
-  // Pre-fill vehicle fields
-  const vt=document.getElementById('driver-vehicle-type');
-  const vd=document.getElementById('driver-vehicle-desc');
-  const lp=document.getElementById('driver-license-plate');
-  if(vt&&user.vehicle_type)vt.value=user.vehicle_type;
-  if(vd&&user.vehicle_description)vd.value=user.vehicle_description;
-  if(lp&&user.license_plate)lp.value=user.license_plate;
-  if(!el)return;
-  const hasLicense=!!user.license_photo;
-  const hasInsurance=!!user.insurance_photo;
-  const hasBoth=hasLicense&&hasInsurance;
-
-  // Show existing document thumbnails
-  if(user.license_photo){
-    const t=document.getElementById('license-thumb');
-    const p=document.getElementById('license-preview');
-    if(t&&p){t.src=user.license_photo;p.style.display='block';}
+      if (pi.status === 'requires_capture' || pi.status === 'requires_confirmation') {
+        await stripe.paymentIntents.capture(job.stripe_payment_intent_id);
+      }
+    } catch (e) { console.error('Stripe accept error:', e.message); }
   }
-  if(user.insurance_photo){
-    const t=document.getElementById('insurance-thumb');
-    const p=document.getElementById('insurance-preview');
-    if(t&&p){t.src=user.insurance_photo;p.style.display='block';}
+  const extra = JSON.parse(job.extra_data || '{}');
+  let firstMsg = "I've accepted your delivery! When and where should we meet for pickup?";
+  if (job.job_type === 'marketplace') {
+    firstMsg = `I've accepted this job! I'll coordinate pickup${extra.seller_name ? ` with ${extra.seller_name}` : ''} and deliver${extra.buyer_name ? ` to ${extra.buyer_name}` : ''}. Any access details I need?`;
+  } else if (job.job_type === 'errand') {
+    firstMsg = `On it! I'll pick up your item from ${extra.store_name || 'the store'}. Any specific instructions or receipts needed?`;
+  } else if (job.job_type === 'retail') {
+    firstMsg = `I've accepted the delivery! I'll coordinate with the shop for pickup. What's the best contact there?`;
   }
+  db.prepare('INSERT INTO messages (id, job_id, sender_id, content) VALUES (?, ?, ?, ?)').run(uuidv4(), job.id, req.session.userId, firstMsg);
+  res.json({ success: true });
+});
 
-  if(user.driver_approved){
-    el.innerHTML=`<div style="background:rgba(0,194,168,0.1);border:1px solid rgba(0,194,168,0.3);border-radius:8px;padding:12px 14px;font-size:13px;color:#00C2A8;">✅ Verified driver — you can accept delivery jobs</div>`;
-    document.getElementById('insurance-upload-section').style.display='none';
-  }else if(hasBoth){
-    el.innerHTML=`<div style="background:rgba(251,191,36,0.1);border:1px solid rgba(251,191,36,0.3);border-radius:8px;padding:12px 14px;font-size:13px;color:#FBBF24;">⏳ Documents submitted — under review. You'll be approved within 24 hours.</div>`;
-  }else{
-    const missing=[];
-    if(!hasLicense)missing.push("driver's license");
-    if(!hasInsurance)missing.push("proof of insurance");
-    el.innerHTML=`<div style="background:rgba(240,85,85,0.1);border:1px solid rgba(240,85,85,0.3);border-radius:8px;padding:12px 14px;font-size:13px;color:#F05555;">⚠️ Upload your ${missing.join(' and ')} to start accepting jobs</div>`;
+router.post('/:id/pickup', requireAuth, upload.array('photos', 6), (req, res) => {
+  const job = db.prepare('SELECT * FROM jobs WHERE id = ?').get(req.params.id);
+  if (!job) return res.status(404).json({ error: 'Job not found' });
+  if (job.driver_id !== req.session.userId && job.shipper_id !== req.session.userId) return res.status(403).json({ error: 'Access denied' });
+  const photos = (req.files || []).map(f => `/uploads/${f.filename}`);
+  const existing = JSON.parse(job.pickup_photos || '[]');
+  db.prepare('UPDATE jobs SET pickup_photos = ?, pickup_signed_at = CURRENT_TIMESTAMP, status = "in_transit" WHERE id = ?')
+    .run(JSON.stringify([...existing, ...photos]), job.id);
+  res.json({ success: true, photos });
+});
+
+router.post('/:id/confirm', requireAuth, upload.array('photos', 6), async (req, res) => {
+  const job = db.prepare('SELECT * FROM jobs WHERE id = ?').get(req.params.id);
+  if (!job) return res.status(404).json({ error: 'Job not found' });
+  if (job.shipper_id !== req.session.userId) return res.status(403).json({ error: 'Only the poster can confirm delivery' });
+  if (job.status !== 'in_transit') return res.status(400).json({ error: 'Job not in transit' });
+  const photos = (req.files || []).map(f => `/uploads/${f.filename}`);
+  const existing = JSON.parse(job.dropoff_photos || '[]');
+  let transferId = null;
+  if (job.stripe_payment_intent_id && process.env.STRIPE_SECRET_KEY !== 'sk_test_placeholder') {
+    try {
+      const driver = db.prepare('SELECT stripe_customer_id FROM users WHERE id = ?').get(job.driver_id);
+      if (driver?.stripe_customer_id) {
+        const t = await stripe.transfers.create({ amount: Math.round(job.driver_payout * 100), currency: 'usd', destination: driver.stripe_customer_id, metadata: { job_id: job.id } });
+        transferId = t.id;
+      }
+    } catch (e) { console.error(e.message); }
   }
-}
-async function sendMsg(jobId){
-  const input=document.getElementById('msg-input'),content=input.value.trim();if(!content)return;input.value='';
-  try{const msg=await api('POST',`/api/jobs/${jobId}/messages`,{content});const thread=document.getElementById('msg-thread');if(thread){const div=document.createElement('div');div.innerHTML=`<div class="msg-name">${escHtml(msg.sender_name)}</div><div class="msg-bubble msg-out">${escHtml(msg.content)}</div>`;thread.appendChild(div);thread.scrollTop=thread.scrollHeight;}}
-  catch(e){toast('Could not send message');}
-}
-async function uploadPhotos(jobId,type,input){
-  const files=Array.from(input.files);if(!files.length)return;
-  const container=document.getElementById(`${type}-photos`);
-  files.forEach(f=>{const img=document.createElement('img');img.className='photo-thumb';img.src=URL.createObjectURL(f);if(container)container.insertBefore(img,container.querySelector('.photo-add-btn')||null);});
-  const fd=new FormData();files.forEach(f=>fd.append('photos',f));
-  try{const res=await fetch(`/api/jobs/${jobId}/${type}`,{method:'POST',body:fd,credentials:'include'});if(!res.ok)throw new Error('Upload failed');toast('Photos uploaded ✓');await loadJobDetail(true);}
-  catch(e){toast('Photo upload failed');}
-}
-async function confirmPickup(jobId){try{const res=await fetch(`/api/jobs/${jobId}/pickup`,{method:'POST',body:new FormData(),credentials:'include'});if(!res.ok)throw new Error('Failed');toast('Pickup confirmed! Item is now in transit.');await loadJobDetail();}catch(e){toast(e.message||'Could not confirm pickup');}}
-async function confirmDelivery(jobId){
-  if(!confirm('Confirm delivery complete and release payment to driver?'))return;
-  try{const res=await fetch(`/api/jobs/${jobId}/confirm`,{method:'POST',body:new FormData(),credentials:'include'});if(!res.ok)throw new Error('Failed');toast('Delivery confirmed! Payment released. 🎉');clearInterval(jobPollInterval);await loadJobDetail();}
-  catch(e){toast(e.message||'Could not confirm delivery');}
-}
-let selectedRating=0;
-function setRating(score){selectedRating=score;document.querySelectorAll('.star').forEach((s,i)=>s.classList.toggle('active',i<score));}
-async function submitRating(jobId){
-  if(!selectedRating){toast('Please select a star rating');return;}
-  const comment=document.getElementById('rating-comment')?.value.trim()||'';
-  try{await api('POST',`/api/jobs/${jobId}/rate`,{score:selectedRating,comment});toast('Rating submitted. Thanks!');await loadJobDetail();}
-  catch(e){toast(e.message||'Could not submit rating');}
-}
-function updatePriceBreakdown(){
-  const price=parseFloat(document.getElementById('job-price').value),bd=document.getElementById('price-breakdown');
-  if(isNaN(price)||price<5){bd.style.display='none';return;}
-  document.getElementById('pb-driver').textContent=`$${(price*0.75).toFixed(2)}`;
-  document.getElementById('pb-fee').textContent=`$${(price*0.25).toFixed(2)}`;
-  document.getElementById('pb-total').textContent=`$${price.toFixed(2)}`;
-  bd.style.display='block';
-}
-function openMaps(address,city){const q=encodeURIComponent(`${address}, ${city}`);window.open(/iPad|iPhone|iPod/.test(navigator.userAgent)?`maps://?q=${q}`:`https://www.google.com/maps/search/?api=1&query=${q}`,'_blank');}
-function mapsButtons(job){return`<div style="display:flex;gap:8px;margin-top:10px;"><button class="btn-secondary" style="flex:1;margin:0;padding:9px;font-size:12px;" onclick="openMaps('${job.pickup_address.replace(/'/g,"\\'")}','${job.pickup_city.replace(/'/g,"\\'")}')">📍 Pickup Directions</button><button class="btn-secondary" style="flex:1;margin:0;padding:9px;font-size:12px;" onclick="openMaps('${job.dropoff_address.replace(/'/g,"\\'")}','${job.dropoff_city.replace(/'/g,"\\'")}')">🏁 Dropoff Directions</button></div>`;}
-async function startConnectOnboarding(){try{const res=await api('POST','/api/stripe/connect/onboard');if(res.already_onboarded){toast('Payout account already set up ✓');return;}if(res.url)window.location.href=res.url;}catch(e){toast(e.message||'Could not start payout setup');}}
-async function openStripeDashboard(){try{const res=await api('POST','/api/stripe/connect/dashboard');if(res.url)window.open(res.url,'_blank');}catch(e){toast('Could not open dashboard');}}
-async function checkAndShowConnectPrompt(){
-  let status={connected:false};try{status=await api('GET','/api/stripe/connect/status');}catch(e){return;}
-  const topPrompt=document.getElementById('connect-prompt-top');
-  if(!topPrompt)return;
-  if(!status.connected||!status.charges_enabled){
-    topPrompt.style.display='block';
-    topPrompt.style.cssText='border-color:rgba(0,194,168,0.4);margin-bottom:14px;display:block;';
-    topPrompt.innerHTML=`<div style="display:flex;gap:12px;align-items:flex-start;"><div style="font-size:22px;">💳</div><div style="flex:1;"><div style="font-family:'Syne',sans-serif;font-size:15px;font-weight:800;margin-bottom:4px;">Set up payouts to earn</div><div style="font-size:13px;color:rgba(255,255,255,0.55);margin-bottom:10px;line-height:1.5;">Connect your bank account so Detour can pay you after each delivery. Takes 2 minutes.</div><button class="btn-primary" style="margin:0;" onclick="startConnectOnboarding()">Connect Bank Account →</button></div></div>`;
-  }else{
-    topPrompt.style.cssText='border-color:rgba(61,204,120,0.3);margin-bottom:14px;display:block;';
-    topPrompt.innerHTML=`<div style="display:flex;justify-content:space-between;align-items:center;"><div><div style="font-size:13px;color:var(--green);font-weight:600;">✓ Payout account connected</div><div style="font-size:12px;color:var(--gray);">Earnings deposited automatically</div></div><button class="btn-ghost" onclick="openStripeDashboard()">View earnings →</button></div>`;
+  db.prepare('UPDATE jobs SET dropoff_photos = ?, dropoff_confirmed_at = CURRENT_TIMESTAMP, status = "completed", stripe_transfer_id = ? WHERE id = ?')
+    .run(JSON.stringify([...existing, ...photos]), transferId, job.id);
+  res.json({ success: true });
+});
+
+// Delete / cancel a job (shipper only, open jobs only)
+router.delete('/:id', requireAuth, async (req, res) => {
+  const job = db.prepare('SELECT * FROM jobs WHERE id = ?').get(req.params.id);
+  if (!job) return res.status(404).json({ error: 'Job not found' });
+  if (job.shipper_id !== req.session.userId) return res.status(403).json({ error: 'Only the poster can delete this job' });
+  if (job.status !== 'open') return res.status(400).json({ error: 'Only open jobs can be deleted. Contact support if a driver has already accepted.' });
+  // Cancel Stripe PaymentIntent if exists
+  if (job.stripe_payment_intent_id && process.env.STRIPE_SECRET_KEY) {
+    try {
+      await stripe.paymentIntents.cancel(job.stripe_payment_intent_id);
+    } catch (e) { console.error('Stripe cancel error:', e.message); }
   }
-}
-(function(){const params=new URLSearchParams(window.location.search);if(params.get('onboard')==='complete'){setTimeout(()=>toast("Payout account connected! You're ready to earn. 🎉"),800);window.history.replaceState({},'','/');}else if(params.get('onboard')==='error'){setTimeout(()=>toast('Something went wrong. Try connecting again.'),800);window.history.replaceState({},'','/');}})();
-async function api(method,url,body){
-  const opts={method,headers:{'Content-Type':'application/json'},credentials:'include'};
-  if(body&&method!=='GET')opts.body=JSON.stringify(body);
-  const res=await fetch(url,opts);
-  const data=await res.json();
-  if(res.status===401){
-    // Session expired - redirect to login
-    toast('Session expired — please sign in again');
-    setTimeout(()=>{
-      currentUser=null;
-      document.getElementById('auth-screen').classList.add('active');
-      document.getElementById('app-screen').classList.remove('active');
-    },1500);
-    throw new Error('Please sign in again');
-  }
-  if(!res.ok)throw new Error(data.error||'Request failed');
-  return data;
-}
-function escHtml(str){if(!str)return'';return String(str).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');}
-let toastTimer;
-function toast(msg){const el=document.getElementById('toast');el.textContent=msg;el.classList.add('show');clearTimeout(toastTimer);toastTimer=setTimeout(()=>el.classList.remove('show'),3200);}
+  db.prepare('DELETE FROM jobs WHERE id = ?').run(job.id);
+  res.json({ success: true });
+});
 
-// Restore saved email and keep-signed-in preference
-(function(){
-  const savedEmail=localStorage.getItem('detour_email');
-  const savedKeep=localStorage.getItem('detour_keep');
-  if(savedEmail)document.getElementById('login-email').value=savedEmail;
-  if(savedKeep!==null)document.getElementById('keep-signed-in').checked=savedKeep==='1';
-})();
+router.post('/:id/messages', requireAuth, (req, res) => {
+  const { content } = req.body;
+  if (!content?.trim()) return res.status(400).json({ error: 'Empty message' });
+  const job = db.prepare('SELECT * FROM jobs WHERE id = ?').get(req.params.id);
+  if (!job) return res.status(404).json({ error: 'Job not found' });
+  if (job.shipper_id !== req.session.userId && job.driver_id !== req.session.userId) return res.status(403).json({ error: 'Access denied' });
+  const id = uuidv4();
+  db.prepare('INSERT INTO messages (id, job_id, sender_id, content) VALUES (?, ?, ?, ?)').run(id, job.id, req.session.userId, content.trim());
+  const msg = db.prepare('SELECT m.*, u.name as sender_name FROM messages m JOIN users u ON m.sender_id = u.id WHERE m.id = ?').get(id);
+  res.json(msg);
+});
 
-// Check if already logged in
-(async()=>{
-  try{
-    const user=await api('GET','/api/auth/me');
-    currentUser=user;
-    enterApp(user.name);
-    updateVerificationStatus(user);
-  }catch(e){}
-})();
+router.post('/:id/rate', requireAuth, (req, res) => {
+  const { score, comment } = req.body;
+  const job = db.prepare('SELECT * FROM jobs WHERE id = ?').get(req.params.id);
+  if (!job || job.status !== 'completed') return res.status(400).json({ error: 'Cannot rate this job' });
+  const isShipper = job.shipper_id === req.session.userId;
+  const isDriver = job.driver_id === req.session.userId;
+  if (!isShipper && !isDriver) return res.status(403).json({ error: 'Access denied' });
+  const existing = db.prepare('SELECT id FROM ratings WHERE job_id = ? AND rater_id = ?').get(job.id, req.session.userId);
+  if (existing) return res.status(400).json({ error: 'Already rated' });
+  const s = Math.min(5, Math.max(1, parseInt(score)));
+  db.prepare('INSERT INTO ratings (id, job_id, rater_id, ratee_id, score, comment) VALUES (?, ?, ?, ?, ?, ?)')
+    .run(uuidv4(), job.id, req.session.userId, isShipper ? job.driver_id : job.shipper_id, s, comment || null);
+  db.prepare('UPDATE users SET rating_total = rating_total + ?, rating_count = rating_count + 1 WHERE id = ?').run(s, isShipper ? job.driver_id : job.shipper_id);
+  res.json({ success: true });
+});
 
-</script>
-</body>
-</html>
+module.exports = router;
