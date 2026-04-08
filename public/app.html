@@ -450,6 +450,22 @@ textarea{resize:none}
 
         <!-- DRIVER VERIFICATION -->
         <div class="form-section" style="margin-top:24px;">
+          <div class="form-section-title">🚗 Your Vehicle</div>
+          <div class="field-group">
+            <select id="driver-vehicle-type">
+              <option value="">Select vehicle type</option>
+              <option value="sedan">Sedan / Hatchback</option>
+              <option value="suv">SUV / Crossover</option>
+              <option value="truck">Pickup Truck</option>
+              <option value="van">Van / Minivan</option>
+              <option value="cargo_van">Cargo Van</option>
+            </select>
+          </div>
+          <div class="field-group"><input type="text" id="driver-vehicle-desc" placeholder="e.g. Toyota Tacoma, truck bed available"></div>
+          <div class="field-group"><input type="text" id="driver-license-plate" placeholder="License plate (e.g. ABC-1234)" style="text-transform:uppercase;"></div>
+          <button class="btn-secondary" style="margin-top:4px;" onclick="updateVehicle()">Save Vehicle Info</button>
+        </div>
+        <div class="form-section" style="margin-top:12px;">
           <div class="form-section-title">🛡️ Driver Verification</div>
           <div id="verification-status" style="margin-bottom:14px;"></div>
           <div id="insurance-upload-section">
@@ -1168,8 +1184,25 @@ async function uploadDoc(type, input){
   }catch(e){toast(e.message||'Upload failed');}
 }
 
+async function updateVehicle(){
+  const vehicle_type=document.getElementById('driver-vehicle-type').value;
+  const vehicle_description=document.getElementById('driver-vehicle-desc').value.trim();
+  const license_plate=document.getElementById('driver-license-plate').value.trim().toUpperCase();
+  if(!vehicle_type){toast('Please select a vehicle type');return;}
+  try{
+    await api('POST','/api/auth/update-profile',{vehicle_type,vehicle_description,license_plate});
+    toast('Vehicle info saved ✓');
+  }catch(e){toast(e.message||'Could not save vehicle info');}
+}
 function updateVerificationStatus(user){
   const el=document.getElementById('verification-status');
+  // Pre-fill vehicle fields
+  const vt=document.getElementById('driver-vehicle-type');
+  const vd=document.getElementById('driver-vehicle-desc');
+  const lp=document.getElementById('driver-license-plate');
+  if(vt&&user.vehicle_type)vt.value=user.vehicle_type;
+  if(vd&&user.vehicle_description)vd.value=user.vehicle_description;
+  if(lp&&user.license_plate)lp.value=user.license_plate;
   if(!el)return;
   const hasLicense=!!user.license_photo;
   const hasInsurance=!!user.insurance_photo;
