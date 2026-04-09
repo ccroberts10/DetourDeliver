@@ -131,6 +131,36 @@ app.post('/api/debug/backfill', async (req, res) => {
     res.status(500).json({ error: e.message });
   }
 });
+// Web Push
+let webpush = null;
+try {
+  webpush = require('web-push');
+  if (process.env.VAPID_PUBLIC_KEY && process.env.VAPID_PRIVATE_KEY) {
+    webpush.setVapidDetails('mailto:hello@detourdeliver.com',
+      process.env.VAPID_PUBLIC_KEY, process.env.VAPID_PRIVATE_KEY);
+    console.log('Web push configured ✓');
+  }
+} catch(e) { console.log('web-push not available:', e.message); }
+
+// Save push subscription
+app.post('/api/push/subscribe', (req, res) => {
+  const userId = req.session.userId || req.headers['x-user-id'];
+  if (!userId) return res.status(401).json({ error: 'Login required' });
+  const { subscription } = req.body;
+  if (!subscription) return res.status(400).json({ error: 'No subscription' });
+  try {
+    const { v4: uuidv4 } = require('uuid');
+    db.prepare(`INSERT OR REPLACE INTO push_subscriptions (id, user_id, subscription) VALUES (?, ?, ?)`)
+      .run(uuidv4(), userId, JSON.stringify(subscription));
+    res.json({ success: true });
+  } catch(e) { res.status(500).json({ error: e.message }); }
+});
+
+// Get VAPID public key
+app.get('/api/push/vapid-public-key', (req, res) => {
+  res.json({ key: process.env.VAPID_PUBLIC_KEY || '' });
+});
+
 const uploadsPath = VOLUME_PATH ? path.join(VOLUME_PATH, 'uploads') : path.join(__dirname, 'public/uploads');
 if (!fs.existsSync(uploadsPath)) fs.mkdirSync(uploadsPath, { recursive: true });
 app.use('/uploads', express.static(uploadsPath));
