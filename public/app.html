@@ -812,6 +812,14 @@ async function refreshVerificationStatus(){
     const user=await res.json();
     currentUser=user;
     updateVerificationStatus(user);
+    // Prompt for home address if not set
+    const homeEl=document.getElementById('driver-home-address');
+    if(homeEl&&!user.home_address){
+      homeEl.style.border='1px solid rgba(0,194,168,0.4)';
+      homeEl.placeholder='⚡ Enter your home address to get matched to nearby jobs!';
+    } else if(homeEl&&user.home_address){
+      homeEl.value=user.home_address;
+    }
   }catch(e){console.log('Verification refresh error:',e.message);}
 }
 function setNavActive(el){document.querySelectorAll('.nav-item').forEach(n=>n.classList.remove('active'));el.classList.add('active');}
@@ -1351,10 +1359,29 @@ function makeSwipeable(el,jobId){
 
 async function acceptJob(jobId){
   try{
-    await api('POST',`/api/jobs/${jobId}/accept`);
+    const uid=currentUser?.userId||currentUser?.id||localStorage.getItem('detour_uid');
+    const res=await fetch(`/api/jobs/${jobId}/accept`,{
+      method:'POST',
+      headers:{'Content-Type':'application/json','x-user-id':uid||''},
+      credentials:'include'
+    });
+    const contentType=res.headers.get('content-type')||'';
+    if(!contentType.includes('application/json')){
+      // Server returned HTML — session issue
+      toast('Session expired — please sign out and sign back in');
+      return;
+    }
+    const data=await res.json();
+    if(!res.ok)throw new Error(data.error||'Could not accept job');
     toast('Job accepted! Check messages to coordinate pickup.');
     await loadJobDetail();
-  }catch(e){toast(e.message||'Could not accept job');}
+  }catch(e){
+    if(e.message.includes('JSON')||e.message.includes('pattern')){
+      toast('Session expired — please sign out and sign back in');
+    }else{
+      toast(e.message||'Could not accept job');
+    }
+  }
 }
 
 // ── PUSH NOTIFICATIONS ──
