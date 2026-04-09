@@ -85,7 +85,9 @@ app.get('/api/debug/db', (req, res) => {
   }
 });
 
-// Test geocoding
+app.get('/api/debug/version', (req, res) => {
+  res.json({ version: 'v2-stripe-nonblocking', timestamp: new Date().toISOString() });
+});
 app.get('/api/debug/geocode', async (req, res) => {
   try {
     const { geocode } = require('./utils/matching');
