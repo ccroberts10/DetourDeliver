@@ -113,6 +113,14 @@ db.exec(`
     notified_at DATETIME DEFAULT CURRENT_TIMESTAMP,
     UNIQUE(job_id, driver_id)
   );
+
+  CREATE TABLE IF NOT EXISTS push_subscriptions (
+    id TEXT PRIMARY KEY,
+    user_id TEXT NOT NULL,
+    subscription TEXT NOT NULL,
+    created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+    UNIQUE(user_id, subscription)
+  );
 `);
 
 module.exports = db;
