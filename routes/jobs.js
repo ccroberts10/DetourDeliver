@@ -310,7 +310,7 @@ router.post('/:id/accept', requireAuth, async (req, res) => {
     if (!driver.insurance_photo) return res.status(403).json({ error: 'Upload your proof of insurance first. Go to Drive tab → Driver Verification.' });
     if (!driver.driver_approved) return res.status(403).json({ error: 'Your documents are under review. You\'ll be notified once approved — usually within 24 hours.' });
 
-    db.prepare('UPDATE jobs SET driver_id = ?, status = "accepted" WHERE id = ?').run(req.session.userId, job.id);
+    db.prepare("UPDATE jobs SET driver_id = ?, status = 'accepted' WHERE id = ?").run(req.session.userId, job.id);
 
     // Stripe capture — run async, don't block the response
     if (job.stripe_payment_intent_id && process.env.STRIPE_SECRET_KEY) {
@@ -351,7 +351,7 @@ router.post('/:id/pickup', requireAuth, upload.array('photos', 6), (req, res) =>
   if (job.driver_id !== req.session.userId && job.shipper_id !== req.session.userId) return res.status(403).json({ error: 'Access denied' });
   const photos = (req.files || []).map(f => `/uploads/${f.filename}`);
   const existing = JSON.parse(job.pickup_photos || '[]');
-  db.prepare('UPDATE jobs SET pickup_photos = ?, pickup_signed_at = CURRENT_TIMESTAMP, status = "in_transit" WHERE id = ?')
+  db.prepare("UPDATE jobs SET pickup_photos = ?, pickup_signed_at = CURRENT_TIMESTAMP, status = 'in_transit' WHERE id = ?")
     .run(JSON.stringify([...existing, ...photos]), job.id);
   res.json({ success: true, photos });
 });
@@ -373,7 +373,7 @@ router.post('/:id/confirm', requireAuth, upload.array('photos', 6), async (req, 
       }
     } catch (e) { console.error(e.message); }
   }
-  db.prepare('UPDATE jobs SET dropoff_photos = ?, dropoff_confirmed_at = CURRENT_TIMESTAMP, status = "completed", stripe_transfer_id = ? WHERE id = ?')
+  db.prepare("UPDATE jobs SET dropoff_photos = ?, dropoff_confirmed_at = CURRENT_TIMESTAMP, status = 'completed', stripe_transfer_id = ? WHERE id = ?")
     .run(JSON.stringify([...existing, ...photos]), transferId, job.id);
   res.json({ success: true });
 });
