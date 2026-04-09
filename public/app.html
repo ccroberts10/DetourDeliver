@@ -1369,17 +1369,29 @@ async function acceptJob(jobId){
     });
     const contentType=res.headers.get('content-type')||'';
     if(!contentType.includes('application/json')){
-      // Server returned HTML — session issue
-      toast('Session expired — please sign out and sign back in');
+      toast('Refreshing session — please try again in a moment');
+      // Auto refresh session using stored uid
+      if(uid){
+        try{
+          const me=await fetch('/api/auth/me',{headers:{'x-user-id':uid},credentials:'include'});
+          if(me.ok){
+            const user=await me.json();
+            currentUser=user;
+            toast('Session restored — try accepting again ✓');
+            return;
+          }
+        }catch(e){}
+      }
+      toast('Please sign out and sign back in');
       return;
     }
     const data=await res.json();
     if(!res.ok)throw new Error(data.error||'Could not accept job');
-    toast('Job accepted! Check messages to coordinate pickup.');
+    toast('Job accepted! Check messages to coordinate pickup. 🎉');
     await loadJobDetail();
   }catch(e){
     if(e.message.includes('JSON')||e.message.includes('pattern')){
-      toast('Session expired — please sign out and sign back in');
+      toast('Please sign out and sign back in');
     }else{
       toast(e.message||'Could not accept job');
     }
