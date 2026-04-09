@@ -493,7 +493,20 @@ textarea{resize:none}
         <div class="form-section" style="margin-top:12px;">
           <div class="form-section-title">📍 Your Starting Location</div>
           <div style="font-size:12px;color:rgba(255,255,255,0.4);margin-bottom:10px;line-height:1.5;">We'll match you to nearby jobs automatically and alert you in the app.</div>
-          <div class="field-group"><input type="text" id="driver-home-address" placeholder="Home address or starting city (e.g. 225 E 8th Ave, Durango, CO)"></div>
+          <div class="field-group">
+            <label>Street Address</label>
+            <div class="autocomplete-wrap">
+              <input type="text" id="driver-home-street" placeholder="Start typing — 225 E 8th Ave, Walmart..." autocomplete="off" oninput="addressAutocomplete(this,'home-ac','driver-home-zip','driver-home-city','driver-home-state')">
+              <div id="home-ac" class="autocomplete-list" style="display:none"></div>
+            </div>
+          </div>
+          <div class="field-row">
+            <div class="field-group" style="flex:2;"><label>City</label><input type="text" id="driver-home-city" placeholder="Durango" value="Durango"></div>
+            <div class="field-group" style="flex:1;"><label>State</label><input type="text" id="driver-home-state" placeholder="CO" maxlength="2" style="text-transform:uppercase;" value="CO"></div>
+            <div class="field-group" style="flex:1;"><label>Zip</label><input type="text" id="driver-home-zip" placeholder="81301" maxlength="5" inputmode="numeric"></div>
+          </div>
+          <!-- Hidden field keeps full combined address for DB storage -->
+          <input type="hidden" id="driver-home-address">
           <button class="btn-secondary" style="margin-top:4px;" onclick="updateVehicle()">Save Location</button>
         </div>
         <div class="form-section" style="margin-top:12px;">
@@ -788,7 +801,21 @@ function enterApp(name){
   if(vt){const el=document.getElementById('driver-vehicle-type');if(el)el.value=vt;}
   if(vd){const el=document.getElementById('driver-vehicle-desc');if(el)el.value=vd;}
   if(lpl){const el=document.getElementById('driver-license-plate');if(el)el.value=lpl;}
-  if(ha){const el=document.getElementById('driver-home-address');if(el)el.value=ha;}
+  if(ha){
+    const hiddenEl=document.getElementById('driver-home-address');
+    if(hiddenEl)hiddenEl.value=ha;
+    // Parse back into separate fields
+    const parts=ha.split(',').map(s=>s.trim());
+    const zip=parts.find(p=>/^\d{5}$/.test(p))||'';
+    const state=parts.find(p=>/^[A-Z]{2}$/.test(p))||'';
+    const stIdx=parts.findIndex(p=>/^[A-Z]{2}$/.test(p));
+    const city=stIdx>0?parts[stIdx-1]:'';
+    const street=parts[0]||'';
+    if(document.getElementById('driver-home-street'))document.getElementById('driver-home-street').value=street;
+    if(city&&document.getElementById('driver-home-city'))document.getElementById('driver-home-city').value=city;
+    if(state&&document.getElementById('driver-home-state'))document.getElementById('driver-home-state').value=state;
+    if(zip&&document.getElementById('driver-home-zip'))document.getElementById('driver-home-zip').value=zip;
+  }
   loadMyJobs();
   loadOpenJobs();
   loadMatchedJobs();
@@ -815,13 +842,24 @@ async function refreshVerificationStatus(){
     const user=await res.json();
     currentUser=user;
     updateVerificationStatus(user);
-    // Prompt for home address if not set
+    // Populate home address fields
     const homeEl=document.getElementById('driver-home-address');
-    if(homeEl&&!user.home_address){
-      homeEl.style.border='1px solid rgba(0,194,168,0.4)';
-      homeEl.placeholder='⚡ Enter your home address to get matched to nearby jobs!';
-    } else if(homeEl&&user.home_address){
-      homeEl.value=user.home_address;
+    if(homeEl)homeEl.value=user.home_address||'';
+    if(user.home_address){
+      const parts=user.home_address.split(',').map(s=>s.trim());
+      const zip=parts.find(p=>/^\d{5}$/.test(p))||'';
+      const state=parts.find(p=>/^[A-Z]{2}$/.test(p))||'';
+      const stIdx=parts.findIndex(p=>/^[A-Z]{2}$/.test(p));
+      const city=stIdx>0?parts[stIdx-1]:'';
+      const street=parts[0]||'';
+      if(document.getElementById('driver-home-street'))document.getElementById('driver-home-street').value=street;
+      if(city&&document.getElementById('driver-home-city'))document.getElementById('driver-home-city').value=city;
+      if(state&&document.getElementById('driver-home-state'))document.getElementById('driver-home-state').value=state;
+      if(zip&&document.getElementById('driver-home-zip'))document.getElementById('driver-home-zip').value=zip;
+    } else {
+      // Prompt if not set
+      const streetEl=document.getElementById('driver-home-street');
+      if(streetEl&&!streetEl.value){streetEl.style.border='1px solid rgba(0,194,168,0.4)';}
     }
   }catch(e){console.log('Verification refresh error:',e.message);}
 }
@@ -1521,7 +1559,15 @@ async function updateVehicle(){
   const vehicle_type=document.getElementById('driver-vehicle-type').value;
   const vehicle_description=document.getElementById('driver-vehicle-desc').value.trim();
   const license_plate=document.getElementById('driver-license-plate').value.trim().toUpperCase();
-  const home_address=document.getElementById('driver-home-address')?.value.trim()||'';
+  const home_street=document.getElementById('driver-home-street')?.value.trim()||'';
+  const home_city=document.getElementById('driver-home-city')?.value.trim()||'';
+  const home_state=document.getElementById('driver-home-state')?.value.trim().toUpperCase()||'';
+  const home_zip=document.getElementById('driver-home-zip')?.value.trim()||'';
+  // Build full address string for geocoding
+  const home_address=[home_street,home_city,home_state,home_zip].filter(Boolean).join(', ');
+  // Keep hidden field in sync
+  const hiddenAddr=document.getElementById('driver-home-address');
+  if(hiddenAddr)hiddenAddr.value=home_address;
   if(!vehicle_type&&!home_address){toast('Please select a vehicle type or enter your home address');return;}
   const uid=currentUser?.userId||currentUser?.id||localStorage.getItem('detour_uid');
   if(vehicle_type){
