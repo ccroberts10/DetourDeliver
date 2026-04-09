@@ -297,44 +297,52 @@ router.get('/:id', requireAuth, (req, res) => {
 });
 
 router.post('/:id/accept', requireAuth, async (req, res) => {
-  const job = db.prepare('SELECT * FROM jobs WHERE id = ?').get(req.params.id);
-  if (!job) return res.status(404).json({ error: 'Job not found' });
-  if (job.status !== 'open') return res.status(400).json({ error: 'Job no longer available' });
-  if (job.shipper_id === req.session.userId) return res.status(400).json({ error: 'Cannot accept your own job' });
+  try {
+    const job = db.prepare('SELECT * FROM jobs WHERE id = ?').get(req.params.id);
+    if (!job) return res.status(404).json({ error: 'Job not found' });
+    if (job.status !== 'open') return res.status(400).json({ error: 'Job no longer available' });
+    if (job.shipper_id === req.session.userId) return res.status(400).json({ error: 'Cannot accept your own job' });
 
-  // Check driver verification
-  const driver = db.prepare('SELECT vehicle_type, license_photo, insurance_photo, insurance_verified, driver_approved FROM users WHERE id = ?').get(req.session.userId);
-  if (!driver.license_photo) return res.status(403).json({ error: 'Upload your driver\'s license first. Go to Drive tab → Driver Verification.' });
-  if (!driver.insurance_photo) return res.status(403).json({ error: 'Upload your proof of insurance first. Go to Drive tab → Driver Verification.' });
-  if (!driver.driver_approved) return res.status(403).json({ error: 'Your documents are under review. You\'ll be notified once approved — usually within 24 hours.' });
-  db.prepare('UPDATE jobs SET driver_id = ?, status = "accepted" WHERE id = ?').run(req.session.userId, job.id);
+    // Check driver verification
+    const driver = db.prepare('SELECT vehicle_type, license_photo, insurance_photo, insurance_verified, driver_approved FROM users WHERE id = ?').get(req.session.userId);
+    if (!driver) return res.status(401).json({ error: 'Account not found. Please sign out and sign back in.' });
+    if (!driver.license_photo) return res.status(403).json({ error: 'Upload your driver\'s license first. Go to Drive tab → Driver Verification.' });
+    if (!driver.insurance_photo) return res.status(403).json({ error: 'Upload your proof of insurance first. Go to Drive tab → Driver Verification.' });
+    if (!driver.driver_approved) return res.status(403).json({ error: 'Your documents are under review. You\'ll be notified once approved — usually within 24 hours.' });
 
-  // Stripe capture — run async, don't block the response
-  if (job.stripe_payment_intent_id && process.env.STRIPE_SECRET_KEY) {
-    setImmediate(async () => {
-      try {
-        const pi = await stripe.paymentIntents.retrieve(job.stripe_payment_intent_id);
-        if (pi.status === 'requires_confirmation') {
-          await stripe.paymentIntents.confirm(job.stripe_payment_intent_id);
-        } else if (pi.status === 'requires_capture') {
-          await stripe.paymentIntents.capture(job.stripe_payment_intent_id);
+    db.prepare('UPDATE jobs SET driver_id = ?, status = "accepted" WHERE id = ?').run(req.session.userId, job.id);
+
+    // Stripe capture — run async, don't block the response
+    if (job.stripe_payment_intent_id && process.env.STRIPE_SECRET_KEY) {
+      setImmediate(async () => {
+        try {
+          const pi = await stripe.paymentIntents.retrieve(job.stripe_payment_intent_id);
+          if (pi.status === 'requires_confirmation') {
+            await stripe.paymentIntents.confirm(job.stripe_payment_intent_id);
+          } else if (pi.status === 'requires_capture') {
+            await stripe.paymentIntents.capture(job.stripe_payment_intent_id);
+          }
+        } catch (e) {
+          console.error('Stripe accept error (non-fatal):', e.message);
         }
-      } catch (e) {
-        console.error('Stripe accept error (non-fatal):', e.message);
-      }
-    });
+      });
+    }
+
+    const extra = JSON.parse(job.extra_data || '{}');
+    let firstMsg = "I've accepted your delivery! When and where should we meet for pickup?";
+    if (job.job_type === 'marketplace') {
+      firstMsg = `I've accepted this job! I'll coordinate pickup${extra.seller_name ? ` with ${extra.seller_name}` : ''} and deliver${extra.buyer_name ? ` to ${extra.buyer_name}` : ''}. Any access details I need?`;
+    } else if (job.job_type === 'errand') {
+      firstMsg = `On it! I'll pick up your item from ${extra.store_name || 'the store'}. Any specific instructions or receipts needed?`;
+    } else if (job.job_type === 'retail') {
+      firstMsg = `I've accepted the delivery! I'll coordinate with the shop for pickup. What's the best contact there?`;
+    }
+    db.prepare('INSERT INTO messages (id, job_id, sender_id, content) VALUES (?, ?, ?, ?)').run(uuidv4(), job.id, req.session.userId, firstMsg);
+    res.json({ success: true });
+  } catch(e) {
+    console.error('Accept route error:', e.message);
+    res.status(500).json({ error: 'Could not accept job: ' + e.message });
   }
-  const extra = JSON.parse(job.extra_data || '{}');
-  let firstMsg = "I've accepted your delivery! When and where should we meet for pickup?";
-  if (job.job_type === 'marketplace') {
-    firstMsg = `I've accepted this job! I'll coordinate pickup${extra.seller_name ? ` with ${extra.seller_name}` : ''} and deliver${extra.buyer_name ? ` to ${extra.buyer_name}` : ''}. Any access details I need?`;
-  } else if (job.job_type === 'errand') {
-    firstMsg = `On it! I'll pick up your item from ${extra.store_name || 'the store'}. Any specific instructions or receipts needed?`;
-  } else if (job.job_type === 'retail') {
-    firstMsg = `I've accepted the delivery! I'll coordinate with the shop for pickup. What's the best contact there?`;
-  }
-  db.prepare('INSERT INTO messages (id, job_id, sender_id, content) VALUES (?, ?, ?, ?)').run(uuidv4(), job.id, req.session.userId, firstMsg);
-  res.json({ success: true });
 });
 
 router.post('/:id/pickup', requireAuth, upload.array('photos', 6), (req, res) => {
