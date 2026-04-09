@@ -90,7 +90,8 @@ router.get('/me', (req, res) => {
   if (!userId) return res.status(401).json({ error: 'Not logged in' });
   const user = db.prepare(`SELECT id, name, email, phone, vehicle_type, vehicle_description, haul_types,
     rating_total, rating_count, background_check, insurance_photo, insurance_verified,
-    insurance_submitted_at, driver_approved, license_photo, stripe_connect_id, stripe_connect_verified, license_plate
+    insurance_submitted_at, driver_approved, license_photo, stripe_connect_id, stripe_connect_verified,
+    license_plate, home_address, home_lat, home_lng
     FROM users WHERE id = ?`).get(userId);
   if (!user) return res.status(404).json({ error: 'User not found' });
   user.haul_types = JSON.parse(user.haul_types || '[]');
