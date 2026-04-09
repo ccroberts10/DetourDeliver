@@ -102,18 +102,47 @@ async function findMatchingDrivers(job) {
   return matches;
 }
 
-// ── STORE MATCHES IN DB ─────────────────────────────────────────────────────
-// Frontend polls /api/jobs/my/matches to get these and show notifications
+// ── STORE MATCHES AND SEND PUSH ─────────────────────────────────────────────
 async function notifyMatchedDrivers(job) {
   const matches = await findMatchingDrivers(job);
   if (!matches.length) return [];
 
+  const payout = (job.offered_price * 0.75).toFixed(0);
+  const payload = JSON.stringify({
+    title: '📦 Job near you on Detour!',
+    body: `${job.title} · ${job.pickup_city} → ${job.dropoff_city} · Earn $${payout}`,
+    url: 'https://detourdeliver.com/app'
+  });
+
   for (const driver of matches) {
+    // Store match in DB for in-app display
     try {
       db.prepare(`INSERT OR IGNORE INTO job_matches (id, job_id, driver_id, notified_at)
         VALUES (?, ?, ?, CURRENT_TIMESTAMP)`).run(uuidv4(), job.id, driver.userId);
-      console.log(`Match stored: driver ${driver.name} → job ${job.id} (${driver.type})`);
     } catch(e) { console.error('Match store error:', e.message); }
+
+    // Send web push if they have subscriptions
+    try {
+      let webpush = null;
+      try { webpush = require('web-push'); } catch(e) {}
+      if (webpush && process.env.VAPID_PUBLIC_KEY) {
+        const subs = db.prepare('SELECT subscription FROM push_subscriptions WHERE user_id = ?').all(driver.userId);
+        for (const row of subs) {
+          try {
+            await webpush.sendNotification(JSON.parse(row.subscription), payload);
+            console.log(`Push sent to ${driver.name}`);
+          } catch(e) {
+            // Remove expired/invalid subscriptions
+            if (e.statusCode === 410 || e.statusCode === 404) {
+              db.prepare('DELETE FROM push_subscriptions WHERE subscription = ?').run(row.subscription);
+            }
+            console.error(`Push failed for ${driver.name}:`, e.message);
+          }
+        }
+      }
+    } catch(e) { console.error('Push send error:', e.message); }
+
+    console.log(`Matched driver ${driver.name} (${driver.type})`);
   }
 
   return matches;
