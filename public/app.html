@@ -743,7 +743,7 @@ async function logout(){
   currentUser=null;
   // Clear all user data from localStorage
   ['detour_uid','detour_name','detour_vehicle','detour_vehicle_desc','detour_plate',
-   `detour_vehicle_${uid}`,`detour_vehicle_desc_${uid}`,`detour_plate_${uid}`
+   `detour_vehicle_${uid}`,`detour_vehicle_desc_${uid}`,`detour_plate_${uid}`,`detour_home_${uid}`
   ].forEach(k=>localStorage.removeItem(k));
   // Clear document previews
   const lt=document.getElementById('license-thumb');
@@ -783,9 +783,11 @@ function enterApp(name){
   const vt=localStorage.getItem(`detour_vehicle_${uid}`);
   const vd=localStorage.getItem(`detour_vehicle_desc_${uid}`);
   const lpl=localStorage.getItem(`detour_plate_${uid}`);
+  const ha=localStorage.getItem(`detour_home_${uid}`);
   if(vt){const el=document.getElementById('driver-vehicle-type');if(el)el.value=vt;}
   if(vd){const el=document.getElementById('driver-vehicle-desc');if(el)el.value=vd;}
   if(lpl){const el=document.getElementById('driver-license-plate');if(el)el.value=lpl;}
+  if(ha){const el=document.getElementById('driver-home-address');if(el)el.value=ha;}
   loadMyJobs();
   loadOpenJobs();
   loadMatchedJobs();
@@ -1473,6 +1475,9 @@ async function updateVehicle(){
     localStorage.setItem(`detour_vehicle_desc_${uid}`,vehicle_description);
     localStorage.setItem(`detour_plate_${uid}`,license_plate);
   }
+  if(home_address){
+    localStorage.setItem(`detour_home_${uid}`,home_address);
+  }
   try{
     const res=await fetch('/api/auth/update-profile',{
       method:'POST',
@@ -1624,11 +1629,13 @@ function toast(msg){const el=document.getElementById('toast');el.textContent=msg
     if(storedUid)currentUser={userId:storedUid,name:storedName};
     const user=await api('GET','/api/auth/me');
     currentUser=user;
-    localStorage.setItem('detour_uid',user.userId||user.id);
+    const uid=user.userId||user.id;
+    localStorage.setItem('detour_uid',uid);
     localStorage.setItem('detour_name',user.name);
-    localStorage.setItem('detour_vehicle',user.vehicle_type||'');
-    localStorage.setItem('detour_vehicle_desc',user.vehicle_description||'');
-    localStorage.setItem('detour_plate',user.license_plate||'');
+    localStorage.setItem(`detour_vehicle_${uid}`,user.vehicle_type||'');
+    localStorage.setItem(`detour_vehicle_desc_${uid}`,user.vehicle_description||'');
+    localStorage.setItem(`detour_plate_${uid}`,user.license_plate||'');
+    localStorage.setItem(`detour_home_${uid}`,user.home_address||'');
     enterApp(user.name);
     updateVerificationStatus(user);
   }catch(e){
