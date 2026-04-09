@@ -653,6 +653,11 @@ textarea{resize:none}
         <option value="oversized">Oversized / Furniture</option>
       </select>
     </div>
+    <div style="background:var(--dark2);border-radius:var(--rs);padding:12px 14px;margin-bottom:14px;">
+      <div style="font-size:10px;color:rgba(255,255,255,0.4);text-transform:uppercase;letter-spacing:0.08em;margin-bottom:10px;">💳 Payment — held until driver accepts</div>
+      <div id="qp-stripe-element" style="background:var(--dark3);border:0.5px solid rgba(255,255,255,0.1);border-radius:var(--rs);padding:12px 14px;"></div>
+      <div id="qp-stripe-error" class="error-msg" style="margin-top:6px;"></div>
+    </div>
     <div id="qp-error" class="error-msg"></div>
     <button class="btn-primary btn-large" onclick="submitQuickPost()">Post Delivery →</button>
     <button class="btn-secondary" onclick="closeQuickPost()" style="margin-top:8px;">Cancel</button>
@@ -1165,7 +1170,24 @@ document.addEventListener('click',(e)=>{
     document.querySelectorAll('.autocomplete-list').forEach(l=>l.style.display='none');
   }
 });
-function showQuickPost(){document.getElementById('quick-post-modal').style.display='flex';}
+let qpStripeCard=null;
+function showQuickPost(){
+  document.getElementById('quick-post-modal').style.display='flex';
+  setTimeout(()=>{
+    if(qpStripeCard)return;
+    try{
+      if(!stripeInstance)stripeInstance=Stripe(document.querySelector('meta[name="stripe-pk"]')?.content||'');
+      const elements=stripeInstance.elements({
+        style:{base:{color:'#fff',fontSize:'14px',fontFamily:'"DM Sans",sans-serif','::placeholder':{color:'rgba(255,255,255,0.3)'}},invalid:{color:'#F05555'}}
+      });
+      qpStripeCard=elements.create('card',{hidePostalCode:true});
+      qpStripeCard.mount('#qp-stripe-element');
+      qpStripeCard.on('change',e=>{
+        document.getElementById('qp-stripe-error').textContent=e.error?e.error.message:'';
+      });
+    }catch(e){console.log('QP Stripe error:',e);}
+  },100);
+}
 function closeQuickPost(){document.getElementById('quick-post-modal').style.display='none';}
 function updateQPBreakdown(){
   const price=parseFloat(document.getElementById('qp-price').value);
@@ -1189,10 +1211,17 @@ async function submitQuickPost(){
   const errEl=document.getElementById('qp-error');
   errEl.textContent='';
   if(!title){errEl.textContent='Please add a title';return;}
-  if(!pickupAddr){errEl.textContent='Please enter a pickup address or neighborhood';return;}
+  if(!pickupAddr){errEl.textContent='Please enter a pickup address';return;}
   if(!to){errEl.textContent='Please enter a destination city';return;}
-  if(!dropoffAddr){errEl.textContent='Please enter a dropoff address or neighborhood';return;}
+  if(!dropoffAddr){errEl.textContent='Please enter a dropoff address';return;}
   if(!price||parseFloat(price)<5){errEl.textContent='Minimum offer is $5';return;}
+  // Tokenize card
+  let paymentMethodId=null;
+  if(qpStripeCard&&stripeInstance){
+    const {paymentMethod,error}=await stripeInstance.createPaymentMethod({type:'card',card:qpStripeCard});
+    if(error){document.getElementById('qp-stripe-error').textContent=error.message;return;}
+    paymentMethodId=paymentMethod.id;
+  }
   const fd=new FormData();
   fd.append('job_type','standard');
   fd.append('title',title);
@@ -1206,11 +1235,14 @@ async function submitQuickPost(){
   fd.append('dropoff_zip',toZip);
   fd.append('item_size',size);
   fd.append('offered_price',price);
+  if(paymentMethodId)fd.append('payment_method_id',paymentMethodId);
   try{
-    const res=await fetch('/api/jobs',{method:'POST',body:fd,credentials:'include'});
+    const res=await fetch('/api/jobs',{method:'POST',body:fd,credentials:'include',headers:{'x-user-id':currentUser?.userId||localStorage.getItem('detour_uid')||''}});
     const data=await res.json();
     if(!res.ok)throw new Error(data.error||'Failed');
     closeQuickPost();
+    // Reset card for next use
+    qpStripeCard=null;
     toast('Delivery posted! 🎉 Looking for a driver...');
     document.getElementById('qp-title').value='';
     document.getElementById('qp-pickup-addr').value='';
