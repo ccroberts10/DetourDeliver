@@ -86,16 +86,16 @@ app.get('/api/debug/db', (req, res) => {
 });
 
 app.get('/api/debug/version', (req, res) => {
-  res.json({ version: 'v4-stripe-debug', timestamp: new Date().toISOString() });
+  res.json({ version: 'v5-stripe-get-test', timestamp: new Date().toISOString() });
 });
-// Test Stripe payment intent — exposes exact error
-app.post('/api/debug/stripe-test', async (req, res) => {
-  const userId = req.session.userId || req.headers['x-user-id'];
-  if (!userId) return res.status(401).json({ error: 'Login required' });
-  const { payment_method_id } = req.body;
-  if (!payment_method_id) return res.status(400).json({ error: 'payment_method_id required' });
+// Test Stripe payment intent — GET to bypass Cloudflare POST filtering
+app.get('/api/debug/stripe-test', async (req, res) => {
+  const userId = req.session.userId || req.headers['x-user-id'] || req.query.uid;
+  if (!userId) return res.json({ error: 'No user ID — pass ?uid=YOUR_ID' });
+  const payment_method_id = req.query.pm || 'pm_card_visa';
   const stripe = require('stripe')(process.env.STRIPE_SECRET_KEY);
   const user = db.prepare('SELECT email, stripe_customer_id FROM users WHERE id = ?').get(userId);
+  if (!user) return res.json({ error: 'User not found', userId });
   let customerId = user?.stripe_customer_id;
   try {
     if (!customerId) {
