@@ -86,7 +86,7 @@ app.get('/api/debug/db', (req, res) => {
 });
 
 app.get('/api/debug/version', (req, res) => {
-  res.json({ version: 'v2-stripe-nonblocking', timestamp: new Date().toISOString() });
+  res.json({ version: 'v3-stripe-customer', timestamp: new Date().toISOString() });
 });
 app.get('/api/debug/geocode', async (req, res) => {
   try {
