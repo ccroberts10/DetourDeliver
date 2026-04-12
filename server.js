@@ -90,6 +90,22 @@ app.get('/api/debug/version', (req, res) => {
 });
 // Retry a missed transfer for a completed job
 // Create SetupIntent for saving card before job post
+// Get saved payment method for user
+app.get('/api/stripe/saved-card', async (req, res) => {
+  try {
+    const userId = req.session.userId || req.headers['x-user-id'];
+    if (!userId) return res.json({ payment_method: null });
+    const stripe = require('stripe')(process.env.STRIPE_SECRET_KEY);
+    const db = require('./db/schema');
+    const user = db.prepare('SELECT stripe_customer_id FROM users WHERE id = ?').get(userId);
+    if (!user?.stripe_customer_id) return res.json({ payment_method: null });
+    const pms = await stripe.paymentMethods.list({ customer: user.stripe_customer_id, type: 'card', limit: 1 });
+    res.json({ payment_method: pms.data[0] || null });
+  } catch(e) {
+    res.json({ payment_method: null });
+  }
+});
+
 app.post('/api/stripe/setup-intent', async (req, res) => {
   try {
     const userId = req.session.userId || req.headers['x-user-id'];
