@@ -1053,11 +1053,31 @@ async function openJob(jobId,perspective='shipper'){
   const backView=perspective==='driver'?'view-drive':'view-home';
   document.getElementById('job-back-btn').onclick=()=>{showView(backView);clearInterval(jobPollInterval);};
   showView('view-job');await loadJobDetail();
-  clearInterval(jobPollInterval);jobPollInterval=setInterval(()=>loadJobDetail(true),5000);
+  clearInterval(jobPollInterval);jobPollInterval=setInterval(()=>loadJobDetail(true),15000);
 }
 async function loadJobDetail(silent=false){
-  const c=document.getElementById('job-detail-content');if(!silent)c.innerHTML='<div class="empty-state">Loading...</div>';
-  try{const{job,messages}=await api('GET',`/api/jobs/${currentJobId}`);c.innerHTML=renderJobDetail(job,messages);}
+  const c=document.getElementById('job-detail-content');
+  if(!silent)c.innerHTML='<div class="empty-state">Loading...</div>';
+  try{
+    const{job,messages}=await api('GET',`/api/jobs/${currentJobId}`);
+    if(silent){
+      // Only update the message thread — don't wipe what user is typing
+      const thread=document.getElementById('msg-thread');
+      if(thread){
+        const typing=document.getElementById('msg-input')?.value||'';
+        thread.innerHTML=messages.length?messages.map(m=>`<div><div class="msg-name">${escHtml(m.sender_name)}</div><div class="msg-bubble ${m.sender_id===currentUser?.userId?'msg-out':'msg-in'}">${escHtml(m.content)}</div></div>`).join(''):'<div style="color:var(--gray);font-size:13px;text-align:center;padding:10px;">No messages yet</div>';
+        thread.scrollTop=thread.scrollHeight;
+        // Restore what user was typing
+        const input=document.getElementById('msg-input');
+        if(input&&typing){input.value=typing;}
+      }
+      // Update status badge only
+      const badge=c.querySelector('.status-badge');
+      if(badge){badge.className=`status-badge status-${job.status}`;badge.textContent=ST[job.status];}
+    } else {
+      c.innerHTML=renderJobDetail(job,messages);
+    }
+  }
   catch(e){if(!silent)c.innerHTML='<div class="empty-state">Could not load job</div>';}
 }
 function renderJobDetail(job,messages){
@@ -1145,15 +1165,21 @@ async function postJob(){
 // Departure times entered by user are already local — don't append Z
 function fmtTime(ts, opts, isLocal){
   if(!ts)return'';
-  const str = isLocal ? ts : (ts.includes('Z')||ts.includes('+')?ts:ts+' UTC');
-  const d=new Date(str);
-  return d.toLocaleString([],opts||{month:'short',day:'numeric',hour:'2-digit',minute:'2-digit'});
+  try{
+    const str=isLocal?ts:(ts.includes('Z')||ts.includes('+')?ts:ts+' UTC');
+    const d=new Date(str);
+    if(isNaN(d.getTime()))return'';
+    return d.toLocaleString([],opts||{month:'short',day:'numeric',hour:'2-digit',minute:'2-digit'});
+  }catch(e){return'';}
 }
 function fmtDate(ts, isLocal){
   if(!ts)return'';
-  const str = isLocal ? ts : (ts.includes('Z')||ts.includes('+')?ts:ts+' UTC');
-  const d=new Date(str);
-  return d.toLocaleString([],{weekday:'short',month:'short',day:'numeric',hour:'2-digit',minute:'2-digit'});
+  try{
+    const str=isLocal?ts:(ts.includes('Z')||ts.includes('+')?ts:ts+' UTC');
+    const d=new Date(str);
+    if(isNaN(d.getTime()))return'';
+    return d.toLocaleString([],{weekday:'short',month:'short',day:'numeric',hour:'2-digit',minute:'2-digit'});
+  }catch(e){return'';}
 }
 let acTimers={};
 function addressAutocomplete(input, listId, zipId, cityId, stateId){
