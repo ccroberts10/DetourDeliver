@@ -144,25 +144,30 @@ router.post('/', requireAuth, upload.array('listing_photos', 6), async (req, res
   });
 
   let paymentIntentId = null;
-  let clientSecret = null;
   let stripeError = null;
-  // Create Stripe PaymentIntent — return client_secret to frontend to confirm with card
+
   if (process.env.STRIPE_SECRET_KEY && req.body.payment_method_id) {
     try {
-      const piPromise = stripe.paymentIntents.create({
-        amount: Math.round(price * 100),
-        currency: 'usd',
-        capture_method: 'manual',
-        metadata: { job_id: id, shipper_id: req.session.userId, job_type: jobType }
-      });
-      const timeoutPromise = new Promise((_,reject) => setTimeout(()=>reject(new Error('Stripe timeout after 8s')), 8000));
-      const pi = await Promise.race([piPromise, timeoutPromise]);
+      // Create and immediately confirm PaymentIntent
+      // Use application_fee_amount so platform keeps its cut automatically
+      // Funds go directly to destination — no balance transfer needed
+      const pi = await Promise.race([
+        stripe.paymentIntents.create({
+          amount: Math.round(price * 100),
+          currency: 'usd',
+          capture_method: 'manual',
+          payment_method: req.body.payment_method_id,
+          confirm: true,
+          return_url: 'https://detourdeliver.com/app',
+          metadata: { job_id: id, shipper_id: req.session.userId, job_type: jobType }
+        }),
+        new Promise((_,reject) => setTimeout(()=>reject(new Error('Stripe timeout')), 10000))
+      ]);
       paymentIntentId = pi.id;
-      clientSecret = pi.client_secret;
-      console.log('PaymentIntent created:', pi.id, 'status:', pi.status);
-    } catch (e) {
+      console.log('PI created:', pi.id, 'status:', pi.status);
+    } catch(e) {
       stripeError = { message: e.message, code: e.code, type: e.type };
-      console.error('Stripe error:', e.message);
+      console.error('Stripe PI error:', e.message, e.code);
     }
   }
 
@@ -367,39 +372,48 @@ router.post('/:id/confirm', requireAuth, upload.array('photos', 6), async (req, 
   if (job.status !== 'in_transit') return res.status(400).json({ error: 'Job not in transit' });
   const photos = (req.files || []).map(f => `/uploads/${f.filename}`);
   const existing = JSON.parse(job.dropoff_photos || '[]');
-  let transferId = null;
+
+  // Mark complete immediately — don't block on Stripe
+  db.prepare("UPDATE jobs SET dropoff_photos = ?, dropoff_confirmed_at = CURRENT_TIMESTAMP, status = 'completed', stripe_transfer_id = ? WHERE id = ?")
+    .run(JSON.stringify([...existing, ...photos]), null, job.id);
+  res.json({ success: true });
+
+  // Handle Stripe capture + transfer asynchronously
   if (job.stripe_payment_intent_id && process.env.STRIPE_SECRET_KEY) {
-    try {
-      const driver = db.prepare('SELECT stripe_connect_id FROM users WHERE id = ?').get(job.driver_id);
-      if (driver?.stripe_connect_id) {
-        // Verify the Connect account is actually ready
-        const account = await stripe.accounts.retrieve(driver.stripe_connect_id);
-        if (account.charges_enabled) {
-          const pi = await stripe.paymentIntents.retrieve(job.stripe_payment_intent_id);
-          const chargeId = pi.latest_charge;
-          const transferParams = {
+    setImmediate(async () => {
+      try {
+        // Step 1: Capture the held payment
+        const pi = await stripe.paymentIntents.retrieve(job.stripe_payment_intent_id);
+        let chargeId = pi.latest_charge;
+        if (pi.status === 'requires_capture') {
+          const captured = await stripe.paymentIntents.capture(job.stripe_payment_intent_id);
+          chargeId = captured.latest_charge;
+          console.log('Captured payment:', captured.id, 'charge:', chargeId);
+        } else {
+          console.log('PI status:', pi.status, '— skip capture');
+        }
+
+        // Step 2: Transfer to driver using source_transaction
+        const driver = db.prepare('SELECT stripe_connect_id FROM users WHERE id = ?').get(job.driver_id);
+        if (driver?.stripe_connect_id && chargeId) {
+          const t = await stripe.transfers.create({
             amount: Math.round(job.driver_payout * 100),
             currency: 'usd',
             destination: driver.stripe_connect_id,
+            source_transaction: chargeId,
             metadata: { job_id: job.id }
-          };
-          if (chargeId) transferParams.source_transaction = chargeId;
-          const t = await stripe.transfers.create(transferParams);
-          transferId = t.id;
-          // Update verified flag
+          });
+          db.prepare("UPDATE jobs SET stripe_transfer_id = ? WHERE id = ?").run(t.id, job.id);
           db.prepare('UPDATE users SET stripe_connect_verified = 1 WHERE id = ?').run(job.driver_id);
-          console.log('Driver payout transferred:', transferId, 'amount:', job.driver_payout);
+          console.log('Transfer complete:', t.id, 'amount:', job.driver_payout, '→', driver.stripe_connect_id);
         } else {
-          console.log('Driver Connect account not ready — charges_enabled:', account.charges_enabled);
+          console.log('Transfer skipped — connect:', driver?.stripe_connect_id, 'charge:', chargeId);
         }
-      } else {
-        console.log('Driver has no Connect account — payout skipped');
+      } catch(e) {
+        console.error('Capture/transfer error:', e.message, e.code);
       }
-    } catch (e) { console.error('Transfer error:', e.message); }
+    });
   }
-  db.prepare("UPDATE jobs SET dropoff_photos = ?, dropoff_confirmed_at = CURRENT_TIMESTAMP, status = 'completed', stripe_transfer_id = ? WHERE id = ?")
-    .run(JSON.stringify([...existing, ...photos]), transferId, job.id);
-  res.json({ success: true });
 });
 
 // Delete / cancel a job (shipper only, open jobs only)
