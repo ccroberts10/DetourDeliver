@@ -1336,23 +1336,8 @@ async function submitQuickPost(){
   // Disable button to prevent double-submit
   const submitBtn=document.querySelector('#quick-post-modal .btn-primary');
   if(submitBtn){submitBtn.disabled=true;submitBtn.textContent='Posting...';}
-  // Tokenize card
-  let paymentMethodId=null;
-  if(qpStripeCard&&stripeInstance){
-    try{
-      const {paymentMethod,error}=await stripeInstance.createPaymentMethod({type:'card',card:qpStripeCard});
-      if(error){
-        document.getElementById('qp-stripe-error').textContent=error.message;
-        const submitBtn=document.querySelector('#quick-post-modal .btn-primary');
-        if(submitBtn){submitBtn.disabled=false;submitBtn.textContent='Post Delivery →';}
-        return;
-      }
-      paymentMethodId=paymentMethod.id;
-    }catch(pmErr){
-      // If card tokenization fails, post without payment (will be resolved later)
-      console.log('PM creation error:', pmErr.message);
-    }
-  }
+
+  // Build form data - no card tokenization yet
   const fd=new FormData();
   fd.append('job_type','standard');
   fd.append('title',title);
@@ -1366,11 +1351,48 @@ async function submitQuickPost(){
   fd.append('dropoff_zip',toZip);
   fd.append('item_size',size);
   fd.append('offered_price',price);
-  if(paymentMethodId)fd.append('payment_method_id',paymentMethodId);
+
+  // Step 1: Get a payment method ID from the card element (just tokenize, don't charge)
+  let paymentMethodId = null;
+  if(qpStripeCard && stripeInstance){
+    try {
+      const {paymentMethod, error} = await stripeInstance.createPaymentMethod({
+        type: 'card',
+        card: qpStripeCard
+      });
+      if(error){
+        document.getElementById('qp-stripe-error').textContent = error.message;
+        if(submitBtn){submitBtn.disabled=false;submitBtn.textContent='Post Delivery →';}
+        return;
+      }
+      paymentMethodId = paymentMethod.id;
+      fd.append('payment_method_id', paymentMethodId);
+    } catch(e){
+      console.log('Card tokenization error:', e.message);
+      // Continue without payment if card fails
+    }
+  }
+
   try{
+    // Step 2: Post the job — server creates PaymentIntent but does NOT confirm yet
     const res=await fetch('/api/jobs',{method:'POST',body:fd,credentials:'include',headers:{'x-user-id':currentUser?.userId||localStorage.getItem('detour_uid')||''}});
     const data=await res.json();
     if(!res.ok)throw new Error(data.error||'Failed');
+
+    // Step 3: If we got a client_secret back, confirm the payment browser-side
+    // confirmCardPayment works on Safari where createPaymentMethod sometimes fails
+    if(data.client_secret && qpStripeCard && stripeInstance){
+      try{
+        const {error:confirmError} = await stripeInstance.confirmCardPayment(data.client_secret, {
+          payment_method: {card: qpStripeCard}
+        });
+        if(confirmError){
+          console.error('Payment confirmation error:', confirmError.message);
+          // Job is posted — payment can be resolved separately
+        }
+      } catch(ce){ console.log('Confirm error:', ce.message); }
+    }
+
     toast('Delivery posted! 🎉 Looking for a driver...');
     closeQuickPost();
     qpStripeCard=null;
@@ -1382,7 +1404,6 @@ async function submitQuickPost(){
     loadOpenJobs();loadMyJobs();
   }catch(e){
     errEl.textContent=e.message;
-    const submitBtn=document.querySelector('#quick-post-modal .btn-primary');
     if(submitBtn){submitBtn.disabled=false;submitBtn.textContent='Post Delivery →';}
   }
 }
