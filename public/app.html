@@ -1300,19 +1300,18 @@ function showQuickPost(){
           document.getElementById('qp-stripe-error').textContent=e.error?e.error.message:'';
         });
       }
-      // Pre-fetch a SetupIntent so card save happens before job post
-      if(!qpSetupClientSecret){
-        const r=await fetch('/api/stripe/setup-intent',{method:'POST',credentials:'include',headers:{'x-user-id':currentUser?.userId||localStorage.getItem('detour_uid')||'','Content-Type':'application/json'}});
-        const d=await r.json();
-        if(d.client_secret){
-          qpSetupClientSecret=d.client_secret;
-          console.log('SetupIntent ready');
-        }
+      // Always fetch a fresh SetupIntent — never reuse old one
+      qpSetupClientSecret = null;
+      const r=await fetch('/api/stripe/setup-intent',{method:'POST',credentials:'include',headers:{'x-user-id':currentUser?.userId||localStorage.getItem('detour_uid')||'','Content-Type':'application/json'}});
+      const d=await r.json();
+      if(d.client_secret){
+        qpSetupClientSecret=d.client_secret;
+        console.log('SetupIntent ready');
       }
     }catch(e){console.log('QP Stripe error:',e);}
   },100);
 }
-function closeQuickPost(){document.getElementById('quick-post-modal').style.display='none';}
+function closeQuickPost(){document.getElementById('quick-post-modal').style.display='none';qpSetupClientSecret=null;}
 function updateQPBreakdown(){
   const price=parseFloat(document.getElementById('qp-price').value);
   const bd=document.getElementById('qp-breakdown');
