@@ -144,6 +144,7 @@ router.post('/', requireAuth, upload.array('listing_photos', 6), async (req, res
   });
 
   let paymentIntentId = null;
+  let stripeError = null;
   // Create and confirm Stripe PaymentIntent — holds funds until driver accepts
   if (process.env.STRIPE_SECRET_KEY && req.body.payment_method_id) {
     try {
@@ -166,7 +167,6 @@ router.post('/', requireAuth, upload.array('listing_photos', 6), async (req, res
       try {
         await stripe.paymentMethods.attach(req.body.payment_method_id, { customer: customerId });
       } catch(attachErr) {
-        // Already attached is fine
         if (!attachErr.message.includes('already been attached')) {
           throw attachErr;
         }
@@ -183,15 +183,13 @@ router.post('/', requireAuth, upload.array('listing_photos', 6), async (req, res
         return_url: 'https://detourdeliver.com/app',
         metadata: { job_id: id, shipper_id: userId, job_type: jobType }
       });
-      const timeoutPromise = new Promise((_,reject) => setTimeout(()=>reject(new Error('Stripe timeout')), 8000));
+      const timeoutPromise = new Promise((_,reject) => setTimeout(()=>reject(new Error('Stripe timeout after 8s')), 8000));
       const pi = await Promise.race([piPromise, timeoutPromise]);
       paymentIntentId = pi.id;
       console.log('PaymentIntent created:', pi.id, 'status:', pi.status);
-      if (pi.status === 'requires_action') {
-        console.log('3DS required for:', pi.id);
-      }
     } catch (e) {
-      console.error('Stripe PaymentIntent error:', e.message, e.code, e.type);
+      stripeError = { message: e.message, code: e.code, type: e.type, param: e.param };
+      console.error('Stripe error:', e.message, '| code:', e.code, '| type:', e.type);
     }
   }
 
@@ -244,7 +242,7 @@ router.post('/', requireAuth, upload.array('listing_photos', 6), async (req, res
     }
   });
 
-  res.json({ success: true, job });
+  res.json({ success: true, job, stripe_error: stripeError });
 });
 
 router.get('/', (req, res) => {
