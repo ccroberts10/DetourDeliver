@@ -1282,27 +1282,33 @@ document.addEventListener('click',(e)=>{
     document.querySelectorAll('.autocomplete-list').forEach(l=>l.style.display='none');
   }
 });
-let qpStripeCard=null;
+let qpStripeCard=null, qpSetupClientSecret=null;
 function showQuickPost(){
   document.getElementById('quick-post-modal').style.display='flex';
-  setTimeout(()=>{
-    if(qpStripeCard)return;
+  setTimeout(async ()=>{
     try{
       if(!stripeInstance)stripeInstance=Stripe(document.querySelector('meta[name="stripe-pk"]')?.content||'');
-      const elements=stripeInstance.elements({
-        appearance:{theme:'night'},
-        currency:'usd',
-        loader:'never'
-      });
-      qpStripeCard=elements.create('card',{
-        hidePostalCode:true,
-        disableLink:true,
-        style:{base:{color:'#fff',fontSize:'14px',fontFamily:'"DM Sans",sans-serif','::placeholder':{color:'rgba(255,255,255,0.3)'}},invalid:{color:'#F05555'}}
-      });
-      qpStripeCard.mount('#qp-stripe-element');
-      qpStripeCard.on('change',e=>{
-        document.getElementById('qp-stripe-error').textContent=e.error?e.error.message:'';
-      });
+      if(!qpStripeCard){
+        const elements=stripeInstance.elements({appearance:{theme:'night'},currency:'usd',loader:'never'});
+        qpStripeCard=elements.create('card',{
+          hidePostalCode:true,
+          disableLink:true,
+          style:{base:{color:'#fff',fontSize:'14px',fontFamily:'"DM Sans",sans-serif','::placeholder':{color:'rgba(255,255,255,0.3)'}},invalid:{color:'#F05555'}}
+        });
+        qpStripeCard.mount('#qp-stripe-element');
+        qpStripeCard.on('change',e=>{
+          document.getElementById('qp-stripe-error').textContent=e.error?e.error.message:'';
+        });
+      }
+      // Pre-fetch a SetupIntent so card save happens before job post
+      if(!qpSetupClientSecret){
+        const r=await fetch('/api/stripe/setup-intent',{method:'POST',credentials:'include',headers:{'x-user-id':currentUser?.userId||localStorage.getItem('detour_uid')||'','Content-Type':'application/json'}});
+        const d=await r.json();
+        if(d.client_secret){
+          qpSetupClientSecret=d.client_secret;
+          console.log('SetupIntent ready');
+        }
+      }
     }catch(e){console.log('QP Stripe error:',e);}
   },100);
 }
@@ -1334,8 +1340,29 @@ async function submitQuickPost(){
   if(!dropoffAddr){errEl.textContent='Please enter a dropoff address';return;}
   if(!price||parseFloat(price)<5){errEl.textContent='Minimum offer is $5';return;}
   const submitBtn=document.querySelector('#quick-post-modal .btn-primary');
-  if(submitBtn){submitBtn.disabled=true;submitBtn.textContent='Posting...';}
+  if(submitBtn){submitBtn.disabled=true;submitBtn.textContent='Saving card...';}
 
+  // Step 1: Save card via SetupIntent BEFORE posting job
+  if(qpStripeCard && stripeInstance && qpSetupClientSecret){
+    try{
+      const {setupIntent, error:setupError} = await stripeInstance.confirmCardSetup(
+        qpSetupClientSecret,
+        {payment_method: {card: qpStripeCard}}
+      );
+      if(setupError){
+        document.getElementById('qp-stripe-error').textContent = setupError.message;
+        if(submitBtn){submitBtn.disabled=false;submitBtn.textContent='Post Delivery →';}
+        return;
+      }
+      console.log('Card saved successfully:', setupIntent.payment_method, setupIntent.status);
+      qpSetupClientSecret = null; // used, clear it
+    }catch(e){
+      console.log('Card save error:', e.message);
+      // Continue — job will post without payment
+    }
+  }
+
+  if(submitBtn)submitBtn.textContent='Posting...';
   const fd=new FormData();
   fd.append('job_type','standard');
   fd.append('title',title);
@@ -1351,32 +1378,13 @@ async function submitQuickPost(){
   fd.append('offered_price',price);
 
   try{
-    // Step 1: Post job — server creates PaymentIntent, returns client_secret
     const res=await fetch('/api/jobs',{method:'POST',body:fd,credentials:'include',headers:{'x-user-id':currentUser?.userId||localStorage.getItem('detour_uid')||''}});
     const data=await res.json();
     if(!res.ok)throw new Error(data.error||'Failed');
-
-    // Step 2: Save card via SetupIntent — actual charge fires when driver accepts
-    if(data.client_secret && qpStripeCard && stripeInstance){
-      if(submitBtn)submitBtn.textContent='Saving card...';
-      const {setupIntent, error:setupError} = await stripeInstance.confirmCardSetup(
-        data.client_secret,
-        {payment_method: {card: qpStripeCard}}
-      );
-      if(setupError){
-        console.error('Card setup error:', setupError.message, setupError.code);
-        // Job posted — card save failed but job exists
-        toast('Job posted! 🎉 Looking for a driver...');
-      } else {
-        console.log('Card saved:', setupIntent?.payment_method, setupIntent?.status);
-        toast('Delivery posted! 🎉 Looking for a driver...');
-      }
-    } else {
-      toast('Delivery posted! 🎉 Looking for a driver...');
-    }
-
+    toast('Delivery posted! 🎉 Looking for a driver...');
     closeQuickPost();
     qpStripeCard=null;
+    qpSetupClientSecret=null;
     document.getElementById('qp-title').value='';
     document.getElementById('qp-pickup-addr').value='';
     document.getElementById('qp-dropoff-addr').value='';
