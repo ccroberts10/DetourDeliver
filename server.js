@@ -88,7 +88,40 @@ app.get('/api/debug/db', (req, res) => {
 app.get('/api/debug/version', (req, res) => {
   res.json({ version: 'v6-stripe-ping', timestamp: new Date().toISOString() });
 });
-// Simple Stripe connectivity check - just retrieves account info
+// Retry a missed transfer for a completed job
+app.get('/api/debug/retry-transfer', async (req, res) => {
+  const userId = req.session.userId || req.headers['x-user-id'];
+  if (!userId) return res.json({ error: 'Login required' });
+  const jobId = req.query.job;
+  if (!jobId) return res.json({ error: 'job param required' });
+  try {
+    const stripe = require('stripe')(process.env.STRIPE_SECRET_KEY);
+    const job = db.prepare('SELECT * FROM jobs WHERE id = ?').get(jobId);
+    if (!job) return res.json({ error: 'Job not found' });
+    if (job.stripe_transfer_id) return res.json({ error: 'Transfer already done', transfer_id: job.stripe_transfer_id });
+    const driver = db.prepare('SELECT stripe_connect_id FROM users WHERE id = ?').get(job.driver_id);
+    if (!driver?.stripe_connect_id) return res.json({ error: 'Driver has no connect account' });
+    // Check the Connect account status
+    const account = await stripe.accounts.retrieve(driver.stripe_connect_id);
+    if (!account.charges_enabled) return res.json({ error: 'Connect account not ready', details_submitted: account.details_submitted, payouts_enabled: account.payouts_enabled });
+    // Get charge from PI
+    const pi = await stripe.paymentIntents.retrieve(job.stripe_payment_intent_id);
+    const chargeId = pi.latest_charge;
+    const transferParams = {
+      amount: Math.round(job.driver_payout * 100),
+      currency: 'usd',
+      destination: driver.stripe_connect_id,
+      metadata: { job_id: job.id }
+    };
+    if (chargeId) transferParams.source_transaction = chargeId;
+    const t = await stripe.transfers.create(transferParams);
+    db.prepare('UPDATE users SET stripe_connect_verified = 1 WHERE id = ?').run(job.driver_id);
+    db.prepare("UPDATE jobs SET stripe_transfer_id = ? WHERE id = ?").run(t.id, job.id);
+    res.json({ success: true, transfer_id: t.id, amount: job.driver_payout, connect_account: driver.stripe_connect_id });
+  } catch(e) {
+    res.json({ error: e.message, code: e.code, type: e.type });
+  }
+});
 app.get('/api/debug/stripe-ping', async (req, res) => {
   try {
     const stripe = require('stripe')(process.env.STRIPE_SECRET_KEY);
