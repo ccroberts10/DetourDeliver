@@ -144,6 +144,7 @@ router.post('/', requireAuth, upload.array('listing_photos', 6), async (req, res
   });
 
   let paymentIntentId = null;
+  let clientSecret = null;
   let stripeError = null;
 
   if (process.env.STRIPE_SECRET_KEY && req.body.payment_method_id) {
@@ -154,12 +155,15 @@ router.post('/', requireAuth, upload.array('listing_photos', 6), async (req, res
           currency: 'usd',
           capture_method: 'manual',
           payment_method: req.body.payment_method_id,
-          confirm: true,
+          // Do NOT confirm here — let browser confirm via confirmCardPayment
+          // This avoids the Safari "resource_missing" error on connected accounts
+          confirm: false,
           metadata: { job_id: id, shipper_id: req.session.userId, job_type: jobType }
         }),
         new Promise((_,reject) => setTimeout(()=>reject(new Error('Stripe timeout')), 10000))
       ]);
       paymentIntentId = pi.id;
+      clientSecret = pi.client_secret;
       console.log('PI created:', pi.id, 'status:', pi.status);
     } catch(e) {
       stripeError = { message: e.message, code: e.code, type: e.type };
