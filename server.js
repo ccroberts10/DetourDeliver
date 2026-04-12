@@ -86,9 +86,20 @@ app.get('/api/debug/db', (req, res) => {
 });
 
 app.get('/api/debug/version', (req, res) => {
-  res.json({ version: 'v5-stripe-get-test', timestamp: new Date().toISOString() });
+  res.json({ version: 'v6-stripe-ping', timestamp: new Date().toISOString() });
 });
-// Test Stripe payment intent — GET to bypass Cloudflare POST filtering
+// Simple Stripe connectivity check - just retrieves account info
+app.get('/api/debug/stripe-ping', async (req, res) => {
+  try {
+    const stripe = require('stripe')(process.env.STRIPE_SECRET_KEY);
+    const start = Date.now();
+    const account = await stripe.accounts.retrieve();
+    const ms = Date.now() - start;
+    res.json({ ok: true, account_id: account.id, country: account.country, charges_enabled: account.charges_enabled, payouts_enabled: account.payouts_enabled, latency_ms: ms });
+  } catch(e) {
+    res.json({ ok: false, error: e.message, code: e.code, type: e.type });
+  }
+});
 app.get('/api/debug/stripe-test', async (req, res) => {
   const userId = req.session.userId || req.headers['x-user-id'] || req.query.uid;
   if (!userId) return res.json({ error: 'No user ID — pass ?uid=YOUR_ID' });
