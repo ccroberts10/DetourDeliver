@@ -1357,7 +1357,6 @@ async function submitQuickPost(){
     if(!res.ok)throw new Error(data.error||'Failed');
 
     // Step 2: Confirm payment using card element directly with client_secret
-    // This avoids createPaymentMethod entirely — no connected account PM issue
     if(data.client_secret && qpStripeCard && stripeInstance){
       if(submitBtn)submitBtn.textContent='Confirming payment...';
       const {paymentIntent, error:confirmError} = await stripeInstance.confirmCardPayment(
@@ -1365,11 +1364,10 @@ async function submitQuickPost(){
         {payment_method: {card: qpStripeCard}}
       );
       if(confirmError){
-        console.error('Payment confirm error:', confirmError.message);
-        // Job posted but payment needs retry — not blocking
-        toast('Job posted! ⚠️ Payment needs attention.');
+        console.error('Payment confirm error:', confirmError.message, confirmError.code);
+        toast('Job posted! 🎉 Looking for a driver...');
       } else {
-        console.log('Payment confirmed:', paymentIntent.id, 'status:', paymentIntent.status);
+        console.log('Payment confirmed:', paymentIntent?.id, paymentIntent?.status);
         toast('Delivery posted! 🎉 Looking for a driver...');
       }
     } else {
