@@ -86,7 +86,7 @@ app.get('/api/debug/db', (req, res) => {
 });
 
 app.get('/api/debug/version', (req, res) => {
-  res.json({ version: 'v3-stripe-customer', timestamp: new Date().toISOString() });
+  res.json({ version: 'v4-stripe-debug', timestamp: new Date().toISOString() });
 });
 // Test Stripe payment intent — exposes exact error
 app.post('/api/debug/stripe-test', async (req, res) => {
