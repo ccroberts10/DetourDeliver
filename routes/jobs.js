@@ -150,19 +150,40 @@ router.post('/', requireAuth, upload.array('listing_photos', 6), async (req, res
 
   if (process.env.STRIPE_SECRET_KEY) {
     try {
+      const userId = req.session.userId;
+      const user = db.prepare('SELECT email, stripe_customer_id FROM users WHERE id = ?').get(userId);
+      let customerId = user?.stripe_customer_id;
+
+      // Get or create Stripe customer
+      if (!customerId) {
+        const customer = await stripe.customers.create({ email: user?.email, metadata: { detour_user_id: userId } });
+        customerId = customer.id;
+        db.prepare('UPDATE users SET stripe_customer_id = ? WHERE id = ?').run(customerId, userId);
+      }
+
+      const piParams = {
+        amount: Math.round(price * 100),
+        currency: 'usd',
+        capture_method: 'manual',
+        payment_method_types: ['card'],
+        customer: customerId,
+        metadata: { job_id: id, shipper_id: userId, job_type: jobType }
+      };
+
+      // If using a saved payment method, confirm server-side
+      if (req.body.payment_method_id) {
+        piParams.payment_method = req.body.payment_method_id;
+        piParams.confirm = true;
+        piParams.off_session = true;
+      }
+
       const pi = await Promise.race([
-        stripe.paymentIntents.create({
-          amount: Math.round(price * 100),
-          currency: 'usd',
-          capture_method: 'manual',
-          payment_method_types: ['card'],
-          metadata: { job_id: id, shipper_id: req.session.userId, job_type: jobType }
-        }),
+        stripe.paymentIntents.create(piParams),
         new Promise((_,reject) => setTimeout(()=>reject(new Error('Stripe timeout')), 10000))
       ]);
       paymentIntentId = pi.id;
       clientSecret = pi.client_secret;
-      console.log('PI created:', pi.id, 'status:', pi.status);
+      console.log('PI created:', pi.id, 'status:', pi.status, 'pm:', req.body.payment_method_id || 'new');
     } catch(e) {
       stripeError = { message: e.message, code: e.code, type: e.type };
       console.error('Stripe PI error:', e.message, e.code);
