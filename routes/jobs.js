@@ -372,20 +372,26 @@ router.post('/:id/confirm', requireAuth, upload.array('photos', 6), async (req, 
     try {
       const driver = db.prepare('SELECT stripe_connect_id FROM users WHERE id = ?').get(job.driver_id);
       if (driver?.stripe_connect_id) {
-        // Get the charge ID from the PaymentIntent to use as source_transaction
-        const pi = await stripe.paymentIntents.retrieve(job.stripe_payment_intent_id);
-        const chargeId = pi.latest_charge;
-        const transferParams = {
-          amount: Math.round(job.driver_payout * 100),
-          currency: 'usd',
-          destination: driver.stripe_connect_id,
-          metadata: { job_id: job.id }
-        };
-        // Use source_transaction if we have a charge — ensures funds are available
-        if (chargeId) transferParams.source_transaction = chargeId;
-        const t = await stripe.transfers.create(transferParams);
-        transferId = t.id;
-        console.log('Driver payout transferred:', transferId, 'amount:', job.driver_payout);
+        // Verify the Connect account is actually ready
+        const account = await stripe.accounts.retrieve(driver.stripe_connect_id);
+        if (account.charges_enabled) {
+          const pi = await stripe.paymentIntents.retrieve(job.stripe_payment_intent_id);
+          const chargeId = pi.latest_charge;
+          const transferParams = {
+            amount: Math.round(job.driver_payout * 100),
+            currency: 'usd',
+            destination: driver.stripe_connect_id,
+            metadata: { job_id: job.id }
+          };
+          if (chargeId) transferParams.source_transaction = chargeId;
+          const t = await stripe.transfers.create(transferParams);
+          transferId = t.id;
+          // Update verified flag
+          db.prepare('UPDATE users SET stripe_connect_verified = 1 WHERE id = ?').run(job.driver_id);
+          console.log('Driver payout transferred:', transferId, 'amount:', job.driver_payout);
+        } else {
+          console.log('Driver Connect account not ready — charges_enabled:', account.charges_enabled);
+        }
       } else {
         console.log('Driver has no Connect account — payout skipped');
       }
