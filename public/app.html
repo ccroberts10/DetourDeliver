@@ -712,9 +712,11 @@ function initStripeElements(){
   try{
     stripeInstance=Stripe(document.querySelector('meta[name="stripe-pk"]')?.content||'');
     const elements=stripeInstance.elements({
-      style:{base:{color:'#fff',fontSize:'15px',fontFamily:'"DM Sans",sans-serif','::placeholder':{color:'rgba(255,255,255,0.3)'}},invalid:{color:'#F05555'}}
+      appearance:{theme:'night'},
+      currency:'usd',
+      loader:'never'
     });
-    stripeCard=elements.create('card',{hidePostalCode:true});
+    stripeCard=elements.create('card',{hidePostalCode:true,disableLink:true,style:{base:{color:'#fff',fontSize:'15px',fontFamily:'"DM Sans",sans-serif','::placeholder':{color:'rgba(255,255,255,0.3)'}},invalid:{color:'#F05555'}}});
     stripeCard.mount('#stripe-card-element');
     stripeCard.on('change',e=>{
       document.getElementById('stripe-card-error').textContent=e.error?e.error.message:'';
@@ -1288,9 +1290,15 @@ function showQuickPost(){
     try{
       if(!stripeInstance)stripeInstance=Stripe(document.querySelector('meta[name="stripe-pk"]')?.content||'');
       const elements=stripeInstance.elements({
+        appearance:{theme:'night'},
+        currency:'usd',
+        loader:'never'
+      });
+      qpStripeCard=elements.create('card',{
+        hidePostalCode:true,
+        disableLink:true,
         style:{base:{color:'#fff',fontSize:'14px',fontFamily:'"DM Sans",sans-serif','::placeholder':{color:'rgba(255,255,255,0.3)'}},invalid:{color:'#F05555'}}
       });
-      qpStripeCard=elements.create('card',{hidePostalCode:true});
       qpStripeCard.mount('#qp-stripe-element');
       qpStripeCard.on('change',e=>{
         document.getElementById('qp-stripe-error').textContent=e.error?e.error.message:'';
