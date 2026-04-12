@@ -1356,18 +1356,19 @@ async function submitQuickPost(){
     const data=await res.json();
     if(!res.ok)throw new Error(data.error||'Failed');
 
-    // Step 2: Confirm payment using card element directly with client_secret
+    // Step 2: Save card via SetupIntent — actual charge fires when driver accepts
     if(data.client_secret && qpStripeCard && stripeInstance){
-      if(submitBtn)submitBtn.textContent='Confirming payment...';
-      const {paymentIntent, error:confirmError} = await stripeInstance.confirmCardPayment(
+      if(submitBtn)submitBtn.textContent='Saving card...';
+      const {setupIntent, error:setupError} = await stripeInstance.confirmCardSetup(
         data.client_secret,
         {payment_method: {card: qpStripeCard}}
       );
-      if(confirmError){
-        console.error('Payment confirm error:', confirmError.message, confirmError.code);
+      if(setupError){
+        console.error('Card setup error:', setupError.message, setupError.code);
+        // Job posted — card save failed but job exists
         toast('Job posted! 🎉 Looking for a driver...');
       } else {
-        console.log('Payment confirmed:', paymentIntent?.id, paymentIntent?.status);
+        console.log('Card saved:', setupIntent?.payment_method, setupIntent?.status);
         toast('Delivery posted! 🎉 Looking for a driver...');
       }
     } else {
