@@ -1356,16 +1356,24 @@ async function submitQuickPost(){
     if(data.client_secret && qpStripeCard && stripeInstance){
       if(submitBtn)submitBtn.textContent='Confirming payment...';
       try{
-        const {paymentIntent, error:confirmError} = await stripeInstance.confirmCardPayment(
+        const confirmPromise = stripeInstance.confirmCardPayment(
           data.client_secret,
           {payment_method: {card: qpStripeCard}}
         );
+        const timeoutPromise = new Promise((_,reject) => setTimeout(()=>reject(new Error('timeout')), 15000));
+        const {paymentIntent, error:confirmError} = await Promise.race([confirmPromise, timeoutPromise]);
         if(confirmError){
           console.error('Payment confirm error:', confirmError.message, confirmError.code);
         } else {
           console.log('Payment confirmed:', paymentIntent?.id, paymentIntent?.status);
         }
-      }catch(ce){console.log('Confirm exception:', ce.message);}
+      }catch(ce){
+        console.log('Confirm exception:', ce.message);
+        // Cancel the PI if we timed out so it doesn't block
+        if(ce.message === 'timeout' && data.job?.stripe_payment_intent_id){
+          fetch(`/api/stripe/cancel-pi`, {method:'POST', credentials:'include', headers:{'Content-Type':'application/json'}, body: JSON.stringify({pi_id: data.job.stripe_payment_intent_id})});
+        }
+      }
     }
 
     // Only close modal AFTER payment confirmed
