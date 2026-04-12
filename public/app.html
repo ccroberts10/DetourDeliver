@@ -1338,6 +1338,9 @@ async function submitQuickPost(){
   if(!to){errEl.textContent='Please enter a destination city';return;}
   if(!dropoffAddr){errEl.textContent='Please enter a dropoff address';return;}
   if(!price||parseFloat(price)<5){errEl.textContent='Minimum offer is $5';return;}
+  // Disable button to prevent double-submit
+  const submitBtn=document.querySelector('#quick-post-modal .btn-primary');
+  if(submitBtn){submitBtn.disabled=true;submitBtn.textContent='Posting...';}
   // Tokenize card
   let paymentMethodId=null;
   if(qpStripeCard&&stripeInstance){
@@ -1389,7 +1392,11 @@ async function submitQuickPost(){
     document.getElementById('qp-to').value='';
     document.getElementById('qp-price').value='';
     loadOpenJobs();loadMyJobs();
-  }catch(e){errEl.textContent=e.message;}
+  }catch(e){
+    errEl.textContent=e.message;
+    const submitBtn=document.querySelector('#quick-post-modal .btn-primary');
+    if(submitBtn){submitBtn.disabled=false;submitBtn.textContent='Post Delivery →';}
+  }
 }
 
 // ── PRICE SUGGESTION ──
