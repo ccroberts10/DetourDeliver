@@ -89,6 +89,36 @@ app.get('/api/debug/version', (req, res) => {
   res.json({ version: 'v6-stripe-ping', timestamp: new Date().toISOString() });
 });
 // Retry a missed transfer for a completed job
+// Create SetupIntent for saving card before job post
+app.post('/api/stripe/setup-intent', async (req, res) => {
+  try {
+    const userId = req.session.userId || req.headers['x-user-id'];
+    if (!userId) return res.status(401).json({ error: 'Login required' });
+    const stripe = require('stripe')(process.env.STRIPE_SECRET_KEY);
+    const db = require('./db/schema');
+    const user = db.prepare('SELECT email, stripe_customer_id FROM users WHERE id = ?').get(userId);
+    // Get or create Stripe customer
+    let customerId = user?.stripe_customer_id;
+    if (!customerId) {
+      const customer = await stripe.customers.create({
+        email: user?.email,
+        metadata: { detour_user_id: userId }
+      });
+      customerId = customer.id;
+      db.prepare('UPDATE users SET stripe_customer_id = ? WHERE id = ?').run(customerId, userId);
+    }
+    const si = await stripe.setupIntents.create({
+      customer: customerId,
+      usage: 'off_session',
+      payment_method_types: ['card'],
+      metadata: { detour_user_id: userId }
+    });
+    res.json({ client_secret: si.client_secret, customer_id: customerId });
+  } catch(e) {
+    res.status(500).json({ error: e.message });
+  }
+});
+
 app.get('/api/debug/retry-transfer', async (req, res) => {
   const userId = req.session.userId || req.headers['x-user-id'] || req.query.uid;
   if (!userId) return res.json({ error: 'Login required' });
