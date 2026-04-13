@@ -30,8 +30,11 @@ function requireAuth(req, res, next) {
   next();
 }
 
-function calcPricing(offeredPrice) {
-  const fee = Math.round(offeredPrice * 0.25 * 100) / 100;
+const SERVICE_TYPES = ['yard_work','labor','dump_run','cleaning','handyman'];
+function calcPricing(offeredPrice, jobType) {
+  // Service jobs: 20% platform fee. Delivery jobs: 25% platform fee.
+  const feeRate = SERVICE_TYPES.includes(jobType) ? 0.20 : 0.25;
+  const fee = Math.round(offeredPrice * feeRate * 100) / 100;
   const payout = Math.round((offeredPrice - fee) * 100) / 100;
   return { platform_fee: fee, driver_payout: payout };
 }
@@ -130,7 +133,7 @@ router.post('/', requireAuth, upload.array('listing_photos', 6), async (req, res
     return res.status(400).json({ error: 'Marketplace jobs require at least one item photo' });
   }
 
-  const { platform_fee, driver_payout } = calcPricing(price);
+  const { platform_fee, driver_payout } = calcPricing(price, jobType);
   const id = uuidv4();
   const listingPhotos = (req.files || []).map(f => `/uploads/${f.filename}`);
 
@@ -327,9 +330,15 @@ router.post('/:id/accept', requireAuth, async (req, res) => {
     // Check driver verification
     const driver = db.prepare('SELECT vehicle_type, license_photo, insurance_photo, insurance_verified, driver_approved FROM users WHERE id = ?').get(req.session.userId);
     if (!driver) return res.status(401).json({ error: 'Account not found. Please sign out and sign back in.' });
-    if (!driver.license_photo) return res.status(403).json({ error: 'Upload your driver\'s license first. Go to Drive tab → Driver Verification.' });
-    if (!driver.insurance_photo) return res.status(403).json({ error: 'Upload your proof of insurance first. Go to Drive tab → Driver Verification.' });
-    if (!driver.driver_approved) return res.status(403).json({ error: 'Your documents are under review. You\'ll be notified once approved — usually within 24 hours.' });
+
+    // Service jobs don't require driver verification — only delivery jobs do
+    const SERVICE_TYPES = ['yard_work','labor','dump_run','cleaning','handyman'];
+    const isServiceJob = SERVICE_TYPES.includes(job.job_type);
+    if (!isServiceJob) {
+      if (!driver.license_photo) return res.status(403).json({ error: 'Upload your driver\'s license first. Go to Drive tab → Driver Verification.' });
+      if (!driver.insurance_photo) return res.status(403).json({ error: 'Upload your proof of insurance first. Go to Drive tab → Driver Verification.' });
+      if (!driver.driver_approved) return res.status(403).json({ error: 'Your documents are under review. You\'ll be notified once approved — usually within 24 hours.' });
+    }
 
     db.prepare("UPDATE jobs SET driver_id = ?, status = 'accepted' WHERE id = ?").run(req.session.userId, job.id);
 
@@ -380,6 +389,16 @@ router.post('/:id/accept', requireAuth, async (req, res) => {
       firstMsg = `On it! I'll pick up your item from ${extra.store_name || 'the store'}. Any specific instructions or receipts needed?`;
     } else if (job.job_type === 'retail') {
       firstMsg = `I've accepted the delivery! I'll coordinate with the shop for pickup. What's the best contact there?`;
+    } else if (job.job_type === 'yard_work') {
+      firstMsg = `I've accepted your yard work job! When works best for you, and is there anything I should bring?`;
+    } else if (job.job_type === 'labor') {
+      firstMsg = `I've accepted your labor job! When should I arrive, and are there any details I need to know?`;
+    } else if (job.job_type === 'dump_run') {
+      firstMsg = `I've accepted your dump run! When can I come by to load up, and how much is there approximately?`;
+    } else if (job.job_type === 'cleaning') {
+      firstMsg = `I've accepted your cleaning job! When works best, and is there anything specific you'd like me to focus on?`;
+    } else if (job.job_type === 'handyman') {
+      firstMsg = `I've accepted your handyman job! When works best, and should I bring any specific tools?`;
     }
     db.prepare('INSERT INTO messages (id, job_id, sender_id, content) VALUES (?, ?, ?, ?)').run(uuidv4(), job.id, req.session.userId, firstMsg);
     res.json({ success: true });
