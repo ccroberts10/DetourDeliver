@@ -155,7 +155,15 @@ textarea{resize:none}
 .star-row{display:flex;gap:5px;margin:7px 0}
 .star{font-size:26px;cursor:pointer;filter:grayscale(1) opacity(0.3);transition:filter 0.15s}
 .star.active{filter:none}
-.bottom-nav{position:fixed;bottom:0;left:0;right:0;background:var(--dark);border-top:0.5px solid rgba(255,255,255,0.07);display:flex;padding:8px 0 20px;z-index:50}
+.home-filter-pill{background:var(--dark2);border:0.5px solid rgba(255,255,255,0.1);border-radius:50px;padding:6px 14px;font-size:12px;color:rgba(255,255,255,0.5);cursor:pointer;white-space:nowrap;font-family:'DM Sans',sans-serif;transition:all 0.2s}
+.home-filter-pill.active{background:rgba(0,194,168,0.15);border-color:var(--teal);color:var(--teal);font-weight:600}
+.gig-category-card{background:var(--dark2);border:0.5px solid rgba(255,255,255,0.08);border-radius:var(--r);padding:18px 16px;cursor:pointer;transition:all 0.2s;display:flex;align-items:center;gap:14px}
+.gig-category-card:active{transform:scale(0.97)}
+.gig-category-card:hover{border-color:rgba(0,194,168,0.3);background:rgba(0,194,168,0.05)}
+.gig-cat-icon{font-size:28px;flex-shrink:0}
+.gig-cat-title{font-size:15px;font-weight:700;color:#fff;margin-bottom:2px}
+.gig-cat-sub{font-size:12px;color:rgba(255,255,255,0.45);line-height:1.4}
+.gig-cat-earn{font-size:12px;color:var(--green);font-weight:600;margin-top:4px}
 .nav-item{flex:1;background:none;border:none;display:flex;flex-direction:column;align-items:center;gap:3px;cursor:pointer;padding:5px 0;opacity:0.35;transition:opacity 0.2s}
 .nav-item.active{opacity:1}
 .filter-btn{padding:6px 14px;border-radius:20px;font-size:12px;font-family:'DM Sans',sans-serif;font-weight:500;cursor:pointer;border:0.5px solid rgba(255,255,255,0.1);background:transparent;color:rgba(255,255,255,0.4);transition:all 0.2s}
@@ -290,44 +298,69 @@ textarea{resize:none}
     <div id="view-home" class="view active">
       <div class="home-hero">
         <div class="home-greeting">Hey, <span id="home-name"></span> 👋</div>
-        <div class="home-sub">Deliveries, yard work, moving & more</div>
+        <div class="home-sub">What do you need today?</div>
       </div>
-      <!-- Quick Post Button -->
+
+      <!-- QUICK POST -->
       <button class="quick-post-btn" onclick="showQuickPost()">⚡ Quick Post a Job</button>
-      <div class="action-grid">
-        <div class="action-card shipper-card" onclick="showView('view-post')">
-          <div class="action-icon">📦</div>
-          <div class="action-title">Full delivery form</div>
-          <div class="action-sub">All options & payment</div>
+
+      <!-- CLEAR USER PATHWAY CARDS -->
+      <div style="margin-bottom:20px;">
+        <div style="font-size:10px;color:rgba(255,255,255,0.35);text-transform:uppercase;letter-spacing:0.09em;margin-bottom:10px;">I need something done</div>
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:10px;">
+          <div class="action-card shipper-card" onclick="showView('view-post');setNavActive(document.querySelectorAll('.nav-item')[1])">
+            <div class="action-icon">📦</div>
+            <div class="action-title">Send a Delivery</div>
+            <div class="action-sub">Ship anything, anywhere</div>
+          </div>
+          <div class="action-card" style="background:var(--dark);border:0.5px solid rgba(255,255,255,0.07);border-radius:var(--r);padding:18px 14px;cursor:pointer;" onclick="showView('view-gigs');setNavActive(document.querySelectorAll('.nav-item')[2])">
+            <div class="action-icon">💼</div>
+            <div class="action-title">Post a Gig</div>
+            <div class="action-sub">Yard work, labor & more</div>
+          </div>
         </div>
-        <div class="action-card driver-card" onclick="showView('view-drive');setNavActive(document.querySelectorAll('.nav-item')[2])">
-          <div class="action-icon">🚗</div>
-          <div class="action-title">I'm making a drive</div>
-          <div class="action-sub">Post route or browse jobs</div>
+        <div style="font-size:10px;color:rgba(255,255,255,0.35);text-transform:uppercase;letter-spacing:0.09em;margin-bottom:10px;margin-top:16px;">I want to earn money</div>
+        <div class="action-card driver-card" onclick="showView('view-gigs');setNavActive(document.querySelectorAll('.nav-item')[2]);switchGigsMode('earn')" style="display:flex;align-items:center;gap:14px;padding:16px 18px;">
+          <div style="font-size:28px;">🚗</div>
+          <div>
+            <div class="action-title" style="margin-bottom:2px;">Browse Jobs & Make a Drive</div>
+            <div class="action-sub">Pick up deliveries or gig work along your route</div>
+          </div>
         </div>
       </div>
+
+      <!-- JOB SEARCH -->
+      <div style="display:flex;gap:8px;margin-bottom:14px;align-items:center;">
+        <div style="flex:1;background:var(--dark2);border:0.5px solid rgba(255,255,255,0.1);border-radius:50px;display:flex;align-items:center;padding:0 14px;gap:8px;">
+          <span style="color:rgba(255,255,255,0.3);font-size:14px;">🔍</span>
+          <input type="text" id="home-search" placeholder="Search jobs near you..." style="background:none;border:none;outline:none;color:#fff;font-size:14px;flex:1;padding:10px 0;" oninput="filterOpenJobs(this.value)">
+        </div>
+        <button onclick="showJobFilters()" style="background:var(--dark2);border:0.5px solid rgba(255,255,255,0.1);border-radius:50px;padding:10px 14px;font-size:12px;color:rgba(255,255,255,0.6);cursor:pointer;white-space:nowrap;">⚙️ Filter</button>
+      </div>
+
+      <!-- JOB TYPE FILTER PILLS -->
+      <div style="display:flex;gap:6px;margin-bottom:14px;overflow-x:auto;padding-bottom:4px;" id="home-type-filters">
+        <button class="home-filter-pill active" onclick="filterByType('all',this)">All</button>
+        <button class="home-filter-pill" onclick="filterByType('standard',this)">📦 Delivery</button>
+        <button class="home-filter-pill" onclick="filterByType('yard_work',this)">🌿 Yard</button>
+        <button class="home-filter-pill" onclick="filterByType('labor',this)">💪 Labor</button>
+        <button class="home-filter-pill" onclick="filterByType('dump_run',this)">🚛 Dump</button>
+        <button class="home-filter-pill" onclick="filterByType('cleaning',this)">🧹 Clean</button>
+        <button class="home-filter-pill" onclick="filterByType('handyman',this)">🔧 Handyman</button>
+      </div>
+
+      <div class="section-head"><span>Available Near You</span><button class="btn-ghost" onclick="loadOpenJobs()">Refresh</button></div>
+      <div id="open-jobs-list" class="jobs-list"><div class="empty-state">Loading jobs near you...</div></div>
+
       <div class="section-head" style="margin-top:20px;"><span>🎯 Matched To Your Route</span><button class="btn-ghost" onclick="loadMatchedJobs()">Refresh</button></div>
       <div id="matched-jobs-list" class="jobs-list" style="margin-bottom:6px;"></div>
-
-      <div class="section-head" style="margin-top:20px;"><span>Open Deliveries Near You</span><button class="btn-ghost" onclick="loadOpenJobs()">Refresh</button></div>
-      <div id="open-jobs-list" class="jobs-list"><div class="empty-state">Loading open deliveries...</div></div>
-
-      <div class="section-head" style="margin-top:20px;"><span>My Active Jobs</span><button class="btn-ghost" onclick="loadMyJobs()">Refresh</button></div>
-      <div style="display:flex;gap:8px;margin-bottom:12px;flex-wrap:wrap;">
-        <button class="filter-btn active" onclick="filterJobs('all',this)">All</button>
-        <button class="filter-btn" onclick="filterJobs('open',this)">Open</button>
-        <button class="filter-btn" onclick="filterJobs('accepted',this)">Matched</button>
-        <button class="filter-btn" onclick="filterJobs('in_transit',this)">In Transit</button>
-        <button class="filter-btn" onclick="filterJobs('completed',this)">Completed</button>
-      </div>
-      <div id="my-jobs-list" class="jobs-list"><div class="empty-state">Loading your jobs...</div></div>
     </div>
 
-    <!-- POST A JOB -->
+    <!-- POST A DELIVERY (Send tab) -->
     <div id="view-post" class="view">
       <div class="view-header">
         <button class="back-btn" onclick="showView('view-home')">← Back</button>
-        <h2>Post a Delivery</h2>
+        <h2>📦 Send a Delivery</h2>
       </div>
       <div class="form-section">
         <div class="form-section-title">What type of delivery?</div>
@@ -676,21 +709,120 @@ textarea{resize:none}
       </div>
     </div>
 
+    <!-- GIGS VIEW — earn money on services & deliveries -->
+    <div id="view-gigs" class="view">
+      <div class="view-header">
+        <h2>💼 Gigs</h2>
+      </div>
+
+      <!-- MODE SWITCHER -->
+      <div class="drive-mode-switch" style="margin-bottom:20px;">
+        <button class="drive-mode-btn active" id="gigs-tab-post" onclick="switchGigsMode('post')">📋 Post a Gig</button>
+        <button class="drive-mode-btn" id="gigs-tab-earn" onclick="switchGigsMode('earn')">💰 Browse & Earn</button>
+        <button class="drive-mode-btn" id="gigs-tab-drive" onclick="switchGigsMode('drive')">🚗 Post My Drive</button>
+      </div>
+
+      <!-- POST A GIG PANEL -->
+      <div id="gigs-post-panel">
+        <div style="font-size:13px;color:rgba(255,255,255,0.4);margin-bottom:16px;line-height:1.5;">Need help with a job? Post it and get matched with someone local. No driver license required — anyone can help.</div>
+        <div style="display:flex;flex-direction:column;gap:10px;">
+          <div class="gig-category-card" onclick="showQuickPostCategory('yard_work')">
+            <div class="gig-cat-icon">🌿</div>
+            <div>
+              <div class="gig-cat-title">Yard & Outdoor</div>
+              <div class="gig-cat-sub">Lawn mowing, landscaping, snow removal, firewood, leaf cleanup</div>
+              <div class="gig-cat-earn">Typical jobs: $50–$150</div>
+            </div>
+          </div>
+          <div class="gig-category-card" onclick="showQuickPostCategory('labor')">
+            <div class="gig-cat-icon">💪</div>
+            <div>
+              <div class="gig-cat-title">Labor & Moving</div>
+              <div class="gig-cat-sub">Moving help, furniture assembly, loading/unloading, heavy lifting</div>
+              <div class="gig-cat-earn">Typical jobs: $75–$300</div>
+            </div>
+          </div>
+          <div class="gig-category-card" onclick="showQuickPostCategory('dump_run')">
+            <div class="gig-cat-icon">🚛</div>
+            <div>
+              <div class="gig-cat-title">Dump Run</div>
+              <div class="gig-cat-sub">Haul junk, yard waste, or bulky items to the transfer station</div>
+              <div class="gig-cat-earn">Typical jobs: $75–$200</div>
+            </div>
+          </div>
+          <div class="gig-category-card" onclick="showQuickPostCategory('cleaning')">
+            <div class="gig-cat-icon">🧹</div>
+            <div>
+              <div class="gig-cat-title">Cleaning</div>
+              <div class="gig-cat-sub">House cleaning, deep clean, move-in/out cleaning, vacation rental turnover</div>
+              <div class="gig-cat-earn">Typical jobs: $80–$250</div>
+            </div>
+          </div>
+          <div class="gig-category-card" onclick="showQuickPostCategory('handyman')">
+            <div class="gig-cat-icon">🔧</div>
+            <div>
+              <div class="gig-cat-title">Handyman</div>
+              <div class="gig-cat-sub">Minor repairs, painting, TV mounting, fence repair, patching — no licensed trade work</div>
+              <div class="gig-cat-earn">Typical jobs: $50–$200</div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- BROWSE & EARN PANEL -->
+      <div id="gigs-earn-panel" style="display:none;">
+        <div style="font-size:13px;color:rgba(255,255,255,0.4);margin-bottom:16px;line-height:1.5;">Browse open jobs near you. Accept one, complete it, get paid. No experience needed for most gigs.</div>
+        <div style="display:flex;gap:6px;margin-bottom:14px;overflow-x:auto;padding-bottom:4px;">
+          <button class="home-filter-pill active" onclick="filterGigJobs('all',this)">All Gigs</button>
+          <button class="home-filter-pill" onclick="filterGigJobs('yard_work',this)">🌿 Yard</button>
+          <button class="home-filter-pill" onclick="filterGigJobs('labor',this)">💪 Labor</button>
+          <button class="home-filter-pill" onclick="filterGigJobs('dump_run',this)">🚛 Dump</button>
+          <button class="home-filter-pill" onclick="filterGigJobs('cleaning',this)">🧹 Clean</button>
+          <button class="home-filter-pill" onclick="filterGigJobs('handyman',this)">🔧 Handyman</button>
+          <button class="home-filter-pill" onclick="filterGigJobs('standard',this)">📦 Delivery</button>
+        </div>
+        <div id="gigs-earn-list" class="jobs-list"><div class="empty-state">Loading gigs near you...</div></div>
+      </div>
+
+      <!-- POST MY DRIVE PANEL (moved from Drive tab) -->
+      <div id="gigs-drive-panel" style="display:none;">
+        <div style="font-size:13px;color:rgba(255,255,255,0.4);margin-bottom:16px;line-height:1.5;">Making a drive? Post your route and get matched with deliveries along the way. Earn money on trips you're already making.</div>
+        <!-- Reuse existing drive post content -->
+        <div id="gigs-drive-content"></div>
+      </div>
+    </div>
+
+    <!-- MY JOBS VIEW -->
+    <div id="view-jobs" class="view">
+      <div class="view-header">
+        <h2>📋 My Jobs</h2>
+      </div>
+      <div style="display:flex;gap:8px;margin-bottom:16px;flex-wrap:wrap;">
+        <button class="filter-btn active" onclick="filterJobs('all',this)">All</button>
+        <button class="filter-btn" onclick="filterJobs('open',this)">Open</button>
+        <button class="filter-btn" onclick="filterJobs('accepted',this)">Matched</button>
+        <button class="filter-btn" onclick="filterJobs('in_transit',this)">In Transit</button>
+        <button class="filter-btn" onclick="filterJobs('completed',this)">Completed</button>
+      </div>
+      <div id="my-jobs-list" class="jobs-list"><div class="empty-state">Loading your jobs...</div></div>
+    </div>
+
     <!-- JOB DETAIL -->
     <div id="view-job" class="view">
       <div class="view-header">
         <button class="back-btn" id="job-back-btn" onclick="showView('view-home')">← Back</button>
-        <h2>Delivery Details</h2>
+        <h2>Job Details</h2>
       </div>
       <div id="job-detail-content"></div>
     </div>
+
 
   </div>
   <div class="bottom-nav">
     <button class="nav-item active" onclick="showView('view-home');setNavActive(this)"><span class="nav-icon">🏠</span><span class="nav-label">Home</span></button>
     <button class="nav-item" onclick="showView('view-post');setNavActive(this)"><span class="nav-icon">📦</span><span class="nav-label">Send</span></button>
-    <button class="nav-item" onclick="showView('view-drive');loadMyRoutes();setNavActive(this)"><span class="nav-icon">🚗</span><span class="nav-label">Drive</span></button>
-    <button class="nav-item" onclick="showView('view-home');loadMyJobs();setNavActive(this)"><span class="nav-icon">📋</span><span class="nav-label">My Jobs</span></button>
+    <button class="nav-item" onclick="showView('view-gigs');setNavActive(this)"><span class="nav-icon">💼</span><span class="nav-label">Gigs</span></button>
+    <button class="nav-item" onclick="showView('view-jobs');loadMyJobs();setNavActive(this)"><span class="nav-icon">📋</span><span class="nav-label">My Jobs</span></button>
   </div>
 </div>
 
@@ -1004,10 +1136,10 @@ function enterApp(name){
 function showView(id){
   document.querySelectorAll('.view').forEach(v=>v.classList.remove('active'));
   document.getElementById(id).classList.add('active');
-  if(id==='view-home'){loadMyJobs();loadOpenJobs();loadMatchedJobs();}
+  if(id==='view-home'){loadOpenJobs();loadMatchedJobs();}
   if(id==='view-post'){loadPaymentMethod('post-payment-status');}
-  if(id==='view-drive'){loadPaymentMethod('profile-payment-status');}
-  if(id==='view-drive'){checkAndShowConnectPrompt();refreshVerificationStatus();}
+  if(id==='view-gigs'){loadPaymentMethod('profile-payment-status');checkAndShowConnectPrompt();refreshVerificationStatus();}
+  if(id==='view-jobs'){loadMyJobs();}
 }
 
 async function refreshVerificationStatus(){
@@ -1044,6 +1176,92 @@ async function refreshVerificationStatus(){
   }catch(e){console.log('Verification refresh error:',e.message);}
 }
 function setNavActive(el){document.querySelectorAll('.nav-item').forEach(n=>n.classList.remove('active'));el.classList.add('active');}
+
+function showJobFilters(){
+  const pills = document.getElementById('home-type-filters');
+  if(pills) pills.scrollIntoView({behavior:'smooth'});
+  toast('Use the category pills above to filter jobs');
+}
+
+// Gigs tab mode switcher
+let gigsMode = 'post';
+function switchGigsMode(mode){
+  gigsMode = mode;
+  document.getElementById('gigs-post-panel').style.display = mode==='post' ? 'block' : 'none';
+  document.getElementById('gigs-earn-panel').style.display = mode==='earn' ? 'block' : 'none';
+  document.getElementById('gigs-drive-panel').style.display = mode==='drive' ? 'block' : 'none';
+  document.querySelectorAll('[id^="gigs-tab-"]').forEach(b=>b.classList.remove('active'));
+  document.getElementById('gigs-tab-'+mode)?.classList.add('active');
+  if(mode==='earn') loadGigJobs('all');
+  if(mode==='drive'){
+    // Lazy-load drive content into gigs panel
+    const driveContent = document.getElementById('gigs-drive-content');
+    if(driveContent && !driveContent.dataset.loaded){
+      driveContent.dataset.loaded='1';
+      // Copy drive post panel content
+      const drivePostPanel = document.getElementById('drive-post-panel');
+      if(drivePostPanel) driveContent.innerHTML = drivePostPanel.innerHTML;
+      loadMyRoutes();
+    }
+  }
+}
+
+// Show Quick Post with a specific category pre-selected
+function showQuickPostCategory(cat){
+  showQuickPost();
+  setTimeout(()=>{
+    const catEl = document.querySelector(`.qp-cat[data-cat="${cat}"]`);
+    if(catEl) selectQPCategory(cat, catEl);
+  }, 200);
+}
+
+// Filter open jobs on home by type
+let homeTypeFilter = 'all';
+let allOpenJobs = [];
+function filterByType(type, el){
+  homeTypeFilter = type;
+  document.querySelectorAll('.home-filter-pill').forEach(p=>p.classList.remove('active'));
+  el.classList.add('active');
+  renderFilteredJobs();
+}
+function filterOpenJobs(query){
+  renderFilteredJobs(query);
+}
+function renderFilteredJobs(query=''){
+  const q = (query||document.getElementById('home-search')?.value||'').toLowerCase();
+  const list = document.getElementById('open-jobs-list');
+  if(!list) return;
+  let filtered = allOpenJobs.filter(j=>{
+    const typeMatch = homeTypeFilter==='all' || j.job_type===homeTypeFilter;
+    const textMatch = !q || j.title?.toLowerCase().includes(q) || j.pickup_city?.toLowerCase().includes(q) || j.dropoff_city?.toLowerCase().includes(q);
+    return typeMatch && textMatch;
+  });
+  if(!filtered.length){list.innerHTML='<div class="empty-state">No jobs match your filter</div>';return;}
+  list.innerHTML=filtered.map(j=>jobCard(j,true)).join('');
+}
+
+// Gig jobs loader for earn panel
+let gigTypeFilter = 'all';
+async function loadGigJobs(type){
+  gigTypeFilter = type||'all';
+  const list = document.getElementById('gigs-earn-list');
+  if(list) list.innerHTML='<div class="empty-state">Loading...</div>';
+  try{
+    const jobs = await api('GET','/api/jobs');
+    const SERVICE_TYPES=['yard_work','labor','dump_run','cleaning','handyman','standard'];
+    let filtered = jobs.filter(j=>j.status==='open' && j.shipper_id!==currentUser?.userId);
+    if(gigTypeFilter!=='all') filtered=filtered.filter(j=>j.job_type===gigTypeFilter);
+    if(list){
+      if(!filtered.length){list.innerHTML='<div class="empty-state">No gigs available right now</div>';return;}
+      list.innerHTML=filtered.map(j=>jobCard(j,true)).join('');
+    }
+  }catch(e){if(list)list.innerHTML='<div class="empty-state">Could not load gigs</div>';}
+}
+function filterGigJobs(type, el){
+  document.querySelectorAll('#gigs-earn-panel .home-filter-pill').forEach(p=>p.classList.remove('active'));
+  el.classList.add('active');
+  loadGigJobs(type);
+}
 const SERVICE_TYPES = ['yard_work','labor','dump_run','cleaning','handyman'];
 const SERVICE_TITLES = {yard_work:'Yard & Outdoor Details',labor:'Labor & Moving Details',dump_run:'Dump Run Details',cleaning:'Cleaning Details',handyman:'Handyman Details'};
 function isServiceType(type){ return SERVICE_TYPES.includes(type); }
@@ -1259,11 +1477,13 @@ function renderJobMap(job){
 async function loadOpenJobs(){
   const list=document.getElementById('open-jobs-list');
   if(!list)return;
+  list.innerHTML='<div class="empty-state">Loading...</div>';
   try{
     const jobs=await api('GET','/api/jobs');
-    if(!jobs.length){list.innerHTML='<div class="empty-state">No open deliveries right now.\nPost one or check back soon!</div>';return;}
-    list.innerHTML=jobs.map(j=>jobCard(j,true)).join('');
-  }catch(e){list.innerHTML='<div class="empty-state">Could not load deliveries</div>';}
+    allOpenJobs=jobs; // Store for filter
+    if(!jobs.length){list.innerHTML='<div class="empty-state">No open jobs right now.\nPost one or check back soon!</div>';return;}
+    renderFilteredJobs();
+  }catch(e){list.innerHTML='<div class="empty-state">Could not load jobs</div>';}
 }
 async function loadMyJobs(){
   const list=document.getElementById('my-jobs-list');
@@ -1306,7 +1526,7 @@ function jobCard(job,isDriver=false){
 }
 async function openJob(jobId,perspective='shipper'){
   currentJobId=jobId;currentJobPerspective=perspective;
-  const backView=perspective==='driver'?'view-drive':'view-home';
+  const backView=perspective==='driver'?'view-gigs':'view-home';
   document.getElementById('job-back-btn').onclick=()=>{showView(backView);clearInterval(jobPollInterval);};
   showView('view-job');await loadJobDetail();
   clearInterval(jobPollInterval);jobPollInterval=setInterval(()=>loadJobDetail(true),15000);
@@ -1956,8 +2176,11 @@ function showActiveJobBanner(job, driverName){
     <div style="background:var(--teal);color:#000;border-radius:20px;padding:8px 14px;font-size:12px;font-weight:700;">💬 Chat →</div>
   </div>`;
   banner.onclick = () => openJob(job.id, 'shipper');
-  const homeSection = document.getElementById('my-jobs-list');
-  if(homeSection) homeSection.parentNode.insertBefore(banner, homeSection);
+  // Insert at top of home view body
+  const homeView = document.getElementById('view-home');
+  const firstChild = homeView?.querySelector('.quick-post-btn');
+  if(firstChild) homeView.insertBefore(banner, firstChild);
+  else if(homeView) homeView.prepend(banner);
 }
 
 // Track job statuses for accepted detection
