@@ -157,6 +157,12 @@ textarea{resize:none}
 .star.active{filter:none}
 .home-filter-pill{background:var(--dark2);border:0.5px solid rgba(255,255,255,0.1);border-radius:50px;padding:6px 14px;font-size:12px;color:rgba(255,255,255,0.5);cursor:pointer;white-space:nowrap;font-family:'DM Sans',sans-serif;transition:all 0.2s}
 .home-filter-pill.active{background:rgba(0,194,168,0.15);border-color:var(--teal);color:var(--teal);font-weight:600}
+.avatar{width:72px;height:72px;border-radius:50%;object-fit:cover;border:2px solid var(--teal);flex-shrink:0}
+.avatar-placeholder{width:72px;height:72px;border-radius:50%;background:var(--dark2);border:2px solid rgba(255,255,255,0.1);display:flex;align-items:center;justify-content:center;font-size:28px;flex-shrink:0;cursor:pointer}
+.avatar-sm{width:36px;height:36px;border-radius:50%;object-fit:cover;border:1.5px solid rgba(255,255,255,0.15);flex-shrink:0}
+.avatar-placeholder-sm{width:36px;height:36px;border-radius:50%;background:var(--dark2);border:1.5px solid rgba(255,255,255,0.1);display:flex;align-items:center;justify-content:center;font-size:14px;flex-shrink:0}
+.review-card{background:var(--dark2);border-radius:var(--rs);padding:12px 14px;margin-bottom:8px}
+.star-display{color:#FFD700;font-size:13px;letter-spacing:1px}
 .gig-category-card{background:var(--dark2);border:0.5px solid rgba(255,255,255,0.08);border-radius:var(--r);padding:18px 16px;cursor:pointer;transition:all 0.2s;display:flex;align-items:center;gap:14px}
 .gig-category-card:active{transform:scale(0.97)}
 .gig-category-card:hover{border-color:rgba(0,194,168,0.3);background:rgba(0,194,168,0.05)}
@@ -293,7 +299,14 @@ textarea{resize:none}
 <div id="app-screen" class="screen">
   <div class="app-header">
     <div class="header-logo">De<span>tour</span></div>
-    <div class="header-user"><span id="header-name"></span><button class="btn-ghost" onclick="logout()">Sign out</button></div>
+    <div class="header-user">
+      <div onclick="showView('view-gigs');setNavActive(document.querySelectorAll('.nav-item')[2]);switchGigsMode('profile')" style="cursor:pointer;display:flex;align-items:center;gap:6px;">
+        <div id="header-avatar-placeholder" style="width:28px;height:28px;border-radius:50%;background:var(--dark2);border:1.5px solid rgba(255,255,255,0.15);display:flex;align-items:center;justify-content:center;font-size:12px;">👤</div>
+        <img id="header-avatar" style="width:28px;height:28px;border-radius:50%;object-fit:cover;border:1.5px solid var(--teal);display:none;" src="" alt="">
+        <span id="header-name" style="font-size:13px;color:var(--gray);"></span>
+      </div>
+      <button class="btn-ghost" onclick="logout()">Sign out</button>
+    </div>
   </div>
   <div class="app-body">
 
@@ -732,10 +745,11 @@ textarea{resize:none}
       </div>
 
       <!-- MODE SWITCHER -->
-      <div class="drive-mode-switch" style="margin-bottom:20px;">
+      <div class="drive-mode-switch" style="margin-bottom:20px;flex-wrap:wrap;">
         <button class="drive-mode-btn active" id="gigs-tab-post" onclick="switchGigsMode('post')">📋 Post a Gig</button>
         <button class="drive-mode-btn" id="gigs-tab-earn" onclick="switchGigsMode('earn')">💰 Browse & Earn</button>
         <button class="drive-mode-btn" id="gigs-tab-drive" onclick="switchGigsMode('drive')">🚗 Post My Drive</button>
+        <button class="drive-mode-btn" id="gigs-tab-profile" onclick="switchGigsMode('profile')">👤 My Profile</button>
       </div>
 
       <!-- POST A GIG PANEL -->
@@ -800,11 +814,59 @@ textarea{resize:none}
         <div id="gigs-earn-list" class="jobs-list"><div class="empty-state">Loading gigs near you...</div></div>
       </div>
 
-      <!-- POST MY DRIVE PANEL (moved from Drive tab) -->
+      <!-- POST MY DRIVE PANEL -->
       <div id="gigs-drive-panel" style="display:none;">
         <div style="font-size:13px;color:rgba(255,255,255,0.4);margin-bottom:16px;line-height:1.5;">Making a drive? Post your route and get matched with deliveries along the way. Earn money on trips you're already making.</div>
-        <!-- Reuse existing drive post content -->
         <div id="gigs-drive-content"></div>
+      </div>
+
+      <!-- MY PROFILE PANEL -->
+      <div id="gigs-profile-panel" style="display:none;">
+
+        <!-- AVATAR + NAME -->
+        <div style="display:flex;align-items:center;gap:16px;margin-bottom:20px;">
+          <div id="profile-avatar-wrap" onclick="document.getElementById('profile-photo-input').click()" style="position:relative;cursor:pointer;">
+            <div id="profile-avatar-placeholder" class="avatar-placeholder">👤</div>
+            <img id="profile-avatar-img" class="avatar" style="display:none;" src="" alt="Profile photo">
+            <div style="position:absolute;bottom:0;right:0;background:var(--teal);border-radius:50%;width:22px;height:22px;display:flex;align-items:center;justify-content:center;font-size:12px;border:2px solid var(--dark);">✏️</div>
+          </div>
+          <input type="file" id="profile-photo-input" accept="image/*" style="display:none;" onchange="uploadProfilePhoto(this)">
+          <div style="flex:1;">
+            <div id="profile-name-display" style="font-family:'Syne',sans-serif;font-size:20px;font-weight:800;margin-bottom:4px;"></div>
+            <div id="profile-rating-display" style="font-size:13px;color:rgba(255,255,255,0.5);"></div>
+            <div id="profile-jobs-display" style="font-size:12px;color:rgba(255,255,255,0.35);margin-top:2px;"></div>
+          </div>
+        </div>
+
+        <!-- BIO -->
+        <div class="job-detail-card" style="margin-bottom:12px;">
+          <div class="detail-label" style="margin-bottom:8px;">About me</div>
+          <textarea id="profile-bio" rows="3" placeholder="Tell people a bit about yourself — what you're good at, your availability, neighborhood..." style="width:100%;background:transparent;border:none;outline:none;color:rgba(255,255,255,0.7);font-size:14px;font-family:'DM Sans',sans-serif;resize:none;line-height:1.6;"></textarea>
+          <button onclick="saveProfile()" style="margin-top:8px;padding:8px 16px;background:rgba(0,194,168,0.1);border:0.5px solid var(--teal);border-radius:var(--rs);color:var(--teal);font-size:13px;cursor:pointer;">Save</button>
+        </div>
+
+        <!-- STATS ROW -->
+        <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:8px;margin-bottom:16px;">
+          <div style="background:var(--dark2);border-radius:var(--rs);padding:14px 10px;text-align:center;">
+            <div id="stat-rating" style="font-family:'Syne',sans-serif;font-size:22px;font-weight:800;color:var(--teal);">—</div>
+            <div style="font-size:11px;color:rgba(255,255,255,0.4);margin-top:2px;">Avg Rating</div>
+          </div>
+          <div style="background:var(--dark2);border-radius:var(--rs);padding:14px 10px;text-align:center;">
+            <div id="stat-reviews" style="font-family:'Syne',sans-serif;font-size:22px;font-weight:800;color:var(--teal);">0</div>
+            <div style="font-size:11px;color:rgba(255,255,255,0.4);margin-top:2px;">Reviews</div>
+          </div>
+          <div style="background:var(--dark2);border-radius:var(--rs);padding:14px 10px;text-align:center;">
+            <div id="stat-jobs" style="font-family:'Syne',sans-serif;font-size:22px;font-weight:800;color:var(--teal);">0</div>
+            <div style="font-size:11px;color:rgba(255,255,255,0.4);margin-top:2px;">Jobs Done</div>
+          </div>
+        </div>
+
+        <!-- REVIEWS -->
+        <div class="section-head"><span>⭐ My Reviews</span></div>
+        <div id="profile-reviews-list">
+          <div class="empty-state" style="padding:24px 0;">No reviews yet.<br>Complete jobs to start building your reputation.</div>
+        </div>
+
       </div>
     </div>
 
@@ -1132,9 +1194,21 @@ async function logout(){
 function enterApp(name){
   document.getElementById('auth-screen').classList.remove('active');
   document.getElementById('app-screen').classList.add('active');
-  document.getElementById('header-name').textContent=name;
+  document.getElementById('header-name').textContent=name.split(' ')[0];
   const firstName = name.split(' ')[0];
   document.getElementById('home-name').textContent = firstName.charAt(0).toUpperCase() + firstName.slice(1);
+  // Load profile photo into header
+  setTimeout(async ()=>{
+    try{
+      const me = await api('GET','/api/auth/me');
+      if(me.profile_photo){
+        const img = document.getElementById('header-avatar');
+        const placeholder = document.getElementById('header-avatar-placeholder');
+        if(img){ img.src=me.profile_photo; img.style.display='block'; }
+        if(placeholder) placeholder.style.display='none';
+      }
+    }catch(e){}
+  }, 500);
   const soon=new Date(Date.now()+3600000);
   const local=new Date(soon.getTime()-soon.getTimezoneOffset()*60000).toISOString().slice(0,16);
   const d=document.getElementById('route-depart');if(d)d.value=local;
@@ -1232,15 +1306,16 @@ function switchGigsMode(mode){
   document.getElementById('gigs-post-panel').style.display = mode==='post' ? 'block' : 'none';
   document.getElementById('gigs-earn-panel').style.display = mode==='earn' ? 'block' : 'none';
   document.getElementById('gigs-drive-panel').style.display = mode==='drive' ? 'block' : 'none';
+  const profilePanel = document.getElementById('gigs-profile-panel');
+  if(profilePanel) profilePanel.style.display = mode==='profile' ? 'block' : 'none';
   document.querySelectorAll('[id^="gigs-tab-"]').forEach(b=>b.classList.remove('active'));
   document.getElementById('gigs-tab-'+mode)?.classList.add('active');
   if(mode==='earn') loadGigJobs('all');
+  if(mode==='profile') loadMyProfile();
   if(mode==='drive'){
-    // Lazy-load drive content into gigs panel
     const driveContent = document.getElementById('gigs-drive-content');
     if(driveContent && !driveContent.dataset.loaded){
       driveContent.dataset.loaded='1';
-      // Copy drive post panel content
       const drivePostPanel = document.getElementById('drive-post-panel');
       if(drivePostPanel) driveContent.innerHTML = drivePostPanel.innerHTML;
       loadMyRoutes();
@@ -1623,7 +1698,7 @@ function renderJobDetail(job,messages){
         ${isDriver?`<div style="font-size:12px;color:var(--green);">You earn $${dp}</div>`:''}
       </div>
     </div>
-    ${renderTimeline(job.status)}
+    ${renderTimeline(job.status, job.job_type)}
     ${job.description?`<p style="font-size:14px;color:rgba(255,255,255,0.55);margin-bottom:10px;">${escHtml(job.description)}</p>`:''}
     ${!isServiceUI?`<div class="detail-grid">
       <div><div class="detail-label">Size</div><div class="detail-val">${SZ[job.item_size]||job.item_size}</div></div>
@@ -1701,7 +1776,7 @@ function renderJobDetail(job,messages){
 
   // ── MESSAGES ──
   if(job.status!=='open'&&(isShipper||isDriver)){
-    h+=`<div class="job-detail-card"><div class="detail-label" style="margin-bottom:10px;">Messages with ${isShipper?(job.driver_name||helperLabel):(job.shipper_name||shipperLabel)}</div><div class="messages-thread" id="msg-thread">${messages.length?messages.map(m=>`<div><div class="msg-name">${escHtml(m.sender_name)}</div><div class="msg-bubble ${m.sender_id===currentUser?.userId?'msg-out':'msg-in'}">${escHtml(m.content)}</div></div>`).join(''):'<div style="color:var(--gray);font-size:13px;text-align:center;padding:10px;">No messages yet</div>'}</div><div class="msg-input-row"><textarea id="msg-input" placeholder="Send a message..." rows="1" onkeydown="if(event.key==='Enter'&&!event.shiftKey){event.preventDefault();sendMsg('${job.id}');}" oninput="this.style.height='auto';this.style.height=Math.min(this.scrollHeight,120)+'px'"></textarea><button class="msg-send-btn" onclick="sendMsg('${job.id}')">↑</button></div></div>`;
+    h+=`<div class="job-detail-card"><div class="detail-label" style="margin-bottom:10px;">Messages with <span style="color:var(--teal);cursor:pointer;" onclick="openUserProfile('${isShipper?job.driver_id:job.shipper_id}')">${isShipper?(job.driver_name||helperLabel):(job.shipper_name||shipperLabel)} ↗</span></div><div class="messages-thread" id="msg-thread">${messages.length?messages.map(m=>`<div><div class="msg-name">${escHtml(m.sender_name)}</div><div class="msg-bubble ${m.sender_id===currentUser?.userId?'msg-out':'msg-in'}">${escHtml(m.content)}</div></div>`).join(''):'<div style="color:var(--gray);font-size:13px;text-align:center;padding:10px;">No messages yet</div>'}</div><div class="msg-input-row"><textarea id="msg-input" placeholder="Send a message..." rows="1" onkeydown="if(event.key==='Enter'&&!event.shiftKey){event.preventDefault();sendMsg('${job.id}');}" oninput="this.style.height='auto';this.style.height=Math.min(this.scrollHeight,120)+'px'"></textarea><button class="msg-send-btn" onclick="sendMsg('${job.id}')">↑</button></div></div>`;
     setTimeout(()=>{const t=document.getElementById('msg-thread');if(t)t.scrollTop=t.scrollHeight;},100);
   }
 
@@ -1720,7 +1795,18 @@ function renderJobDetail(job,messages){
   }
 
   // ── RATING ──
-  if(job.status==='completed'&&(isShipper||isDriver))h+=`<div class="job-detail-card"><div class="detail-label" style="margin-bottom:7px;">Rate your experience</div><div class="star-row" id="star-row">${[1,2,3,4,5].map(i=>`<span class="star" onclick="setRating(${i})">★</span>`).join('')}</div><input type="text" id="rating-comment" placeholder="Any feedback? (optional)" style="margin-top:7px;"><button class="btn-secondary" style="margin-top:7px;" onclick="submitRating('${job.id}')">Submit Rating</button></div>`;
+  if(job.status==='completed'&&(isShipper||isDriver)){
+    const otherName = isShipper ? (job.driver_name||helperLabel) : (job.shipper_name||shipperLabel);
+    h+=`<div class="job-detail-card" id="rating-card-${job.id}">
+      <div class="detail-label" style="margin-bottom:12px;">⭐ Rate Your Experience</div>
+      <div style="font-size:13px;color:rgba(255,255,255,0.5);margin-bottom:10px;">How was ${escHtml(otherName)}?</div>
+      <div class="star-row" id="star-row">
+        ${[1,2,3,4,5].map(i=>`<span class="star" onclick="setRating(${i})" style="font-size:32px;cursor:pointer;filter:grayscale(1) opacity(0.3);transition:filter 0.15s;">★</span>`).join('')}
+      </div>
+      <textarea id="rating-comment" placeholder="Leave a review (optional)..." style="margin-top:10px;width:100%;background:var(--dark2);border:0.5px solid rgba(255,255,255,0.1);border-radius:var(--rs);padding:10px;color:#fff;font-size:13px;font-family:'DM Sans',sans-serif;resize:none;" rows="2"></textarea>
+      <button class="btn-secondary" style="margin-top:10px;width:100%;" onclick="submitRating('${job.id}')">Submit Rating →</button>
+    </div>`;
+  }
 
   return h;
 }
@@ -1909,6 +1995,169 @@ function selectQPCategory(cat, el){
   // Show delivery restrictions only for delivery
   const restrictionsBox = document.getElementById('qp-delivery-restrictions');
   if(restrictionsBox) restrictionsBox.style.display = cat==='delivery' ? 'block' : 'none';
+}
+// ── PROFILE FUNCTIONS ──
+async function loadMyProfile(){
+  try{
+    const user = await api('GET','/api/auth/me');
+    // Avatar
+    const img = document.getElementById('profile-avatar-img');
+    const placeholder = document.getElementById('profile-avatar-placeholder');
+    if(user.profile_photo){
+      img.src = user.profile_photo;
+      img.style.display='block';
+      placeholder.style.display='none';
+    } else {
+      img.style.display='none';
+      placeholder.style.display='flex';
+    }
+    // Name & rating
+    const firstName = user.name.split(' ')[0];
+    document.getElementById('profile-name-display').textContent = user.name;
+    document.getElementById('profile-rating-display').textContent = user.avg_rating
+      ? '⭐ '.repeat(Math.round(user.avg_rating)).trim() + ` ${user.avg_rating} rating`
+      : 'No ratings yet';
+    // Bio
+    document.getElementById('profile-bio').value = user.bio || '';
+    // Stats
+    document.getElementById('stat-rating').textContent = user.avg_rating || '—';
+    document.getElementById('stat-reviews').textContent = user.rating_count || 0;
+    // Jobs done — fetch from my jobs
+    try{
+      const jobs = await api('GET','/api/jobs/my/all');
+      const done = [...(jobs.as_shipper||[]),...(jobs.as_driver||[])].filter(j=>j.status==='completed').length;
+      document.getElementById('stat-jobs').textContent = done;
+      document.getElementById('profile-jobs-display').textContent = `${done} job${done===1?'':'s'} completed`;
+    }catch(e){}
+    // Reviews — fetch public profile
+    try{
+      const profile = await api('GET',`/api/auth/profile/${user.userId||user.id}`);
+      renderMyReviews(profile.reviews||[]);
+      document.getElementById('stat-reviews').textContent = (profile.reviews||[]).length;
+    }catch(e){}
+  }catch(e){console.log('Profile load error:',e.message);}
+}
+
+function renderMyReviews(reviews){
+  const list = document.getElementById('profile-reviews-list');
+  if(!reviews.length){
+    list.innerHTML='<div class="empty-state" style="padding:24px 0;">No reviews yet.<br>Complete jobs to start building your reputation.</div>';
+    return;
+  }
+  list.innerHTML = reviews.map(r=>{
+    const stars = '★'.repeat(r.score) + '☆'.repeat(5-r.score);
+    const roleLabel = r.role==='helper' ? 'as helper' : 'as poster';
+    const photoHtml = r.rater_photo
+      ? `<img class="avatar-sm" src="${escHtml(r.rater_photo)}">`
+      : `<div class="avatar-placeholder-sm">👤</div>`;
+    return `<div class="review-card">
+      <div style="display:flex;align-items:center;gap:10px;margin-bottom:6px;">
+        ${photoHtml}
+        <div>
+          <div style="font-size:13px;font-weight:600;">${escHtml(r.rater_name)}</div>
+          <div style="font-size:11px;color:rgba(255,255,255,0.35);">${roleLabel} · ${fmtTime(r.created_at)}</div>
+        </div>
+        <div class="star-display" style="margin-left:auto;">${stars}</div>
+      </div>
+      ${r.comment?`<div style="font-size:13px;color:rgba(255,255,255,0.6);line-height:1.5;">"${escHtml(r.comment)}"</div>`:''}
+    </div>`;
+  }).join('');
+}
+
+async function uploadProfilePhoto(input){
+  if(!input.files?.length) return;
+  const fd = new FormData();
+  fd.append('photo', input.files[0]);
+  try{
+    toast('Uploading...');
+    const res = await fetch('/api/auth/profile-photo',{
+      method:'POST',body:fd,credentials:'include',
+      headers:{'x-user-id':currentUser?.userId||localStorage.getItem('detour_uid')||''}
+    });
+    const data = await res.json();
+    if(!res.ok) throw new Error(data.error||'Upload failed');
+    const img = document.getElementById('profile-avatar-img');
+    const placeholder = document.getElementById('profile-avatar-placeholder');
+    img.src = data.photo;
+    img.style.display='block';
+    placeholder.style.display='none';
+    // Also update header avatar if present
+    currentUser.profile_photo = data.photo;
+    updateHeaderAvatar(data.photo);
+    toast('Profile photo updated ✓');
+  }catch(e){toast('Could not upload photo: '+e.message);}
+}
+
+async function saveProfile(){
+  const bio = document.getElementById('profile-bio')?.value.trim()||'';
+  try{
+    await api('POST','/api/auth/update-profile',{
+      vehicle_type: currentUser?.vehicle_type||'',
+      vehicle_description: currentUser?.vehicle_description||'',
+      license_plate: currentUser?.license_plate||'',
+      home_address: currentUser?.home_address||'',
+      bio
+    });
+    toast('Profile saved ✓');
+  }catch(e){toast('Could not save profile');}
+}
+
+function updateHeaderAvatar(photoUrl){
+  // Update any avatar shown in header or nav
+  const headerAvatar = document.getElementById('header-avatar');
+  if(headerAvatar) headerAvatar.src = photoUrl;
+}
+
+// View another user's public profile
+async function openUserProfile(userId){
+  try{
+    const profile = await api('GET',`/api/auth/profile/${userId}`);
+    const stars = profile.avg_rating ? '★'.repeat(Math.round(profile.avg_rating)) + '☆'.repeat(5-Math.round(profile.avg_rating)) : '☆☆☆☆☆';
+    const photoHtml = profile.profile_photo
+      ? `<img class="avatar" src="${escHtml(profile.profile_photo)}" style="width:64px;height:64px;">`
+      : `<div class="avatar-placeholder" style="width:64px;height:64px;">👤</div>`;
+    const reviewsHtml = (profile.reviews||[]).length ? profile.reviews.map(r=>`
+      <div class="review-card">
+        <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:4px;">
+          <div style="font-size:13px;font-weight:600;">${escHtml(r.rater_name)}</div>
+          <div class="star-display">${'★'.repeat(r.score)}${'☆'.repeat(5-r.score)}</div>
+        </div>
+        ${r.comment?`<div style="font-size:13px;color:rgba(255,255,255,0.6);">"${escHtml(r.comment)}"</div>`:''}
+      </div>`).join('') : '<div style="color:rgba(255,255,255,0.35);font-size:13px;">No reviews yet</div>';
+    const html = `
+      <div style="display:flex;align-items:center;gap:14px;margin-bottom:16px;">
+        ${photoHtml}
+        <div>
+          <div style="font-family:'Syne',sans-serif;font-size:18px;font-weight:800;">${escHtml(profile.name)}</div>
+          <div style="font-size:13px;color:#FFD700;">${stars} ${profile.avg_rating||''}</div>
+          <div style="font-size:12px;color:rgba(255,255,255,0.35);">${profile.job_count} jobs completed</div>
+        </div>
+      </div>
+      ${profile.bio?`<div style="font-size:14px;color:rgba(255,255,255,0.6);line-height:1.6;margin-bottom:16px;">"${escHtml(profile.bio)}"</div>`:''}
+      <div style="font-size:11px;color:rgba(255,255,255,0.35);text-transform:uppercase;letter-spacing:0.08em;margin-bottom:10px;">Reviews</div>
+      ${reviewsHtml}`;
+    showModal('👤 ' + escHtml(profile.name), html);
+  }catch(e){toast('Could not load profile');}
+}
+
+// Generic modal
+function showModal(title, content){
+  let modal = document.getElementById('generic-modal');
+  if(!modal){
+    modal = document.createElement('div');
+    modal.id = 'generic-modal';
+    modal.style.cssText='position:fixed;inset:0;background:rgba(0,0,0,0.85);z-index:1000;display:flex;align-items:flex-end;';
+    modal.onclick = e => { if(e.target===modal) modal.style.display='none'; };
+    document.body.appendChild(modal);
+  }
+  modal.innerHTML=`<div style="background:var(--dark);border-radius:20px 20px 0 0;padding:20px;width:100%;max-height:85vh;overflow-y:auto;">
+    <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:16px;">
+      <div style="font-family:'Syne',sans-serif;font-size:17px;font-weight:800;">${title}</div>
+      <button onclick="document.getElementById('generic-modal').style.display='none'" style="background:none;border:none;color:rgba(255,255,255,0.5);font-size:20px;cursor:pointer;">✕</button>
+    </div>
+    ${content}
+  </div>`;
+  modal.style.display='flex';
 }
 function updateQPServiceBreakdown(){
   const price = parseFloat(document.getElementById('qp-service-price')?.value);
@@ -2104,13 +2353,24 @@ function applyPriceSuggestion(){
 }
 
 // ── DELIVERY TIMELINE ──
-function renderTimeline(status){
-  const steps=[
+function renderTimeline(status, jobType){
+  const SERVICE_TYPES=['yard_work','labor','dump_run','cleaning','handyman'];
+  const isService = SERVICE_TYPES.includes(jobType);
+
+  const deliverySteps=[
     {key:'open',label:'Posted',icon:'📦'},
     {key:'accepted',label:'Driver\nFound',icon:'🚗'},
     {key:'in_transit',label:'Picked\nUp',icon:'📸'},
     {key:'completed',label:'Delivered',icon:'✅'}
   ];
+  const serviceSteps=[
+    {key:'open',label:'Posted',icon:'📋'},
+    {key:'accepted',label:'Worker\nFound',icon:'🙋'},
+    {key:'in_transit',label:'In\nProgress',icon:'⚙️'},
+    {key:'completed',label:'Complete',icon:'✅'}
+  ];
+
+  const steps = isService ? serviceSteps : deliverySteps;
   const order=['open','accepted','in_transit','completed'];
   const current=order.indexOf(status);
   let html='<div class="delivery-timeline">';
@@ -2542,12 +2802,23 @@ async function confirmDelivery(jobId){
   }catch(e){toast(e.message||'Could not confirm delivery');}
 }
 let selectedRating=0;
-function setRating(score){selectedRating=score;document.querySelectorAll('.star').forEach((s,i)=>s.classList.toggle('active',i<score));}
+function setRating(score){
+  selectedRating=score;
+  document.querySelectorAll('.star').forEach((s,i)=>{
+    s.style.filter=i<score?'none':'grayscale(1) opacity(0.3)';
+    s.style.color=i<score?'#FFD700':'';
+  });
+}
 async function submitRating(jobId){
-  if(!selectedRating){toast('Please select a star rating');return;}
+  if(!selectedRating){toast('Please select a star rating first');return;}
   const comment=document.getElementById('rating-comment')?.value.trim()||'';
-  try{await api('POST',`/api/jobs/${jobId}/rate`,{score:selectedRating,comment});toast('Rating submitted. Thanks!');await loadJobDetail();}
-  catch(e){toast(e.message||'Could not submit rating');}
+  try{
+    await api('POST',`/api/jobs/${jobId}/rate`,{score:selectedRating,comment});
+    const card=document.getElementById(`rating-card-${jobId}`);
+    if(card) card.innerHTML=`<div style="text-align:center;padding:20px;color:var(--teal);font-size:15px;font-weight:600;">⭐ Rating submitted — thanks!</div>`;
+    toast('Rating submitted!');
+  }
+  catch(e){toast(e.message==='Already rated'?'You\'ve already rated this job':e.message||'Could not submit rating');}
 }
 function updatePriceBreakdown(){
   const price=parseFloat(document.getElementById('job-price').value),bd=document.getElementById('price-breakdown');
