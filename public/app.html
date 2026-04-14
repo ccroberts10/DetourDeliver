@@ -1877,17 +1877,12 @@ function updateQPBreakdown(){
 async function submitQuickPost(){
   const errEl=document.getElementById('qp-error');
   errEl.textContent='';
-  if(!title){errEl.textContent='Please add a title';return;}
-  if(!pickupAddr){errEl.textContent='Please enter a pickup address';return;}
-  if(!to){errEl.textContent='Please enter a destination city';return;}
-  if(!dropoffAddr){errEl.textContent='Please enter a dropoff address';return;}
-  if(!price||parseFloat(price)<5){errEl.textContent='Minimum offer is $5';return;}
   if(!qpHasPaymentMethod){
     errEl.textContent='Please add a payment method first';
     addPaymentMethod();
     return;
   }
-  const submitBtn=document.querySelector('#quick-post-modal .btn-primary');
+  const submitBtn=document.getElementById('qp-submit-btn');
   if(submitBtn){submitBtn.disabled=true;submitBtn.textContent='Posting...';}
 
   const isService = qpCategory !== 'delivery';
@@ -1937,6 +1932,9 @@ async function submitQuickPost(){
     if(!to){errEl.textContent='Please enter a destination city';if(submitBtn){submitBtn.disabled=false;submitBtn.textContent='Post Delivery →';}return;}
     if(!dropoffAddr){errEl.textContent='Please enter a dropoff address';if(submitBtn){submitBtn.disabled=false;submitBtn.textContent='Post Delivery →';}return;}
     if(!price||parseFloat(price)<5){errEl.textContent='Minimum offer is $5';if(submitBtn){submitBtn.disabled=false;submitBtn.textContent='Post Delivery →';}return;}
+    if(parseFloat(price)>1500){errEl.textContent='Maximum delivery offer is $1,500';if(submitBtn){submitBtn.disabled=false;submitBtn.textContent='Post Delivery →';}return;}
+    const agreed=document.getElementById('qp-restrictions-agree')?.checked;
+    if(!agreed){errEl.textContent='Please confirm this delivery complies with Detour\'s restrictions';if(submitBtn){submitBtn.disabled=false;submitBtn.textContent='Post Delivery →';}return;}
     fd.append('title',title);
     fd.append('pickup_address',pickupAddr);
     fd.append('pickup_city',from);
@@ -1948,14 +1946,6 @@ async function submitQuickPost(){
     fd.append('dropoff_zip',toZip);
     fd.append('item_size',size);
     fd.append('offered_price',price);
-  }
-
-  // Delivery-specific validation
-  if(!isService){
-    const price = parseFloat(document.getElementById('qp-price')?.value||0);
-    if(price > 1500){errEl.textContent='Maximum delivery offer is $1,500';if(submitBtn){submitBtn.disabled=false;submitBtn.textContent='Post Delivery →';}return;}
-    const agreed = document.getElementById('qp-restrictions-agree')?.checked;
-    if(!agreed){errEl.textContent='Please confirm this delivery complies with Detour\'s restrictions';if(submitBtn){submitBtn.disabled=false;submitBtn.textContent='Post Delivery →';}return;}
   }
 
   try{
@@ -1977,7 +1967,8 @@ async function submitQuickPost(){
     loadOpenJobs();loadMyJobs();
   }catch(e){
     errEl.textContent=e.message;
-    if(submitBtn){submitBtn.disabled=false;submitBtn.textContent='Post Delivery →';}
+    const btnLabels={delivery:'Post Delivery →',yard_work:'Post Yard Job →',labor:'Post Labor Job →',dump_run:'Post Dump Run →',cleaning:'Post Cleaning Job →',handyman:'Post Handyman Job →'};
+    if(submitBtn){submitBtn.disabled=false;submitBtn.textContent=btnLabels[qpCategory]||'Post Job →';}
   }
 }
 
