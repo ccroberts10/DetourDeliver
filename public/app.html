@@ -1600,7 +1600,11 @@ async function loadJobDetail(silent=false){
 }
 function renderJobDetail(job,messages){
   const isShipper=job.shipper_id===currentUser?.userId,isDriver=job.driver_id===currentUser?.userId;
-  const extra=job.extra_data||{},dp=parseFloat(job.driver_payout||job.offered_price*0.75).toFixed(2);
+  const extra=job.extra_data||{};
+  const SERVICE_TYPES_UI=['yard_work','labor','dump_run','cleaning','handyman'];
+  const isServiceUI=SERVICE_TYPES_UI.includes(job.job_type);
+  const feeRateUI=isServiceUI?0.20:0.25;
+  const dp=parseFloat(job.driver_payout||job.offered_price*(1-feeRateUI)).toFixed(2);
   let h=`<div class="job-detail-card"><div style="display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:10px;"><div><div style="font-size:11px;color:var(--teal);margin-bottom:4px;">${TL[job.job_type]||'📦 General'}</div><div style="font-family:'Syne',sans-serif;font-size:18px;font-weight:800;margin-bottom:6px;">${escHtml(job.title)}</div><span class="status-badge status-${job.status}">${ST[job.status]}</span></div><div style="text-align:right;"><div style="font-family:'Syne',sans-serif;font-size:26px;font-weight:800;color:var(--teal);">$${parseFloat(job.offered_price).toFixed(2)}</div>${isDriver?`<div style="font-size:12px;color:var(--green);">You earn $${dp}</div>`:''}</div></div>${renderTimeline(job.status)}${job.description?`<p style="font-size:14px;color:rgba(255,255,255,0.55);margin-bottom:10px;">${escHtml(job.description)}</p>`:''}<div class="detail-grid"><div><div class="detail-label">Size</div><div class="detail-val">${SZ[job.item_size]||job.item_size}</div></div><div><div class="detail-label">Weight</div><div class="detail-val">${job.item_weight?job.item_weight+' lbs':'—'}</div></div></div>${job.fragile?'<div class="alert-box danger">⚠️ Fragile — handle with care</div>':''}${job.needs_disassembly?'<div class="alert-box warn">🔧 Requires disassembly / reassembly</div>':''}</div>`;
   if(job.listing_photos?.length)h+=`<div class="job-detail-card"><div class="detail-label" style="margin-bottom:10px;">Item Photos</div><div class="photo-upload-row">${job.listing_photos.map(p=>`<img class="photo-thumb" src="${p}">`).join('')}</div></div>`;
   if(job.job_type==='marketplace'&&(extra.seller_name||extra.buyer_name))h+=`<div class="job-detail-card"><div class="detail-label" style="margin-bottom:10px;">Marketplace Parties</div>${extra.seller_name?`<div class="detail-grid"><div><div class="detail-label">Seller</div><div class="detail-val">${escHtml(extra.seller_name)}</div></div>${extra.seller_phone?`<div><div class="detail-label">Phone</div><div class="detail-val">${escHtml(extra.seller_phone)}</div></div>`:''}</div>`:''}${extra.buyer_name?`<div class="detail-grid" style="margin-top:8px;"><div><div class="detail-label">Buyer</div><div class="detail-val">${escHtml(extra.buyer_name)}</div></div>${extra.buyer_phone?`<div><div class="detail-label">Phone</div><div class="detail-val">${escHtml(extra.buyer_phone)}</div></div>`:''}</div>`:''}</div>`;
@@ -1867,7 +1871,8 @@ function updateQPBreakdown(){
   const bd=document.getElementById('qp-breakdown');
   if(isNaN(price)||price<5){bd.style.display='none';return;}
   bd.style.display='block';
-  bd.innerHTML=`Driver earns <strong style="color:var(--green)">$${(price*0.75).toFixed(2)}</strong> · Detour fee $${(price*0.25).toFixed(2)}`;
+  // Delivery is always 75/25
+  bd.innerHTML=`Driver earns <strong style="color:var(--green)">$${(price*0.75).toFixed(2)}</strong> · Detour fee (25%) $${(price*0.25).toFixed(2)}`;
 }
 async function submitQuickPost(){
   const errEl=document.getElementById('qp-error');
@@ -2260,7 +2265,7 @@ function startJobPolling(){
       if(jobs.length>lastJobCount&&lastJobCount>0){
         const newest=jobs[0];
         showPushNotification('📦 New delivery available!',
-          `${newest.title} — ${newest.pickup_city} → ${newest.dropoff_city} — Earn $${(newest.offered_price*0.75).toFixed(0)}`);
+          `${newest.title} — ${newest.pickup_city} → ${newest.dropoff_city} — Earn $${(newest.driver_payout||newest.offered_price*0.75).toFixed(0)}`);
       }
       lastJobCount=jobs.length;
     }catch(e){}
@@ -2284,7 +2289,7 @@ function startJobPolling(){
       if(matches.length>lastMatchCount&&lastMatchCount>0){
         const newest=matches[0];
         showPushNotification('🎯 Job matched to your route!',
-          `${newest.title} — ${newest.pickup_city} → ${newest.dropoff_city} — Earn $${(newest.offered_price*0.75).toFixed(0)}`);
+          `${newest.title} — ${newest.pickup_city} → ${newest.dropoff_city} — Earn $${(newest.driver_payout||newest.offered_price*0.75).toFixed(0)}`);
         loadMatchedJobs();
         const homeNav=document.querySelectorAll('.nav-item')[0];
         if(homeNav&&!homeNav.querySelector('.nav-badge')){
