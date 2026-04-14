@@ -1573,11 +1573,8 @@ function renderJobMap(job){
   if(!job.pickup_lat||!job.dropoff_lat)return'';
   const pickupLat=job.pickup_lat,pickupLng=job.pickup_lng;
   const dropoffLat=job.dropoff_lat,dropoffLng=job.dropoff_lng;
-  // Center map between pickup and dropoff
   const centerLat=(pickupLat+dropoffLat)/2;
   const centerLng=(pickupLng+dropoffLng)/2;
-  // Use OpenStreetMap static map via tile server
-  const zoom=11;
   const mapUrl=`https://www.openstreetmap.org/export/embed.html?bbox=${Math.min(pickupLng,dropoffLng)-0.1},${Math.min(pickupLat,dropoffLat)-0.1},${Math.max(pickupLng,dropoffLng)+0.1},${Math.max(pickupLat,dropoffLat)+0.1}&layer=mapnik&marker=${pickupLat},${pickupLng}`;
   return`<div class="job-map"><iframe src="${mapUrl}" style="width:100%;height:100%;border:none;" loading="lazy" title="Job route map"></iframe></div>
   <div style="display:flex;gap:8px;margin-bottom:10px;">
@@ -1590,6 +1587,13 @@ function renderJobMap(job){
       <div style="font-size:12px;">${escHtml(job.dropoff_address)}, ${escHtml(job.dropoff_city)}</div>
     </div>
   </div>`;
+}
+function renderSingleLocationMap(job){
+  if(!job.pickup_lat) return '';
+  const lat=job.pickup_lat, lng=job.pickup_lng;
+  const pad=0.02;
+  const mapUrl=`https://www.openstreetmap.org/export/embed.html?bbox=${lng-pad},${lat-pad},${lng+pad},${lat+pad}&layer=mapnik&marker=${lat},${lng}`;
+  return`<div class="job-map"><iframe src="${mapUrl}" style="width:100%;height:100%;border:none;" loading="lazy" title="Job location map"></iframe></div>`;
 }
 async function loadOpenJobs(){
   const list=document.getElementById('open-jobs-list');
@@ -1722,27 +1726,28 @@ function renderJobDetail(job,messages){
     // Single location — where the work is
     h+=`<div class="job-detail-card">
       <div class="detail-label" style="margin-bottom:10px;">📍 Job Location</div>
-      <div class="detail-val" style="font-size:15px;font-weight:600;margin-bottom:4px;">${escHtml(job.pickup_city)}${job.pickup_state?', '+escHtml(job.pickup_state):''}</div>
+      ${renderSingleLocationMap(job)}
+      <div class="detail-val" style="font-size:15px;font-weight:600;margin-bottom:4px;margin-top:8px;">${escHtml(job.pickup_city)}${job.pickup_state?', '+escHtml(job.pickup_state):''}</div>
       ${job.pickup_address&&job.pickup_address!==job.pickup_city?`<div class="detail-val" style="font-size:13px;color:rgba(255,255,255,0.5);">${escHtml(job.pickup_address)}</div>`:''}
       ${job.notes?`<div style="margin-top:10px;"><div class="detail-label">Notes for helper</div><div class="detail-val" style="font-size:13px;">${escHtml(job.notes)}</div></div>`:''}
-      ${(isDriver||currentJobPerspective==='driver')?`<a href="https://maps.google.com/?q=${encodeURIComponent((job.pickup_address||'')+' '+job.pickup_city+' '+job.pickup_state)}" target="_blank" class="btn-secondary" style="display:inline-block;margin-top:10px;font-size:13px;padding:8px 14px;">🗺 Open in Maps</a>`:''}
+      ${(isDriver||currentJobPerspective==='driver')?`<a href="https://maps.google.com/?q=${encodeURIComponent((job.pickup_address||'')+' '+job.pickup_city+' '+(job.pickup_state||''))}" target="_blank" class="btn-secondary" style="display:block;margin-top:10px;font-size:13px;padding:10px 14px;text-align:center;">🗺 Open in Maps</a>`:''}
     </div>`;
   } else if(isDumpRun){
-    // Dump run — pickup location + dump station dropoff
+    // Dump run — pickup + dump station with full route map
     h+=`<div class="job-detail-card">
-      <div class="detail-label" style="margin-bottom:10px;">🗺 Pickup & Drop-off</div>
-      <div style="margin-bottom:10px;">
+      <div class="detail-label" style="margin-bottom:10px;">🗺 Route</div>
+      ${renderJobMap(job)}
+      <div style="margin-top:8px;">
         <div class="detail-label">📍 Pickup (where the load is)</div>
-        <div class="detail-val" style="font-size:13px;">${escHtml(job.pickup_address)||'—'}</div>
-        <div class="detail-val" style="font-size:12px;color:rgba(255,255,255,0.4);">${escHtml(job.pickup_city)}${job.pickup_state?', '+escHtml(job.pickup_state):''}</div>
+        <div class="detail-val" style="font-size:13px;">${escHtml(job.pickup_address)||escHtml(job.pickup_city)}</div>
       </div>
-      <div>
+      <div style="margin-top:8px;">
         <div class="detail-label">🏁 Drop-off (dump station)</div>
         <div class="detail-val" style="font-size:13px;">${job.dropoff_address&&job.dropoff_address!==job.dropoff_city?escHtml(job.dropoff_address):'To be coordinated'}</div>
         <div class="detail-val" style="font-size:12px;color:rgba(255,255,255,0.4);">${escHtml(job.dropoff_city)}${job.dropoff_state?', '+escHtml(job.dropoff_state):''}</div>
       </div>
-      ${job.notes?`<div style="margin-top:10px;"><div class="detail-label">Notes</div><div class="detail-val" style="font-size:13px;">${escHtml(job.notes)}</div></div>`:''}
-      ${(isDriver||currentJobPerspective==='driver')?`<a href="https://maps.google.com/?q=${encodeURIComponent((job.pickup_address||'')+' '+job.pickup_city)}" target="_blank" class="btn-secondary" style="display:inline-block;margin-top:10px;font-size:13px;padding:8px 14px;">🗺 Open in Maps</a>`:''}
+      ${job.notes?`<div style="margin-top:8px;"><div class="detail-label">Notes</div><div class="detail-val" style="font-size:13px;">${escHtml(job.notes)}</div></div>`:''}
+      ${(isDriver||currentJobPerspective==='driver')?mapsButtons(job):''}
     </div>`;
   } else {
     // Delivery — full route with map
