@@ -368,14 +368,11 @@ textarea{resize:none}
       <div class="form-section">
         <div class="form-section-title">What type of delivery?</div>
         <div class="type-picker">
-          <div class="type-opt active" data-type="standard" onclick="selectJobType('standard',this)"><span class="type-emoji">📦</span><span class="type-name">Delivery</span></div>
+          <div class="type-opt active" data-type="standard" onclick="selectJobType('standard',this)"><span class="type-emoji">📦</span><span class="type-name">General</span></div>
           <div class="type-opt" data-type="marketplace" onclick="selectJobType('marketplace',this)"><span class="type-emoji">🛋️</span><span class="type-name">Marketplace</span></div>
           <div class="type-opt" data-type="errand" onclick="selectJobType('errand',this)"><span class="type-emoji">🛍️</span><span class="type-name">Errand</span></div>
-          <div class="type-opt" data-type="yard_work" onclick="selectJobType('yard_work',this)"><span class="type-emoji">🌿</span><span class="type-name">Yard Work</span></div>
-          <div class="type-opt" data-type="labor" onclick="selectJobType('labor',this)"><span class="type-emoji">💪</span><span class="type-name">Labor</span></div>
-          <div class="type-opt" data-type="dump_run" onclick="selectJobType('dump_run',this)"><span class="type-emoji">🚛</span><span class="type-name">Dump Run</span></div>
-          <div class="type-opt" data-type="cleaning" onclick="selectJobType('cleaning',this)"><span class="type-emoji">🧹</span><span class="type-name">Cleaning</span></div>
-          <div class="type-opt" data-type="handyman" onclick="selectJobType('handyman',this)"><span class="type-emoji">🔧</span><span class="type-name">Handyman</span></div>
+          <div class="type-opt" data-type="retail" onclick="selectJobType('retail',this)"><span class="type-emoji">🚴</span><span class="type-name">Retail</span></div>
+          <div class="type-opt" data-type="business" onclick="selectJobType('business',this)"><span class="type-emoji">🏢</span><span class="type-name">Business</span></div>
         </div>
         <div id="type-hint" class="type-hint">Standard delivery between two locations.</div>
       </div>
@@ -533,6 +530,22 @@ textarea{resize:none}
             <div style="color:rgba(255,255,255,0.3);font-size:13px;">Loading...</div>
           </div>
           <div id="stripe-card-error" class="error-msg" style="margin-top:8px;"></div>
+        </div>
+        <!-- RESTRICTED ITEMS POLICY -->
+        <div style="background:rgba(255,80,80,0.06);border:1px solid rgba(255,80,80,0.2);border-radius:var(--rs);padding:14px 16px;margin-bottom:16px;">
+          <div style="font-size:13px;font-weight:700;color:#F05555;margin-bottom:8px;">⚠️ Delivery Restrictions</div>
+          <div style="font-size:12px;color:rgba(255,255,255,0.6);line-height:1.7;">
+            <strong style="color:#fff;">Not permitted for transport:</strong><br>
+            ❌ Firearms or weapons &nbsp;|&nbsp; ❌ Illegal items or controlled substances<br>
+            ❌ Drugs or alcohol &nbsp;|&nbsp; ❌ Explosives or fireworks<br>
+            ❌ Hazardous materials &nbsp;|&nbsp; ❌ Items exceeding $1,500 in value<br><br>
+            <strong style="color:#fff;">All transported items must be clearly visible to the driver.</strong><br>
+            Drivers may decline any delivery for any reason. Detour is not responsible for transported items, their condition, or their contents.<br><br>
+            <label style="display:flex;align-items:flex-start;gap:8px;cursor:pointer;">
+              <input type="checkbox" id="post-restrictions-agree" style="margin-top:2px;accent-color:var(--teal);flex-shrink:0;">
+              <span>I confirm this delivery complies with Detour's restrictions and the item value does not exceed $1,500.</span>
+            </label>
+          </div>
         </div>
         <div id="post-error" class="error-msg" style="font-size:14px;padding:10px 0;"></div>
         <button type="button" onclick="postJob()" class="btn-primary btn-large">Post Delivery Job →</button>
@@ -996,6 +1009,19 @@ textarea{resize:none}
       </div>
       <div id="qp-stripe-error" class="error-msg" style="margin-top:6px;"></div>
     </div>
+
+    <!-- DELIVERY RESTRICTIONS — shown only for delivery category -->
+    <div id="qp-delivery-restrictions" style="background:rgba(255,80,80,0.06);border:1px solid rgba(255,80,80,0.2);border-radius:var(--rs);padding:12px 14px;margin-bottom:14px;">
+      <div style="font-size:12px;font-weight:700;color:#F05555;margin-bottom:6px;">⚠️ Restricted Items</div>
+      <div style="font-size:11px;color:rgba(255,255,255,0.55);line-height:1.6;">
+        No firearms, illegal items, drugs, alcohol, explosives, fireworks, or hazardous materials. Max item value $1,500. Items must be visible to driver. Driver may decline for any reason. Detour is not responsible for transported items.
+      </div>
+      <label style="display:flex;align-items:flex-start;gap:8px;margin-top:8px;cursor:pointer;">
+        <input type="checkbox" id="qp-restrictions-agree" style="margin-top:2px;accent-color:var(--teal);flex-shrink:0;">
+        <span style="font-size:11px;color:rgba(255,255,255,0.6);">I confirm this delivery complies with Detour's restrictions.</span>
+      </label>
+    </div>
+
     <div id="qp-error" class="error-msg"></div>
     <button class="btn-primary btn-large" id="qp-submit-btn" onclick="submitQuickPost()">Post Delivery →</button>
     <button class="btn-secondary" onclick="closeQuickPost()" style="margin-top:8px;">Cancel</button>
@@ -1620,6 +1646,11 @@ async function postJob(){
   if(!dropoff_city){errEl.textContent='Please enter a dropoff city.';return;}
   if(!dropoff_state){errEl.textContent='Please enter a dropoff state (e.g. CO).';return;}
   if(!offered_price||parseFloat(offered_price)<5){errEl.textContent='Minimum offer is $5.';return;}
+  if(parseFloat(offered_price)>1500){errEl.textContent='Maximum delivery offer is $1,500. For higher-value items, please arrange alternative shipping.';return;}
+
+  // Delivery restrictions acknowledgment
+  const restrictionsAgreed = document.getElementById('post-restrictions-agree')?.checked;
+  if(!restrictionsAgreed){errEl.textContent='Please confirm this delivery complies with Detour\'s restrictions.';return;}
 
   const listingInput=document.getElementById('listing-photos-input');
   if(jobType==='marketplace'&&(!listingInput?.files?.length)){errEl.textContent='Marketplace jobs require at least one item photo.';return;}
@@ -1772,6 +1803,9 @@ function selectQPCategory(cat, el){
   if(handymanWarning) handymanWarning.style.display = cat==='handyman' ? 'block' : 'none';
   const btnLabels = {delivery:'Post Delivery →',yard_work:'Post Yard Job →',labor:'Post Labor Job →',dump_run:'Post Dump Run →',cleaning:'Post Cleaning Job →',handyman:'Post Handyman Job →'};
   document.getElementById('qp-submit-btn').textContent = btnLabels[cat] || 'Post Job →';
+  // Show delivery restrictions only for delivery
+  const restrictionsBox = document.getElementById('qp-delivery-restrictions');
+  if(restrictionsBox) restrictionsBox.style.display = cat==='delivery' ? 'block' : 'none';
 }
 function updateQPServiceBreakdown(){
   const price = parseFloat(document.getElementById('qp-service-price')?.value);
@@ -1911,6 +1945,14 @@ async function submitQuickPost(){
     fd.append('offered_price',price);
   }
 
+  // Delivery-specific validation
+  if(!isService){
+    const price = parseFloat(document.getElementById('qp-price')?.value||0);
+    if(price > 1500){errEl.textContent='Maximum delivery offer is $1,500';if(submitBtn){submitBtn.disabled=false;submitBtn.textContent='Post Delivery →';}return;}
+    const agreed = document.getElementById('qp-restrictions-agree')?.checked;
+    if(!agreed){errEl.textContent='Please confirm this delivery complies with Detour\'s restrictions';if(submitBtn){submitBtn.disabled=false;submitBtn.textContent='Post Delivery →';}return;}
+  }
+
   try{
     const res=await fetch('/api/jobs',{method:'POST',body:fd,credentials:'include',headers:{'x-user-id':currentUser?.userId||localStorage.getItem('detour_uid')||''}});
     const data=await res.json();
@@ -1925,6 +1967,8 @@ async function submitQuickPost(){
     document.getElementById('qp-to').value='';
     document.getElementById('qp-price').value='';
     document.getElementById('qp-service-price').value='';
+    const rc = document.getElementById('qp-restrictions-agree');
+    if(rc) rc.checked = false;
     loadOpenJobs();loadMyJobs();
   }catch(e){
     errEl.textContent=e.message;
