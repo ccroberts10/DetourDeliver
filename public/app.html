@@ -1602,27 +1602,126 @@ function renderJobDetail(job,messages){
   const isShipper=job.shipper_id===currentUser?.userId,isDriver=job.driver_id===currentUser?.userId;
   const extra=job.extra_data||{};
   const SERVICE_TYPES_UI=['yard_work','labor','dump_run','cleaning','handyman'];
+  const DUMP_TYPE=['dump_run'];
   const isServiceUI=SERVICE_TYPES_UI.includes(job.job_type);
+  const isDumpRun=DUMP_TYPE.includes(job.job_type);
   const feeRateUI=isServiceUI?0.20:0.25;
   const dp=parseFloat(job.driver_payout||job.offered_price*(1-feeRateUI)).toFixed(2);
-  let h=`<div class="job-detail-card"><div style="display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:10px;"><div><div style="font-size:11px;color:var(--teal);margin-bottom:4px;">${TL[job.job_type]||'📦 General'}</div><div style="font-family:'Syne',sans-serif;font-size:18px;font-weight:800;margin-bottom:6px;">${escHtml(job.title)}</div><span class="status-badge status-${job.status}">${ST[job.status]}</span></div><div style="text-align:right;"><div style="font-family:'Syne',sans-serif;font-size:26px;font-weight:800;color:var(--teal);">$${parseFloat(job.offered_price).toFixed(2)}</div>${isDriver?`<div style="font-size:12px;color:var(--green);">You earn $${dp}</div>`:''}</div></div>${renderTimeline(job.status)}${job.description?`<p style="font-size:14px;color:rgba(255,255,255,0.55);margin-bottom:10px;">${escHtml(job.description)}</p>`:''}<div class="detail-grid"><div><div class="detail-label">Size</div><div class="detail-val">${SZ[job.item_size]||job.item_size}</div></div><div><div class="detail-label">Weight</div><div class="detail-val">${job.item_weight?job.item_weight+' lbs':'—'}</div></div></div>${job.fragile?'<div class="alert-box danger">⚠️ Fragile — handle with care</div>':''}${job.needs_disassembly?'<div class="alert-box warn">🔧 Requires disassembly / reassembly</div>':''}</div>`;
+  const helperLabel=isServiceUI?'Helper':'Driver';
+  const shipperLabel=isServiceUI?'Poster':'Shipper';
+
+  // ── HEADER CARD ──
+  let h=`<div class="job-detail-card">
+    <div style="display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:10px;">
+      <div>
+        <div style="font-size:11px;color:var(--teal);margin-bottom:4px;">${TL[job.job_type]||'📦 General'}</div>
+        <div style="font-family:'Syne',sans-serif;font-size:18px;font-weight:800;margin-bottom:6px;">${escHtml(job.title)}</div>
+        <span class="status-badge status-${job.status}">${ST[job.status]}</span>
+      </div>
+      <div style="text-align:right;">
+        <div style="font-family:'Syne',sans-serif;font-size:26px;font-weight:800;color:var(--teal);">$${parseFloat(job.offered_price).toFixed(2)}</div>
+        ${isDriver?`<div style="font-size:12px;color:var(--green);">You earn $${dp}</div>`:''}
+      </div>
+    </div>
+    ${renderTimeline(job.status)}
+    ${job.description?`<p style="font-size:14px;color:rgba(255,255,255,0.55);margin-bottom:10px;">${escHtml(job.description)}</p>`:''}
+    ${!isServiceUI?`<div class="detail-grid">
+      <div><div class="detail-label">Size</div><div class="detail-val">${SZ[job.item_size]||job.item_size}</div></div>
+      <div><div class="detail-label">Weight</div><div class="detail-val">${job.item_weight?job.item_weight+' lbs':'—'}</div></div>
+    </div>`:''}
+    ${job.fragile?'<div class="alert-box danger">⚠️ Fragile — handle with care</div>':''}
+    ${job.needs_disassembly?'<div class="alert-box warn">🔧 Requires disassembly / reassembly</div>':''}
+  </div>`;
+
+  // ── ITEM PHOTOS (delivery only) ──
   if(job.listing_photos?.length)h+=`<div class="job-detail-card"><div class="detail-label" style="margin-bottom:10px;">Item Photos</div><div class="photo-upload-row">${job.listing_photos.map(p=>`<img class="photo-thumb" src="${p}">`).join('')}</div></div>`;
+
+  // ── MARKETPLACE PARTIES ──
   if(job.job_type==='marketplace'&&(extra.seller_name||extra.buyer_name))h+=`<div class="job-detail-card"><div class="detail-label" style="margin-bottom:10px;">Marketplace Parties</div>${extra.seller_name?`<div class="detail-grid"><div><div class="detail-label">Seller</div><div class="detail-val">${escHtml(extra.seller_name)}</div></div>${extra.seller_phone?`<div><div class="detail-label">Phone</div><div class="detail-val">${escHtml(extra.seller_phone)}</div></div>`:''}</div>`:''}${extra.buyer_name?`<div class="detail-grid" style="margin-top:8px;"><div><div class="detail-label">Buyer</div><div class="detail-val">${escHtml(extra.buyer_name)}</div></div>${extra.buyer_phone?`<div><div class="detail-label">Phone</div><div class="detail-val">${escHtml(extra.buyer_phone)}</div></div>`:''}</div>`:''}</div>`;
+
+  // ── ERRAND DETAILS ──
   if(job.job_type==='errand'&&(extra.store_name||extra.item_to_pickup))h+=`<div class="job-detail-card"><div class="detail-label" style="margin-bottom:10px;">Errand Details</div>${extra.store_name?`<div><div class="detail-label">Store</div><div class="detail-val">${escHtml(extra.store_name)}</div></div>`:''}${extra.item_to_pickup?`<div style="margin-top:8px;"><div class="detail-label">Item to pick up</div><div class="detail-val" style="font-size:13px;">${escHtml(extra.item_to_pickup)}</div></div>`:''}</div>`;
-  h+=`<div class="job-detail-card"><div class="detail-label" style="margin-bottom:10px;">Route</div>${renderJobMap(job)}<div class="job-route" style="margin-bottom:10px;"><div class="route-dot start"></div><div class="route-city">${escHtml(job.pickup_city)}</div><div class="route-line"></div><div class="route-city">${escHtml(job.dropoff_city)}</div><div class="route-dot end"></div></div><div class="detail-grid"><div><div class="detail-label">Pickup</div><div class="detail-val" style="font-size:13px;">${escHtml(job.pickup_address)}</div></div><div><div class="detail-label">Dropoff</div><div class="detail-val" style="font-size:13px;">${escHtml(job.dropoff_address)}</div></div></div>${job.notes?`<div style="margin-top:8px;"><div class="detail-label">Notes</div><div class="detail-val" style="font-size:13px;">${escHtml(job.notes)}</div></div>`:''} ${(isDriver||currentJobPerspective==='driver')?mapsButtons(job):''}</div>`;
+
+  // ── LOCATION CARD — service jobs show single location; dump runs show pickup + dropoff; delivery shows full route ──
+  if(isServiceUI && !isDumpRun){
+    // Single location — where the work is
+    h+=`<div class="job-detail-card">
+      <div class="detail-label" style="margin-bottom:10px;">📍 Job Location</div>
+      <div class="detail-val" style="font-size:15px;font-weight:600;margin-bottom:4px;">${escHtml(job.pickup_city)}${job.pickup_state?', '+escHtml(job.pickup_state):''}</div>
+      ${job.pickup_address&&job.pickup_address!==job.pickup_city?`<div class="detail-val" style="font-size:13px;color:rgba(255,255,255,0.5);">${escHtml(job.pickup_address)}</div>`:''}
+      ${job.notes?`<div style="margin-top:10px;"><div class="detail-label">Notes for helper</div><div class="detail-val" style="font-size:13px;">${escHtml(job.notes)}</div></div>`:''}
+      ${(isDriver||currentJobPerspective==='driver')?`<a href="https://maps.google.com/?q=${encodeURIComponent((job.pickup_address||'')+' '+job.pickup_city+' '+job.pickup_state)}" target="_blank" class="btn-secondary" style="display:inline-block;margin-top:10px;font-size:13px;padding:8px 14px;">🗺 Open in Maps</a>`:''}
+    </div>`;
+  } else if(isDumpRun){
+    // Dump run — pickup location + dump station dropoff
+    h+=`<div class="job-detail-card">
+      <div class="detail-label" style="margin-bottom:10px;">🗺 Pickup & Drop-off</div>
+      <div style="margin-bottom:10px;">
+        <div class="detail-label">📍 Pickup (where the load is)</div>
+        <div class="detail-val" style="font-size:13px;">${escHtml(job.pickup_address)||'—'}</div>
+        <div class="detail-val" style="font-size:12px;color:rgba(255,255,255,0.4);">${escHtml(job.pickup_city)}${job.pickup_state?', '+escHtml(job.pickup_state):''}</div>
+      </div>
+      <div>
+        <div class="detail-label">🏁 Drop-off (dump station)</div>
+        <div class="detail-val" style="font-size:13px;">${job.dropoff_address&&job.dropoff_address!==job.dropoff_city?escHtml(job.dropoff_address):'To be coordinated'}</div>
+        <div class="detail-val" style="font-size:12px;color:rgba(255,255,255,0.4);">${escHtml(job.dropoff_city)}${job.dropoff_state?', '+escHtml(job.dropoff_state):''}</div>
+      </div>
+      ${job.notes?`<div style="margin-top:10px;"><div class="detail-label">Notes</div><div class="detail-val" style="font-size:13px;">${escHtml(job.notes)}</div></div>`:''}
+      ${(isDriver||currentJobPerspective==='driver')?`<a href="https://maps.google.com/?q=${encodeURIComponent((job.pickup_address||'')+' '+job.pickup_city)}" target="_blank" class="btn-secondary" style="display:inline-block;margin-top:10px;font-size:13px;padding:8px 14px;">🗺 Open in Maps</a>`:''}
+    </div>`;
+  } else {
+    // Delivery — full route with map
+    h+=`<div class="job-detail-card">
+      <div class="detail-label" style="margin-bottom:10px;">Route</div>
+      ${renderJobMap(job)}
+      <div class="job-route" style="margin-bottom:10px;">
+        <div class="route-dot start"></div>
+        <div class="route-city">${escHtml(job.pickup_city)}</div>
+        <div class="route-line"></div>
+        <div class="route-city">${escHtml(job.dropoff_city)}</div>
+        <div class="route-dot end"></div>
+      </div>
+      <div class="detail-grid">
+        <div><div class="detail-label">Pickup</div><div class="detail-val" style="font-size:13px;">${escHtml(job.pickup_address)}</div></div>
+        <div><div class="detail-label">Dropoff</div><div class="detail-val" style="font-size:13px;">${escHtml(job.dropoff_address)}</div></div>
+      </div>
+      ${job.notes?`<div style="margin-top:8px;"><div class="detail-label">Notes</div><div class="detail-val" style="font-size:13px;">${escHtml(job.notes)}</div></div>`:''}
+      ${(isDriver||currentJobPerspective==='driver')?mapsButtons(job):''}
+    </div>`;
+  }
+
+  // ── ACCEPT BUTTON ──
   if(job.status==='open'&&currentJobPerspective==='driver'&&!isShipper)h+=`<button class="btn-primary btn-large" onclick="acceptJob('${job.id}')">Accept — Earn $${dp} →</button>`;
-  if(job.status==='accepted'&&isDriver)h+=`<button class="im-here-btn" onclick="imHere('${job.id}')">📍 I'm here — notify shipper</button>`;
+
+  // ── I'M HERE BUTTON ──
+  if(job.status==='accepted'&&isDriver)h+=`<button class="im-here-btn" onclick="imHere('${job.id}')">📍 I'm here — notify ${shipperLabel.toLowerCase()}</button>`;
+
+  // ── DELETE BUTTON ──
   if(job.status==='open'&&isShipper)h+=`<button class="btn-secondary btn-large" style="background:rgba(240,85,85,0.1);border-color:rgba(240,85,85,0.3);color:var(--red);margin-top:8px;" onclick="deleteJob('${job.id}')">🗑 Delete This Listing</button>`;
+
+  // ── MESSAGES ──
   if(job.status!=='open'&&(isShipper||isDriver)){
-    h+=`<div class="job-detail-card"><div class="detail-label" style="margin-bottom:10px;">Messages with ${isShipper?(job.driver_name||'Driver'):(job.shipper_name||'Shipper')}</div><div class="messages-thread" id="msg-thread">${messages.length?messages.map(m=>`<div><div class="msg-name">${escHtml(m.sender_name)}</div><div class="msg-bubble ${m.sender_id===currentUser?.userId?'msg-out':'msg-in'}">${escHtml(m.content)}</div></div>`).join(''):'<div style="color:var(--gray);font-size:13px;text-align:center;padding:10px;">No messages yet</div>'}</div><div class="msg-input-row"><textarea id="msg-input" placeholder="Send a message..." rows="1" onkeydown="if(event.key==='Enter'&&!event.shiftKey){event.preventDefault();sendMsg('${job.id}');}" oninput="this.style.height='auto';this.style.height=Math.min(this.scrollHeight,120)+'px'"></textarea><button class="msg-send-btn" onclick="sendMsg('${job.id}')">↑</button></div></div>`;
+    h+=`<div class="job-detail-card"><div class="detail-label" style="margin-bottom:10px;">Messages with ${isShipper?(job.driver_name||helperLabel):(job.shipper_name||shipperLabel)}</div><div class="messages-thread" id="msg-thread">${messages.length?messages.map(m=>`<div><div class="msg-name">${escHtml(m.sender_name)}</div><div class="msg-bubble ${m.sender_id===currentUser?.userId?'msg-out':'msg-in'}">${escHtml(m.content)}</div></div>`).join(''):'<div style="color:var(--gray);font-size:13px;text-align:center;padding:10px;">No messages yet</div>'}</div><div class="msg-input-row"><textarea id="msg-input" placeholder="Send a message..." rows="1" onkeydown="if(event.key==='Enter'&&!event.shiftKey){event.preventDefault();sendMsg('${job.id}');}" oninput="this.style.height='auto';this.style.height=Math.min(this.scrollHeight,120)+'px'"></textarea><button class="msg-send-btn" onclick="sendMsg('${job.id}')">↑</button></div></div>`;
     setTimeout(()=>{const t=document.getElementById('msg-thread');if(t)t.scrollTop=t.scrollHeight;},100);
   }
+
+  // ── PHOTOS & AGREEMENT ──
   if((job.status==='accepted'||job.status==='in_transit')&&(isShipper||isDriver)){
     const photos=job.pickup_photos||[];
-    h+=`<div class="job-detail-card"><div class="detail-label" style="margin-bottom:10px;">📸 Pickup Photos & Agreement</div><div class="photo-upload-row" id="pickup-photos">${photos.map(p=>`<img class="photo-thumb" src="${p}">`).join('')}${job.status==='accepted'?`<div class="photo-add-btn" onclick="document.getElementById('pickup-file').click()">+</div><input type="file" id="pickup-file" class="photo-input" accept="image/*" multiple onchange="uploadPhotos('${job.id}','pickup',this)">`:''}</div>${job.pickup_signed_at?`<div style="font-size:12px;color:var(--green);margin-top:5px;">✓ Condition agreed ${fmtTime(job.pickup_signed_at)}</div>`:''}${job.status==='accepted'&&photos.length>=1?`<button class="btn-primary" onclick="confirmPickup('${job.id}')">✓ Confirm Pickup & Sign Agreement</button>`:''} ${job.status==='accepted'&&!photos.length?`<div style="font-size:12px;color:var(--gray);margin-top:7px;">Add at least 1 photo before confirming pickup</div>`:''}</div>`;
+    const photoLabel=isServiceUI?'Job Photos':'Pickup Photos & Agreement';
+    h+=`<div class="job-detail-card"><div class="detail-label" style="margin-bottom:10px;">📸 ${photoLabel}</div><div class="photo-upload-row" id="pickup-photos">${photos.map(p=>`<img class="photo-thumb" src="${p}">`).join('')}${job.status==='accepted'?`<div class="photo-add-btn" onclick="document.getElementById('pickup-file').click()">+</div><input type="file" id="pickup-file" class="photo-input" accept="image/*" multiple onchange="uploadPhotos('${job.id}','pickup',this)">`:''}</div>${job.pickup_signed_at?`<div style="font-size:12px;color:var(--green);margin-top:5px;">✓ Agreed ${fmtTime(job.pickup_signed_at)}</div>`:''}${job.status==='accepted'&&photos.length>=1?`<button class="btn-primary" onclick="confirmPickup('${job.id}')">✓ ${isServiceUI?'Confirm Start & Begin Job':'Confirm Pickup & Sign Agreement'}</button>`:''} ${job.status==='accepted'&&!photos.length?`<div style="font-size:12px;color:var(--gray);margin-top:7px;">Add at least 1 photo before confirming</div>`:''}</div>`;
   }
-  if(job.status==='in_transit'&&isShipper)h+=`<div class="job-detail-card"><div class="detail-label" style="margin-bottom:7px;">✅ Confirm Delivery</div><p style="font-size:13px;color:rgba(255,255,255,0.55);margin-bottom:10px;">Confirm delivery to release $${dp} to the driver.</p><div class="photo-upload-row" id="dropoff-photos"><div class="photo-add-btn" onclick="document.getElementById('dropoff-file').click()">+</div><input type="file" id="dropoff-file" class="photo-input" accept="image/*" multiple onchange="uploadPhotos('${job.id}','dropoff',this)"></div><button class="btn-primary" onclick="confirmDelivery('${job.id}')">Confirm Delivery & Release Payment 🎉</button></div>`;
+
+  // ── CONFIRM COMPLETION ──
+  if(job.status==='in_transit'&&isShipper){
+    const confirmLabel=isServiceUI?'Confirm Job Complete':'Confirm Delivery';
+    const confirmBtn=isServiceUI?'Confirm Complete & Release Payment 🎉':'Confirm Delivery & Release Payment 🎉';
+    h+=`<div class="job-detail-card"><div class="detail-label" style="margin-bottom:7px;">✅ ${confirmLabel}</div><p style="font-size:13px;color:rgba(255,255,255,0.55);margin-bottom:10px;">Confirm to release $${dp} to your ${helperLabel.toLowerCase()}.</p><div class="photo-upload-row" id="dropoff-photos"><div class="photo-add-btn" onclick="document.getElementById('dropoff-file').click()">+</div><input type="file" id="dropoff-file" class="photo-input" accept="image/*" multiple onchange="uploadPhotos('${job.id}','dropoff',this)"></div><button class="btn-primary" onclick="confirmDelivery('${job.id}')">${confirmBtn}</button></div>`;
+  }
+
+  // ── RATING ──
   if(job.status==='completed'&&(isShipper||isDriver))h+=`<div class="job-detail-card"><div class="detail-label" style="margin-bottom:7px;">Rate your experience</div><div class="star-row" id="star-row">${[1,2,3,4,5].map(i=>`<span class="star" onclick="setRating(${i})">★</span>`).join('')}</div><input type="text" id="rating-comment" placeholder="Any feedback? (optional)" style="margin-top:7px;"><button class="btn-secondary" style="margin-top:7px;" onclick="submitRating('${job.id}')">Submit Rating</button></div>`;
+
   return h;
 }
 async function postJob(){
