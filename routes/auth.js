@@ -91,7 +91,7 @@ router.get('/me', (req, res) => {
   const user = db.prepare(`SELECT id, name, email, phone, vehicle_type, vehicle_description, haul_types,
     rating_total, rating_count, background_check, insurance_photo, insurance_verified,
     insurance_submitted_at, driver_approved, license_photo, stripe_connect_id, stripe_connect_verified,
-    license_plate, home_address, home_lat, home_lng
+    license_plate, home_address, home_lat, home_lng, profile_photo, bio
     FROM users WHERE id = ?`).get(userId);
   if (!user) return res.status(404).json({ error: 'User not found' });
   user.haul_types = JSON.parse(user.haul_types || '[]');
@@ -136,21 +136,51 @@ router.post('/license', requireAuth, upload.single('license_card'), async (req, 
 router.post('/update-profile', (req, res) => {
   const userId = req.session.userId || req.headers['x-user-id'];
   if (!userId) return res.status(401).json({ error: 'Login required' });
-  const { vehicle_type, vehicle_description, license_plate, home_address } = req.body;
-  db.prepare('UPDATE users SET vehicle_type = ?, vehicle_description = ?, license_plate = ?, home_address = ? WHERE id = ?')
-    .run(vehicle_type || null, vehicle_description || null, license_plate || null, home_address || null, userId);
-  // Geocode home address if provided
+  const { vehicle_type, vehicle_description, license_plate, home_address, bio } = req.body;
+  db.prepare('UPDATE users SET vehicle_type = ?, vehicle_description = ?, license_plate = ?, home_address = ?, bio = ? WHERE id = ?')
+    .run(vehicle_type || null, vehicle_description || null, license_plate || null, home_address || null, bio || null, userId);
   if (home_address) {
     const { geocode } = require('../utils/matching');
     geocode(home_address).then(coords => {
       if (coords) {
         db.prepare('UPDATE users SET home_lat = ?, home_lng = ? WHERE id = ?')
           .run(coords.lat, coords.lng, userId);
-        console.log(`Geocoded home for user ${userId}: ${coords.lat},${coords.lng}`);
       }
     }).catch(e => console.error('Home geocode error:', e.message));
   }
   res.json({ success: true });
+});
+
+// Upload profile photo
+router.post('/profile-photo', requireAuth, upload.single('photo'), (req, res) => {
+  if (!req.file) return res.status(400).json({ error: 'No photo uploaded' });
+  const photoPath = `/uploads/${req.file.filename}`;
+  db.prepare('UPDATE users SET profile_photo = ? WHERE id = ?').run(photoPath, req.session.userId);
+  res.json({ success: true, photo: photoPath });
+});
+
+// Get public profile for any user
+router.get('/profile/:userId', (req, res) => {
+  const user = db.prepare(`
+    SELECT id, name, profile_photo, bio, vehicle_type, vehicle_description,
+           rating_total, rating_count, driver_approved, created_at
+    FROM users WHERE id = ?
+  `).get(req.params.userId);
+  if (!user) return res.status(404).json({ error: 'User not found' });
+  user.avg_rating = user.rating_count > 0 ? (user.rating_total / user.rating_count).toFixed(1) : null;
+  // Get recent reviews
+  const reviews = db.prepare(`
+    SELECT r.score, r.comment, r.created_at, r.role, u.name as rater_name, u.profile_photo as rater_photo
+    FROM ratings r
+    JOIN users u ON u.id = r.rater_id
+    WHERE r.ratee_id = ?
+    ORDER BY r.created_at DESC LIMIT 10
+  `).all(req.params.userId);
+  user.reviews = reviews;
+  user.job_count = db.prepare(`
+    SELECT COUNT(*) as c FROM jobs WHERE (driver_id = ? OR shipper_id = ?) AND status = 'completed'
+  `).get(req.params.userId, req.params.userId)?.c || 0;
+  res.json(user);
 });
 
 module.exports = router;
