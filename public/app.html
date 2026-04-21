@@ -2158,24 +2158,31 @@ async function uploadProfilePhoto(input){
 
     // Force display update with cache-busting
     const photoUrl = data.photo + '?t=' + Date.now();
+    const fullUrl = window.location.origin + data.photo;
+    console.log('Photo saved at:', data.photo, '| Full URL:', fullUrl);
+
     const img = document.getElementById('profile-avatar-img');
     const placeholder = document.getElementById('profile-avatar-placeholder');
     const headerAvatar = document.getElementById('header-avatar');
     const headerPlaceholder = document.getElementById('header-avatar-placeholder');
 
-    if(img){
-      img.src = photoUrl;
-      img.style.cssText = 'display:block!important;width:72px;height:72px;border-radius:50%;object-fit:cover;border:2px solid var(--teal);flex-shrink:0;';
-    }
-    if(placeholder) placeholder.style.display = 'none';
-    if(headerAvatar){
-      headerAvatar.src = photoUrl;
-      headerAvatar.style.display = 'block';
-    }
-    if(headerPlaceholder) headerPlaceholder.style.display = 'none';
-
-    if(currentUser) currentUser.profile_photo = data.photo;
-    toast('Profile photo updated ✓');
+    // Test if the image actually loads before showing
+    const testImg = new Image();
+    testImg.onload = () => {
+      if(img){
+        img.src = photoUrl;
+        img.style.cssText = 'display:block!important;width:72px;height:72px;border-radius:50%;object-fit:cover;border:2px solid var(--teal);flex-shrink:0;';
+      }
+      if(placeholder) placeholder.style.display = 'none';
+      if(headerAvatar){ headerAvatar.src = photoUrl; headerAvatar.style.display = 'block'; }
+      if(headerPlaceholder) headerPlaceholder.style.display = 'none';
+      toast('Profile photo updated ✓');
+    };
+    testImg.onerror = () => {
+      toast('Photo saved but not loading — check: ' + fullUrl);
+      console.error('Photo URL not accessible:', fullUrl);
+    };
+    testImg.src = photoUrl;
   }catch(e){ toast('Could not upload photo: '+e.message); }
 }
 
