@@ -1261,15 +1261,14 @@ function enterApp(name){
   document.getElementById('header-name').textContent=name.split(' ')[0];
   const firstName = name.split(' ')[0];
   document.getElementById('home-name').textContent = firstName.charAt(0).toUpperCase() + firstName.slice(1);
-  // Load profile photo into header
+  // Load profile photo into header and profile panel
   setTimeout(async ()=>{
     try{
       const me = await api('GET','/api/auth/me');
       if(me.profile_photo){
-        const img = document.getElementById('header-avatar');
-        const placeholder = document.getElementById('header-avatar-placeholder');
-        if(img){ img.src=me.profile_photo; img.style.display='block'; }
-        if(placeholder) placeholder.style.display='none';
+        updateHeaderAvatar(me.profile_photo);
+        // Also store on currentUser
+        if(currentUser) currentUser.profile_photo = me.profile_photo;
       }
     }catch(e){}
   }, 500);
@@ -2082,8 +2081,8 @@ async function loadMyProfile(){
     const img = document.getElementById('profile-avatar-img');
     const placeholder = document.getElementById('profile-avatar-placeholder');
     if(user.profile_photo){
-      img.src = user.profile_photo;
-      img.style.display='block';
+      img.src = user.profile_photo + '?t=' + Date.now();
+      img.style.cssText = 'display:block!important;width:72px;height:72px;border-radius:50%;object-fit:cover;border:2px solid var(--teal);flex-shrink:0;';
       placeholder.style.display='none';
     } else {
       img.style.display='none';
@@ -2156,13 +2155,26 @@ async function uploadProfilePhoto(input){
     });
     const data = await res.json();
     if(!res.ok) throw new Error(data.error||'Upload failed');
+
+    // Force display update with cache-busting
+    const photoUrl = data.photo + '?t=' + Date.now();
     const img = document.getElementById('profile-avatar-img');
     const placeholder = document.getElementById('profile-avatar-placeholder');
-    img.src = data.photo;
-    img.style.display='block';
-    placeholder.style.display='none';
+    const headerAvatar = document.getElementById('header-avatar');
+    const headerPlaceholder = document.getElementById('header-avatar-placeholder');
+
+    if(img){
+      img.src = photoUrl;
+      img.style.cssText = 'display:block!important;width:72px;height:72px;border-radius:50%;object-fit:cover;border:2px solid var(--teal);flex-shrink:0;';
+    }
+    if(placeholder) placeholder.style.display = 'none';
+    if(headerAvatar){
+      headerAvatar.src = photoUrl;
+      headerAvatar.style.display = 'block';
+    }
+    if(headerPlaceholder) headerPlaceholder.style.display = 'none';
+
     if(currentUser) currentUser.profile_photo = data.photo;
-    updateHeaderAvatar(data.photo);
     toast('Profile photo updated ✓');
   }catch(e){ toast('Could not upload photo: '+e.message); }
 }
@@ -2182,9 +2194,16 @@ async function saveProfile(){
 }
 
 function updateHeaderAvatar(photoUrl){
-  // Update any avatar shown in header or nav
+  if(!photoUrl) return;
   const headerAvatar = document.getElementById('header-avatar');
-  if(headerAvatar) headerAvatar.src = photoUrl;
+  const headerPlaceholder = document.getElementById('header-avatar-placeholder');
+  if(headerAvatar){ headerAvatar.src = photoUrl; headerAvatar.style.display='block'; }
+  if(headerPlaceholder) headerPlaceholder.style.display='none';
+  // Also update profile panel avatar
+  const profileImg = document.getElementById('profile-avatar-img');
+  const profilePlaceholder = document.getElementById('profile-avatar-placeholder');
+  if(profileImg){ profileImg.src = photoUrl; profileImg.style.display='block'; }
+  if(profilePlaceholder) profilePlaceholder.style.display='none';
 }
 
 // View another user's public profile
