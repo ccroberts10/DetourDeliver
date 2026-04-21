@@ -12,9 +12,9 @@
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
 <meta name="apple-mobile-web-app-title" content="Detour">
-<link rel="apple-touch-icon" href="/icons/icon-192.png">
-<link rel="icon" type="image/png" sizes="192x192" href="/icons/icon-192.png">
-<link rel="icon" type="image/png" sizes="512x512" href="/icons/icon-512.png">
+<link rel="apple-touch-icon" href="/icons/detour-icon-teal-192px.png">
+<link rel="icon" type="image/png" sizes="192x192" href="/icons/detour-icon-teal-192px.png">
+<link rel="icon" type="image/png" sizes="512x512" href="/icons/detour-icon-teal-512px.png">
 <meta name="stripe-pk" content="pk_live_51HsdjEHr60zI2cLPJB3fA6O1sX0HI45REiwT7DfGYvJ0oiL5sLkU608l8DevXTkcSEOjlYpxrejhcXtpVdxqRrsn00KLZzc6di">
 <link href="https://fonts.googleapis.com/css2?family=Syne:wght@700;800&family=DM+Sans:wght@300;400;500&family=DM+Mono:wght@400;500&display=swap" rel="stylesheet">
 <style>
@@ -2651,7 +2651,7 @@ async function savePushSub(sub){
 
 function showPushNotification(title,body){
   if(Notification.permission==='granted'&&document.hidden){
-    new Notification(title,{body,icon:'/icons/icon-192.png',badge:'/icons/icon-192.png'});
+    new Notification(title,{body,icon:'/icons/detour-icon-teal-192px.png',badge:'/icons/detour-icon-teal-192px.png'});
   }
 }
 
