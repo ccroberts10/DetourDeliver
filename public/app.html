@@ -16,68 +16,94 @@
 <link rel="icon" type="image/png" sizes="192x192" href="/icons/icon-192.png">
 <link rel="icon" type="image/png" sizes="512x512" href="/icons/icon-512.png">
 <meta name="stripe-pk" content="pk_live_51HsdjEHr60zI2cLPJB3fA6O1sX0HI45REiwT7DfGYvJ0oiL5sLkU608l8DevXTkcSEOjlYpxrejhcXtpVdxqRrsn00KLZzc6di">
-<link href="https://fonts.googleapis.com/css2?family=Syne:wght@700;800&family=DM+Sans:wght@400;500&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Syne:wght@700;800&family=DM+Sans:wght@300;400;500&family=DM+Mono:wght@400;500&display=swap" rel="stylesheet">
 <style>
-:root{--teal:#00C2A8;--teal2:#00DDB8;--black:#080808;--dark:#111111;--dark2:#1C1C1C;--dark3:#242424;--white:#FFFFFF;--gray:#777777;--gray2:#444444;--green:#3DCC78;--red:#F05555;--r:14px;--rs:8px}
+:root{
+  --teal:#00C2A8;--teal2:#00DDB8;--teal3:#00F5CC;--teal-dark:#008F7A;
+  --black:#080808;--dark:#111111;--dark2:#1A1A1A;--dark3:#222222;--dark4:#2A2A2A;
+  --white:#FFFFFF;--cream:#F5F0E8;
+  --gray:#777777;--gray2:#444444;
+  --green:#3DCC78;--red:#F05555;--yellow:#F5C542;
+  --r:14px;--rs:8px;
+  --font-display:'Syne',sans-serif;
+  --font-body:'DM Sans',sans-serif;
+  --font-mono:'DM Mono',monospace;
+}
 *{margin:0;padding:0;box-sizing:border-box;-webkit-tap-highlight-color:transparent}
-html,body{height:100%;background:var(--black);color:var(--white);font-family:'DM Sans',sans-serif;font-size:15px;line-height:1.5;overflow:hidden}
+html,body{height:100%;background:var(--black);color:var(--white);font-family:var(--font-body);font-size:15px;line-height:1.5;overflow:hidden}
 .screen{display:none;height:100vh;flex-direction:column}
 .screen.active{display:flex}
-.auth-wrap{display:flex;flex-direction:column;height:100vh;background:var(--black)}
-.auth-top{flex:1;display:flex;flex-direction:column;align-items:center;justify-content:center;padding:40px 28px 28px}
-.auth-logo{font-family:'Syne',sans-serif;font-size:80px;font-weight:800;letter-spacing:-4px;line-height:1;color:var(--white)}
-.auth-logo span{color:var(--teal)}
-.auth-tagline{font-size:16px;color:var(--gray);margin-top:14px;text-align:center}
-.auth-pills{display:flex;gap:8px;margin-top:24px;flex-wrap:wrap;justify-content:center}
-.auth-pill{background:rgba(255,255,255,0.05);border:0.5px solid rgba(255,255,255,0.1);border-radius:30px;padding:6px 14px;font-size:12px;color:rgba(255,255,255,0.4)}
-.auth-bottom{background:var(--dark);border-radius:28px 28px 0 0;border-top:0.5px solid rgba(255,255,255,0.08);padding:24px 24px 40px;overflow-y:auto}
+.auth-wrap{display:flex;flex-direction:column;height:100vh;background:var(--black);position:relative;overflow:hidden}
+.auth-wrap::before{content:'';position:absolute;width:300px;height:300px;border-radius:50%;background:radial-gradient(circle,rgba(0,194,168,0.08) 0%,transparent 70%);top:-80px;right:-80px;pointer-events:none}
+.auth-wrap::after{content:'';position:absolute;width:200px;height:200px;border-radius:50%;background:radial-gradient(circle,rgba(0,194,168,0.05) 0%,transparent 70%);bottom:200px;left:-60px;pointer-events:none}
+.auth-top{flex:1;display:flex;flex-direction:column;align-items:center;justify-content:center;padding:40px 28px 28px;position:relative;z-index:1}
+
+/* D-MARK LOGO */
+.auth-logo-wrap{display:flex;align-items:center;gap:6px;margin-bottom:16px}
+.auth-d-mark{width:56px;height:56px;background:var(--teal);border-radius:0 28px 28px 0;position:relative;flex-shrink:0;display:flex;align-items:center;justify-content:center}
+.auth-d-mark::before{content:'';width:24px;height:24px;background:var(--black);border-radius:50%;position:absolute}
+.auth-wordmark{font-family:var(--font-display);font-size:52px;font-weight:800;letter-spacing:-3px;line-height:1;color:var(--white)}
+.auth-tagline{font-family:var(--font-display);font-size:17px;font-weight:700;color:rgba(255,255,255,0.55);text-align:center;letter-spacing:-0.3px;line-height:1.3;max-width:260px}
+.auth-tagline em{color:var(--teal);font-style:normal}
+.auth-pills{display:flex;gap:8px;margin-top:22px;flex-wrap:wrap;justify-content:center}
+.auth-pill{background:rgba(0,194,168,0.06);border:0.5px solid rgba(0,194,168,0.2);border-radius:30px;padding:6px 14px;font-size:11px;color:rgba(255,255,255,0.5);font-family:var(--font-mono);letter-spacing:0.04em}
+.auth-bottom{background:var(--dark);border-radius:28px 28px 0 0;border-top:0.5px solid rgba(255,255,255,0.08);padding:24px 24px 40px;overflow-y:auto;position:relative;z-index:1}
 .tab-switch{display:flex;background:var(--dark2);border-radius:var(--rs);padding:4px;margin-bottom:22px;gap:4px}
-.tab-btn{flex:1;padding:9px;border:none;background:none;color:var(--gray);font-size:14px;font-family:'DM Sans',sans-serif;font-weight:500;border-radius:6px;cursor:pointer;transition:all 0.2s}
-.tab-btn.active{background:var(--teal);color:var(--white)}
+.tab-btn{flex:1;padding:9px;border:none;background:none;color:var(--gray);font-size:14px;font-family:var(--font-body);font-weight:500;border-radius:6px;cursor:pointer;transition:all 0.2s}
+.tab-btn.active{background:var(--teal);color:#000;font-weight:600}
 .field-group{margin-bottom:14px}
-.field-group label{display:block;font-size:11px;font-weight:500;color:rgba(255,255,255,0.4);text-transform:uppercase;letter-spacing:0.07em;margin-bottom:5px}
-.field-group input,.field-group select,.field-group textarea{width:100%;background:var(--dark2);border:0.5px solid rgba(255,255,255,0.1);border-radius:var(--rs);color:var(--white);font-size:15px;font-family:'DM Sans',sans-serif;padding:11px 14px;outline:none;transition:border-color 0.2s;-webkit-appearance:none;appearance:none}
-.field-group input:focus,.field-group select:focus,.field-group textarea:focus{border-color:var(--teal)}
+.field-group label{display:block;font-size:10px;font-weight:500;color:rgba(255,255,255,0.35);text-transform:uppercase;letter-spacing:0.1em;margin-bottom:5px;font-family:var(--font-mono)}
+.field-group input,.field-group select,.field-group textarea{width:100%;background:var(--dark2);border:0.5px solid rgba(255,255,255,0.08);border-radius:var(--rs);color:var(--white);font-size:15px;font-family:var(--font-body);padding:12px 14px;outline:none;transition:border-color 0.2s,box-shadow 0.2s;-webkit-appearance:none;appearance:none}
+.field-group input:focus,.field-group select:focus,.field-group textarea:focus{border-color:var(--teal);box-shadow:0 0 0 3px rgba(0,194,168,0.1)}
 .field-group select option{background:var(--dark2)}
 textarea{resize:none}
 .field-row{display:flex;gap:10px}
 .field-row .field-group{flex:1}
 .req{color:var(--teal)}
-.btn-primary{width:100%;padding:14px;background:var(--teal);color:var(--white);border:none;border-radius:var(--r);font-size:15px;font-family:'DM Sans',sans-serif;font-weight:500;cursor:pointer;margin-top:6px;transition:opacity 0.15s,transform 0.1s}
-.btn-primary:active{opacity:0.82;transform:scale(0.99)}
-.btn-primary.btn-large{padding:16px;font-size:16px;margin-top:14px}
+.btn-primary{width:100%;padding:15px;background:var(--teal);color:#000;border:none;border-radius:var(--r);font-size:15px;font-family:var(--font-display);font-weight:800;cursor:pointer;margin-top:6px;transition:opacity 0.15s,transform 0.1s,background 0.2s;letter-spacing:-0.3px}
+.btn-primary:hover{background:var(--teal2)}
+.btn-primary:active{opacity:0.85;transform:scale(0.99)}
+.btn-primary.btn-large{padding:17px;font-size:16px;margin-top:14px}
 .btn-primary.btn-sm{width:auto;padding:11px 18px;margin-top:0;white-space:nowrap}
-.btn-secondary{width:100%;padding:12px;background:transparent;color:var(--teal);border:0.5px solid rgba(0,194,168,0.5);border-radius:var(--r);font-size:14px;font-family:'DM Sans',sans-serif;font-weight:500;cursor:pointer;margin-top:6px;transition:all 0.2s}
-.btn-ghost{background:none;border:none;color:var(--teal);font-size:13px;font-family:'DM Sans',sans-serif;cursor:pointer;padding:4px 6px}
+.btn-secondary{width:100%;padding:13px;background:transparent;color:var(--teal);border:1px solid rgba(0,194,168,0.4);border-radius:var(--r);font-size:14px;font-family:var(--font-body);font-weight:500;cursor:pointer;margin-top:6px;transition:all 0.2s}
+.btn-secondary:hover{background:rgba(0,194,168,0.08);border-color:var(--teal)}
+.btn-ghost{background:none;border:none;color:var(--gray);font-size:13px;font-family:var(--font-body);cursor:pointer;padding:4px 6px;transition:color 0.2s}
+.btn-ghost:hover{color:var(--teal)}
 #app-screen{background:var(--black)}
-.app-header{background:var(--black);border-bottom:0.5px solid rgba(255,255,255,0.07);padding:14px 20px;display:flex;align-items:center;justify-content:space-between;flex-shrink:0}
-.header-logo{font-family:'Syne',sans-serif;font-size:22px;font-weight:800;letter-spacing:-1px;color:var(--white)}
+.app-header{background:rgba(8,8,8,0.97);backdrop-filter:blur(12px);border-bottom:0.5px solid rgba(255,255,255,0.07);padding:12px 20px;display:flex;align-items:center;justify-content:space-between;flex-shrink:0}
+.header-logo-wrap{display:flex;align-items:center;gap:5px}
+.header-d-mark{width:26px;height:26px;background:var(--teal);border-radius:0 13px 13px 0;position:relative;flex-shrink:0;display:flex;align-items:center;justify-content:center}
+.header-d-mark::before{content:'';width:11px;height:11px;background:var(--black);border-radius:50%;position:absolute}
+.header-wordmark{font-family:var(--font-display);font-size:20px;font-weight:800;letter-spacing:-0.8px;color:var(--white)}
+.header-logo{font-family:var(--font-display);font-size:22px;font-weight:800;letter-spacing:-1px;color:var(--white)}
 .header-logo span{color:var(--teal)}
 .header-user{display:flex;align-items:center;gap:6px;font-size:13px;color:var(--gray)}
 .app-body{flex:1;overflow:hidden;position:relative}
 .view{display:none;height:100%;overflow-y:auto;padding:20px 20px 100px}
 .view.active{display:block}
 .view-header{display:flex;align-items:center;gap:10px;margin-bottom:22px}
-.view-header h2{font-family:'Syne',sans-serif;font-size:22px;font-weight:800;letter-spacing:-0.5px}
-.back-btn{background:none;border:none;color:var(--teal);font-size:14px;font-family:'DM Sans',sans-serif;cursor:pointer;padding:0;white-space:nowrap}
-.home-hero{margin-bottom:22px}
-.home-greeting{font-family:'Syne',sans-serif;font-size:26px;font-weight:800;letter-spacing:-0.5px}
-.home-sub{font-size:15px;color:var(--gray);margin-top:3px}
-.action-grid{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:26px}
-.action-card{background:var(--dark);border:0.5px solid rgba(255,255,255,0.07);border-radius:var(--r);padding:18px 14px;cursor:pointer;transition:border-color 0.2s,transform 0.1s}
+.view-header h2{font-family:var(--font-display);font-size:22px;font-weight:800;letter-spacing:-0.5px}
+.back-btn{background:none;border:none;color:var(--teal);font-size:14px;font-family:var(--font-body);cursor:pointer;padding:0;white-space:nowrap}
+.home-hero{margin-bottom:20px;padding:16px 0 4px}
+.home-greeting{font-family:var(--font-display);font-size:24px;font-weight:800;letter-spacing:-0.5px;line-height:1.1}
+.home-sub{font-size:14px;color:var(--gray);margin-top:4px;font-weight:300}
+.home-buzz{font-family:var(--font-display);font-size:13px;font-weight:700;color:var(--teal);margin-top:6px;letter-spacing:-0.2px}
+.action-grid{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:24px}
+.action-card{background:var(--dark);border:0.5px solid rgba(255,255,255,0.07);border-radius:var(--r);padding:18px 14px;cursor:pointer;transition:border-color 0.2s,transform 0.1s,background 0.2s}
 .action-card:active{transform:scale(0.97)}
-.shipper-card:hover{border-color:rgba(0,194,168,0.5)}
-.driver-card:hover{border-color:rgba(61,204,120,0.5)}
+.shipper-card:hover{border-color:rgba(0,194,168,0.5);background:rgba(0,194,168,0.03)}
+.driver-card:hover{border-color:rgba(61,204,120,0.5);background:rgba(61,204,120,0.03)}
 .action-icon{font-size:26px;margin-bottom:10px}
-.action-title{font-family:'Syne',sans-serif;font-size:14px;font-weight:700;line-height:1.25;margin-bottom:4px}
-.action-sub{font-size:12px;color:var(--gray);line-height:1.4}
-.section-head{display:flex;justify-content:space-between;align-items:center;font-size:11px;font-weight:500;color:rgba(255,255,255,0.4);text-transform:uppercase;letter-spacing:0.09em;margin-bottom:10px}
+.action-title{font-family:var(--font-display);font-size:14px;font-weight:700;line-height:1.25;margin-bottom:4px;letter-spacing:-0.2px}
+.action-sub{font-size:11px;color:var(--gray);line-height:1.4}
+.action-earn{font-size:11px;color:var(--green);font-weight:600;margin-top:5px;font-family:var(--font-mono)}
+.section-head{display:flex;justify-content:space-between;align-items:center;font-size:10px;font-weight:500;color:rgba(255,255,255,0.35);text-transform:uppercase;letter-spacing:0.12em;margin-bottom:10px;font-family:var(--font-mono)}
 .jobs-list{display:flex;flex-direction:column;gap:10px}
-.job-card{background:var(--dark);border:0.5px solid rgba(255,255,255,0.07);border-radius:var(--r);padding:14px;cursor:pointer;transition:border-color 0.2s}
-.job-card:hover{border-color:rgba(0,194,168,0.35)}
+.job-card{background:var(--dark);border:0.5px solid rgba(255,255,255,0.07);border-radius:var(--r);padding:14px;cursor:pointer;transition:border-color 0.2s,background 0.2s}
+.job-card:hover{border-color:rgba(0,194,168,0.35);background:rgba(0,194,168,0.02)}
 .job-card-header{display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:9px}
-.job-card-title{font-family:'Syne',sans-serif;font-size:14px;font-weight:700;flex:1;margin-right:10px;line-height:1.3}
-.job-price{font-family:'Syne',sans-serif;font-size:18px;font-weight:800;color:var(--teal);flex-shrink:0}
+.job-card-title{font-family:var(--font-display);font-size:14px;font-weight:700;flex:1;margin-right:10px;line-height:1.3}
+.job-price{font-family:var(--font-display);font-size:18px;font-weight:800;color:var(--teal);flex-shrink:0}
 .job-route{display:flex;align-items:center;gap:7px;margin-bottom:8px}
 .route-dot{width:7px;height:7px;border-radius:50%;flex-shrink:0}
 .route-dot.start{background:var(--green)}
@@ -118,7 +144,7 @@ textarea{resize:none}
 .price-val.green{color:var(--green)}
 .price-val.muted{color:var(--gray)}
 .drive-mode-switch{display:flex;gap:8px;margin-bottom:18px}
-.drive-mode-btn{flex:1;padding:11px;background:var(--dark);border:0.5px solid rgba(255,255,255,0.08);border-radius:var(--r);color:var(--gray);font-size:13px;font-family:'DM Sans',sans-serif;font-weight:500;cursor:pointer;transition:all 0.2s}
+.drive-mode-btn{flex:1;padding:11px;background:var(--dark);border:0.5px solid rgba(255,255,255,0.08);border-radius:var(--r);color:var(--gray);font-size:13px;font-family:var(--font-body);font-weight:500;cursor:pointer;transition:all 0.2s}
 .drive-mode-btn.active{background:rgba(0,194,168,0.08);border-color:var(--teal);color:var(--white)}
 .haul-types{display:flex;flex-wrap:wrap;gap:7px;margin-top:6px}
 .haul-tag{display:flex;align-items:center;gap:6px;background:var(--dark2);border:0.5px solid rgba(255,255,255,0.08);border-radius:20px;padding:6px 11px;font-size:12px;color:rgba(255,255,255,0.65);cursor:pointer}
@@ -131,7 +157,7 @@ textarea{resize:none}
 .filter-row{display:flex;gap:8px;flex-wrap:wrap}
 .filter-group{flex:1;min-width:80px}
 .filter-group label{display:block;font-size:10px;font-weight:500;color:rgba(255,255,255,0.4);text-transform:uppercase;letter-spacing:0.07em;margin-bottom:4px}
-.filter-group select{width:100%;background:var(--dark2);border:0.5px solid rgba(255,255,255,0.1);border-radius:var(--rs);color:var(--white);font-size:12px;font-family:'DM Sans',sans-serif;padding:8px 10px;outline:none;-webkit-appearance:none;appearance:none}
+.filter-group select{width:100%;background:var(--dark2);border:0.5px solid rgba(255,255,255,0.1);border-radius:var(--rs);color:var(--white);font-size:12px;font-family:var(--font-body);padding:8px 10px;outline:none;-webkit-appearance:none;appearance:none}
 .job-detail-card{background:var(--dark);border:0.5px solid rgba(255,255,255,0.07);border-radius:var(--r);padding:16px;margin-bottom:12px}
 .detail-label{font-size:11px;color:var(--gray);text-transform:uppercase;letter-spacing:0.06em;margin-bottom:4px}
 .detail-val{font-size:15px;color:var(--white);font-weight:500}
@@ -155,7 +181,7 @@ textarea{resize:none}
 .star-row{display:flex;gap:5px;margin:7px 0}
 .star{font-size:26px;cursor:pointer;filter:grayscale(1) opacity(0.3);transition:filter 0.15s}
 .star.active{filter:none}
-.home-filter-pill{background:var(--dark2);border:0.5px solid rgba(255,255,255,0.1);border-radius:50px;padding:6px 14px;font-size:12px;color:rgba(255,255,255,0.5);cursor:pointer;white-space:nowrap;font-family:'DM Sans',sans-serif;transition:all 0.2s}
+.home-filter-pill{background:var(--dark2);border:0.5px solid rgba(255,255,255,0.1);border-radius:50px;padding:6px 14px;font-size:12px;color:rgba(255,255,255,0.5);cursor:pointer;white-space:nowrap;font-family:var(--font-body);transition:all 0.2s}
 .home-filter-pill.active{background:rgba(0,194,168,0.15);border-color:var(--teal);color:var(--teal);font-weight:600}
 .avatar{width:72px;height:72px;border-radius:50%;object-fit:cover;border:2px solid var(--teal);flex-shrink:0}
 .avatar-placeholder{width:72px;height:72px;border-radius:50%;background:var(--dark2);border:2px solid rgba(255,255,255,0.1);display:flex;align-items:center;justify-content:center;font-size:28px;flex-shrink:0;cursor:pointer}
@@ -171,15 +197,17 @@ textarea{resize:none}
 .gig-cat-title{font-size:15px;font-weight:700;color:#fff;margin-bottom:2px}
 .gig-cat-sub{font-size:12px;color:rgba(255,255,255,0.45);line-height:1.4}
 .gig-cat-earn{font-size:12px;color:var(--green);font-weight:600;margin-top:4px}
-.bottom-nav{position:fixed;bottom:0;left:0;right:0;background:var(--dark);border-top:0.5px solid rgba(255,255,255,0.07);display:flex;flex-direction:row;padding:8px 0 20px;z-index:50}
-.nav-item{flex:1;background:none;border:none;display:flex;flex-direction:column;align-items:center;gap:3px;cursor:pointer;padding:5px 0;opacity:0.35;transition:opacity 0.2s}
+.bottom-nav{position:fixed;bottom:0;left:0;right:0;background:rgba(12,12,12,0.97);backdrop-filter:blur(16px);border-top:0.5px solid rgba(255,255,255,0.07);display:flex;flex-direction:row;padding:8px 0 20px;z-index:50}
+.nav-item{flex:1;background:none;border:none;display:flex;flex-direction:column;align-items:center;gap:3px;cursor:pointer;padding:5px 0;opacity:0.3;transition:opacity 0.2s}
 .nav-item.active{opacity:1}
-.filter-btn{padding:6px 14px;border-radius:20px;font-size:12px;font-family:'DM Sans',sans-serif;font-weight:500;cursor:pointer;border:0.5px solid rgba(255,255,255,0.1);background:transparent;color:rgba(255,255,255,0.4);transition:all 0.2s}
-.filter-btn.active{background:rgba(0,194,168,0.12);border-color:var(--teal);color:var(--teal)}
 .nav-icon{font-size:19px}
-.nav-label{font-size:9px;color:var(--white);font-family:'DM Sans',sans-serif;letter-spacing:0.03em}
+.nav-label{font-size:9px;color:var(--white);font-family:var(--font-mono);letter-spacing:0.05em;text-transform:uppercase}
 .nav-item svg{color:var(--white);stroke:currentColor}
 .nav-item.active svg{color:var(--teal);stroke:var(--teal)}
+.filter-btn{padding:6px 14px;border-radius:20px;font-size:12px;font-family:var(--font-body);font-weight:500;cursor:pointer;border:0.5px solid rgba(255,255,255,0.1);background:transparent;color:rgba(255,255,255,0.4);transition:all 0.2s}
+.filter-btn.active{background:rgba(0,194,168,0.12);border-color:var(--teal);color:var(--teal)}
+.home-filter-pill{background:var(--dark2);border:0.5px solid rgba(255,255,255,0.08);border-radius:50px;padding:6px 14px;font-size:12px;color:rgba(255,255,255,0.45);cursor:pointer;white-space:nowrap;font-family:var(--font-body);transition:all 0.2s}
+.home-filter-pill.active{background:rgba(0,194,168,0.12);border-color:var(--teal);color:var(--teal);font-weight:600}
 .empty-state{text-align:center;color:var(--gray);font-size:14px;padding:36px 20px;line-height:1.6}
 .error-msg{color:var(--red);font-size:13px;min-height:16px;margin-bottom:4px}
 .toast{position:fixed;bottom:88px;left:50%;transform:translateX(-50%) translateY(14px);background:var(--dark3);border:0.5px solid rgba(255,255,255,0.12);color:var(--white);padding:11px 18px;border-radius:30px;font-size:13px;opacity:0;transition:all 0.28s;pointer-events:none;white-space:nowrap;z-index:200;max-width:90vw;text-align:center}
@@ -187,7 +215,7 @@ textarea{resize:none}
 
 /* UX IMPROVEMENTS */
 /* Quick post button */
-.quick-post-btn{width:100%;padding:16px;background:linear-gradient(135deg,var(--teal),var(--teal2));color:#000;border:none;border-radius:var(--r);font-size:16px;font-family:'Syne',sans-serif;font-weight:800;cursor:pointer;margin-bottom:10px;display:flex;align-items:center;justify-content:center;gap:8px;letter-spacing:-0.3px}
+.quick-post-btn{width:100%;padding:16px;background:linear-gradient(135deg,var(--teal),var(--teal2));color:#000;border:none;border-radius:var(--r);font-size:16px;font-family:var(--font-display);font-weight:800;cursor:pointer;margin-bottom:10px;display:flex;align-items:center;justify-content:center;gap:8px;letter-spacing:-0.3px}
 /* Swipe job cards */
 .job-card-wrap{position:relative;overflow:hidden;border-radius:var(--r);margin-bottom:10px}
 .job-card-wrap .job-card{margin-bottom:0;border-radius:var(--r)}
@@ -208,12 +236,12 @@ textarea{resize:none}
 .price-suggestion{font-size:12px;color:rgba(255,255,255,0.4);padding:6px 0;margin-top:-4px}
 .price-suggestion span{color:var(--teal);cursor:pointer;font-weight:500}
 /* Im here button */
-.im-here-btn{width:100%;padding:14px;background:rgba(61,204,120,0.1);color:var(--green);border:1px solid rgba(61,204,120,0.3);border-radius:var(--r);font-size:15px;font-family:'DM Sans',sans-serif;font-weight:500;cursor:pointer;margin-top:8px;display:flex;align-items:center;justify-content:center;gap:8px}
+.im-here-btn{width:100%;padding:14px;background:rgba(61,204,120,0.1);color:var(--green);border:1px solid rgba(61,204,120,0.3);border-radius:var(--r);font-size:15px;font-family:var(--font-body);font-weight:500;cursor:pointer;margin-top:8px;display:flex;align-items:center;justify-content:center;gap:8px}
 /* Quick post modal */
 .modal-overlay{position:fixed;inset:0;background:rgba(0,0,0,0.7);z-index:300;display:flex;align-items:flex-end;backdrop-filter:blur(4px)}
 .modal-sheet{background:var(--dark);border-radius:24px 24px 0 0;padding:24px 20px 48px;width:100%;max-height:85vh;overflow-y:auto}
 .modal-sheet-handle{width:40px;height:4px;background:rgba(255,255,255,0.2);border-radius:2px;margin:0 auto 20px}
-.modal-sheet-title{font-family:'Syne',sans-serif;font-size:20px;font-weight:800;margin-bottom:18px}
+.modal-sheet-title{font-family:var(--font-display);font-size:20px;font-weight:800;margin-bottom:18px}
 /* Notification badge */
 .nav-badge{position:absolute;top:2px;right:8px;width:8px;height:8px;background:var(--red);border-radius:50%;border:2px solid var(--dark)}
 .nav-item{position:relative}
@@ -239,13 +267,16 @@ textarea{resize:none}
 <div id="auth-screen" class="screen active">
   <div class="auth-wrap">
     <div class="auth-top">
-      <div class="auth-logo">De<span>tour</span></div>
-      <p class="auth-tagline">Make money on drives you're already doing.</p>
+      <div class="auth-logo-wrap">
+        <div class="auth-d-mark"></div>
+        <div class="auth-wordmark">etour</div>
+      </div>
+      <p class="auth-tagline">Commuting?<br><em>Now get paid for it.</em></p>
       <div class="auth-pills">
-        <span class="auth-pill">📦 Deliver anything</span>
-        <span class="auth-pill">🚗 Earn on your commute</span>
-        <span class="auth-pill">🛋️ Marketplace pickups</span>
-        <span class="auth-pill">🗺️ Durango · Telluride · Beyond</span>
+        <span class="auth-pill">🚗 earn on your commute</span>
+        <span class="auth-pill">📦 deliver anything</span>
+        <span class="auth-pill">💸 $20–$80 per job</span>
+        <span class="auth-pill">🗺️ durango · telluride · beyond</span>
       </div>
     </div>
     <div class="auth-bottom">
@@ -299,7 +330,10 @@ textarea{resize:none}
 <!-- MAIN APP -->
 <div id="app-screen" class="screen">
   <div class="app-header">
-    <div class="header-logo">De<span>tour</span></div>
+    <div class="header-logo-wrap">
+      <div class="header-d-mark"></div>
+      <div class="header-wordmark">etour</div>
+    </div>
     <div class="header-user">
       <div onclick="showView('view-gigs');setNavActive(document.querySelectorAll('.nav-item')[2]);switchGigsMode('profile')" style="cursor:pointer;display:flex;align-items:center;gap:6px;">
         <div id="header-avatar-placeholder" style="width:28px;height:28px;border-radius:50%;background:var(--dark2);border:1.5px solid rgba(255,255,255,0.15);display:flex;align-items:center;justify-content:center;font-size:12px;">👤</div>
@@ -315,20 +349,21 @@ textarea{resize:none}
     <div id="view-home" class="view active">
       <div class="home-hero">
         <div class="home-greeting">Hey, <span id="home-name"></span> 👋</div>
-        <div class="home-sub">What do you need today?</div>
+        <div class="home-sub">Your commute. Your paycheck.</div>
+        <div class="home-buzz">Free afternoon? Log on. Find a job. Get paid.</div>
       </div>
 
       <!-- QUICK POST -->
-      <button class="quick-post-btn" onclick="showQuickPost()">⚡ Quick Post a Job</button>
+      <button class="quick-post-btn" onclick="showQuickPost()">⚡ Post a Delivery — Someone's Already Going Your Way</button>
 
       <!-- CLEAR USER PATHWAY CARDS -->
       <div style="margin-bottom:20px;">
-        <div style="font-size:10px;color:rgba(255,255,255,0.35);text-transform:uppercase;letter-spacing:0.09em;margin-bottom:10px;">I need something done</div>
+        <div style="font-size:10px;color:rgba(255,255,255,0.35);text-transform:uppercase;letter-spacing:0.12em;margin-bottom:10px;font-family:var(--font-mono);">I need something done</div>
         <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:10px;">
           <div class="action-card shipper-card" onclick="showView('view-post');setNavActive(document.querySelectorAll('.nav-item')[1])">
             <div class="action-icon">📦</div>
-            <div class="action-title">Send a Delivery</div>
-            <div class="action-sub">Ship anything, anywhere</div>
+            <div class="action-title">Post a Delivery</div>
+            <div class="action-sub">Someone's already heading your way</div>
           </div>
           <div class="action-card" style="background:var(--dark);border:0.5px solid rgba(255,255,255,0.07);border-radius:var(--r);padding:18px 14px;cursor:pointer;" onclick="showView('view-gigs');setNavActive(document.querySelectorAll('.nav-item')[2])">
             <div class="action-icon">💼</div>
@@ -336,12 +371,12 @@ textarea{resize:none}
             <div class="action-sub">Yard work, labor & more</div>
           </div>
         </div>
-        <div style="font-size:10px;color:rgba(255,255,255,0.35);text-transform:uppercase;letter-spacing:0.09em;margin-bottom:10px;margin-top:16px;">I want to earn money</div>
+        <div style="font-size:10px;color:rgba(255,255,255,0.35);text-transform:uppercase;letter-spacing:0.12em;margin-bottom:10px;margin-top:16px;font-family:var(--font-mono);">I want to earn money</div>
         <div class="action-card driver-card" onclick="showView('view-gigs');setNavActive(document.querySelectorAll('.nav-item')[2]);switchGigsMode('earn')" style="display:flex;align-items:center;gap:14px;padding:16px 18px;">
           <div style="font-size:28px;">🚗</div>
           <div>
-            <div class="action-title" style="margin-bottom:2px;">Browse Jobs & Make a Drive</div>
-            <div class="action-sub">Pick up deliveries or gig work along your route</div>
+            <div class="action-title" style="margin-bottom:2px;">Browse Jobs & Drive</div>
+            <div class="action-sub">Dead miles → live earnings. $20–$80 per job.</div>
           </div>
         </div>
       </div>
@@ -367,17 +402,21 @@ textarea{resize:none}
       </div>
 
       <div class="section-head"><span>Available Near You</span><button class="btn-ghost" onclick="loadOpenJobs()">Refresh</button></div>
-      <div id="open-jobs-list" class="jobs-list"><div class="empty-state">Loading jobs near you...</div></div>
+      <div id="open-jobs-list" class="jobs-list"><div class="empty-state">Loading jobs near you...<br><span style="color:var(--teal);font-size:12px;font-family:var(--font-display);font-weight:700;">Free afternoon? Log on. Find a job. Get paid.</span></div></div>
 
       <div class="section-head" style="margin-top:20px;"><span>🎯 Matched To Your Route</span><button class="btn-ghost" onclick="loadMatchedJobs()">Refresh</button></div>
       <div id="matched-jobs-list" class="jobs-list" style="margin-bottom:6px;"></div>
     </div>
 
-    <!-- POST A DELIVERY (Send tab) -->
+    <!-- POST A DELIVERY -->
     <div id="view-post" class="view">
       <div class="view-header">
         <button class="back-btn" onclick="showView('view-home')">← Back</button>
-        <h2>📦 Send a Delivery</h2>
+        <h2>📦 Post a Delivery</h2>
+      </div>
+      <div style="background:rgba(0,194,168,0.06);border:0.5px solid rgba(0,194,168,0.2);border-radius:var(--rs);padding:14px 16px;margin-bottom:16px;">
+        <div style="font-family:var(--font-display);font-size:15px;font-weight:800;color:var(--teal);letter-spacing:-0.3px;margin-bottom:4px;">Someone's already headed your way.</div>
+        <div style="font-size:13px;color:rgba(255,255,255,0.55);line-height:1.5;">Set your price and let a commuter on that route pick it up. No dedicated couriers. No FedEx prices. Just someone already going there.</div>
       </div>
       <div class="form-section">
         <div class="form-section-title">What type of delivery?</div>
@@ -539,8 +578,8 @@ textarea{resize:none}
           <!-- PROMO CODE -->
           <div style="margin-top:10px;margin-bottom:4px;">
             <div style="display:flex;gap:8px;align-items:center;">
-              <input type="text" id="promo-code-input" placeholder="Promo code (e.g. DBP10)" style="flex:1;background:var(--dark2);border:0.5px solid rgba(255,255,255,0.1);border-radius:var(--rs);color:var(--white);font-size:14px;padding:10px 14px;font-family:'DM Sans',sans-serif;text-transform:uppercase;letter-spacing:0.05em;" oninput="this.value=this.value.toUpperCase()">
-              <button type="button" onclick="applyPromo()" style="background:rgba(0,194,168,0.15);border:0.5px solid rgba(0,194,168,0.35);color:var(--teal);padding:10px 16px;border-radius:var(--rs);font-size:13px;font-family:'DM Sans',sans-serif;cursor:pointer;white-space:nowrap;font-weight:500;">Apply</button>
+              <input type="text" id="promo-code-input" placeholder="Promo code (e.g. DBP10)" style="flex:1;background:var(--dark2);border:0.5px solid rgba(255,255,255,0.1);border-radius:var(--rs);color:var(--white);font-size:14px;padding:10px 14px;font-family:var(--font-body);text-transform:uppercase;letter-spacing:0.05em;" oninput="this.value=this.value.toUpperCase()">
+              <button type="button" onclick="applyPromo()" style="background:rgba(0,194,168,0.15);border:0.5px solid rgba(0,194,168,0.35);color:var(--teal);padding:10px 16px;border-radius:var(--rs);font-size:13px;font-family:var(--font-body);cursor:pointer;white-space:nowrap;font-weight:500;">Apply</button>
             </div>
             <div id="promo-status" style="font-size:12px;margin-top:6px;min-height:18px;"></div>
           </div>
@@ -571,7 +610,7 @@ textarea{resize:none}
           </div>
         </div>
         <div id="post-error" class="error-msg" style="font-size:14px;padding:10px 0;"></div>
-        <button type="button" onclick="postJob()" class="btn-primary btn-large">Post Delivery Job →</button>
+        <button type="button" onclick="postJob()" class="btn-primary btn-large">💸 Post My Delivery →</button>
       </form>
     </div>
 
@@ -579,7 +618,11 @@ textarea{resize:none}
     <div id="view-drive" class="view">
       <div class="view-header">
         <button class="back-btn" onclick="showView('view-home')">← Back</button>
-        <h2>Drive & Earn</h2>
+        <h2>🚗 Drive & Earn</h2>
+      </div>
+      <div style="background:rgba(61,204,120,0.06);border:0.5px solid rgba(61,204,120,0.2);border-radius:var(--rs);padding:14px 16px;margin-bottom:14px;">
+        <div style="font-family:var(--font-display);font-size:15px;font-weight:800;color:var(--green);letter-spacing:-0.3px;margin-bottom:4px;">Dead miles → live earnings.</div>
+        <div style="font-size:13px;color:rgba(255,255,255,0.55);line-height:1.5;">$20–$80 per delivery. Post your route and get matched — or browse jobs on your path. You see the payout before you commit.</div>
       </div>
       <!-- Connect Bank Account — always visible -->
       <div id="connect-prompt-top" class="job-detail-card" style="margin-bottom:14px;display:none;"></div>
@@ -589,7 +632,7 @@ textarea{resize:none}
       </div>
       <div id="drive-post-panel">
         <div class="form-section">
-          <div class="form-section-title">Announce your drive</div>
+          <div class="form-section-title">Announce your drive — get matched with deliveries</div>
           <div class="field-row">
             <div class="field-group"><label>From <span class="req">*</span></label><input type="text" id="route-origin" placeholder="Durango, CO"></div>
             <div class="field-group"><label>To <span class="req">*</span></label><input type="text" id="route-dest" placeholder="Telluride, CO"></div>
@@ -613,9 +656,10 @@ textarea{resize:none}
             <label class="haul-tag"><input type="checkbox" value="oversized"> Furniture</label>
           </div>
         </div>
-        <button class="btn-primary btn-large" onclick="postDriverRoute()">Post My Drive →</button>
+        <button class="btn-primary btn-large" onclick="postDriverRoute()">🚗 Post My Drive & Start Earning →</button>
+        <div style="text-align:center;margin-top:10px;font-family:var(--font-mono);font-size:10px;color:rgba(255,255,255,0.25);letter-spacing:0.08em;">75% OF EVERY JOB GOES STRAIGHT TO YOUR BANK</div>
         <div class="section-head" style="margin-top:22px;"><span>Your Active Routes</span></div>
-        <div id="my-routes-list" class="jobs-list"><div class="empty-state">No active routes posted</div></div>
+        <div id="my-routes-list" class="jobs-list"><div class="empty-state">No active routes.<br><span style="color:var(--green);font-size:12px;font-family:var(--font-display);font-weight:700;">Post your next drive above and start earning.</span></div></div>
 
         <!-- DRIVER VERIFICATION -->
         <div class="form-section" style="margin-top:24px;">
@@ -742,16 +786,16 @@ textarea{resize:none}
         </div>
 
         <div class="section-head"><span>Available Drivers</span></div>
-        <div id="available-drivers" class="jobs-list"><div class="empty-state">Search or browse to see available drivers</div></div>
+        <div id="available-drivers" class="jobs-list"><div class="empty-state">No drivers on this route yet.<br><span style="color:var(--teal);font-size:12px;font-family:'Syne',sans-serif;font-weight:700;">Someone's already headed that way — keep checking.</span></div></div>
         <div class="section-head" style="margin-top:18px;"><span>Open Deliveries</span></div>
-        <div id="browse-results" class="jobs-list"><div class="empty-state">Search or browse to see open jobs</div></div>
+        <div id="browse-results" class="jobs-list"><div class="empty-state">No open deliveries right now.<br><span style="color:var(--teal);font-size:12px;font-family:'Syne',sans-serif;font-weight:700;">Post your route — shippers will find you.</span></div></div>
       </div>
     </div>
 
-    <!-- GIGS VIEW — earn money on services & deliveries -->
+    <!-- GIGS VIEW -->
     <div id="view-gigs" class="view">
       <div class="view-header">
-        <h2>💼 Gigs</h2>
+        <h2>💼 Gigs & Earnings</h2>
       </div>
 
       <!-- MODE SWITCHER -->
@@ -764,7 +808,9 @@ textarea{resize:none}
 
       <!-- POST A GIG PANEL -->
       <div id="gigs-post-panel">
-        <div style="font-size:13px;color:rgba(255,255,255,0.4);margin-bottom:16px;line-height:1.5;">Need help with a job? Post it and get matched with someone local. No driver license required — anyone can help.</div>
+        <div style="font-size:13px;color:rgba(255,255,255,0.5);margin-bottom:16px;line-height:1.6;background:rgba(0,194,168,0.04);border:0.5px solid rgba(0,194,168,0.15);border-radius:var(--rs);padding:12px 14px;">
+          🤝 Post a job and get matched with someone local. Fast, simple, no fuss.
+        </div>
         <div style="display:flex;flex-direction:column;gap:10px;">
           <div class="gig-category-card" onclick="showQuickPostCategory('yard_work')">
             <div class="gig-cat-icon">🌿</div>
@@ -811,7 +857,9 @@ textarea{resize:none}
 
       <!-- BROWSE & EARN PANEL -->
       <div id="gigs-earn-panel" style="display:none;">
-        <div style="font-size:13px;color:rgba(255,255,255,0.4);margin-bottom:16px;line-height:1.5;">Browse open jobs near you. Accept one, complete it, get paid. No experience needed for most gigs.</div>
+        <div style="font-size:13px;color:rgba(255,255,255,0.5);margin-bottom:16px;line-height:1.6;background:rgba(61,204,120,0.05);border:0.5px solid rgba(61,204,120,0.2);border-radius:var(--rs);padding:12px 14px;">
+          🚗 <strong style="color:var(--green);">Free afternoon? Log on. Find a job. Get paid.</strong> No experience needed for most gigs.
+        </div>
         <div style="display:flex;gap:6px;margin-bottom:14px;overflow-x:auto;padding-bottom:4px;">
           <button class="home-filter-pill active" onclick="filterGigJobs('all',this)">All Gigs</button>
           <button class="home-filter-pill" onclick="filterGigJobs('yard_work',this)">🌿 Yard</button>
@@ -821,17 +869,23 @@ textarea{resize:none}
           <button class="home-filter-pill" onclick="filterGigJobs('handyman',this)">🔧 Handyman</button>
           <button class="home-filter-pill" onclick="filterGigJobs('standard',this)">📦 Delivery</button>
         </div>
-        <div id="gigs-earn-list" class="jobs-list"><div class="empty-state">Loading gigs near you...</div></div>
+        <div id="gigs-earn-list" class="jobs-list"><div class="empty-state">Loading gigs near you...<br><span style="color:var(--green);font-size:12px;font-family:'Syne',sans-serif;font-weight:700;">Free afternoon? Log on. Find a job. Get paid.</span></div></div>
       </div>
 
       <!-- POST MY DRIVE PANEL -->
       <div id="gigs-drive-panel" style="display:none;">
-        <div style="font-size:13px;color:rgba(255,255,255,0.4);margin-bottom:16px;line-height:1.5;">Making a drive? Post your route and get matched with deliveries along the way. Earn money on trips you're already making.</div>
+        <div style="font-size:13px;color:rgba(255,255,255,0.5);margin-bottom:16px;line-height:1.6;background:rgba(0,194,168,0.05);border:0.5px solid rgba(0,194,168,0.15);border-radius:var(--rs);padding:12px 14px;">
+          💸 <strong style="color:var(--teal);">Dead miles → live earnings.</strong> Post your route and get matched with deliveries on your way.
+        </div>
         <div id="gigs-drive-content"></div>
       </div>
 
       <!-- MY PROFILE PANEL -->
       <div id="gigs-profile-panel" style="display:none;">
+        <div style="background:rgba(0,194,168,0.05);border:0.5px solid rgba(0,194,168,0.15);border-radius:var(--rs);padding:12px 14px;margin-bottom:16px;">
+          <div style="font-family:var(--font-display);font-size:13px;font-weight:700;color:var(--teal);letter-spacing:-0.2px;">Your reputation is your business.</div>
+          <div style="font-size:12px;color:rgba(255,255,255,0.4);margin-top:3px;line-height:1.5;">Every completed job builds your rating. High-rated drivers get matched first.</div>
+        </div>
 
         <!-- AVATAR + NAME -->
         <div style="display:flex;align-items:center;gap:16px;margin-bottom:20px;">
@@ -842,32 +896,32 @@ textarea{resize:none}
           </div>
           <input type="file" id="profile-photo-input" accept="image/*" style="display:none;" onchange="uploadProfilePhoto(this)">
           <div style="flex:1;">
-            <div id="profile-name-display" style="font-family:'Syne',sans-serif;font-size:20px;font-weight:800;margin-bottom:4px;"></div>
+            <div id="profile-name-display" style="font-family:var(--font-display);font-size:20px;font-weight:800;margin-bottom:4px;letter-spacing:-0.5px;"></div>
             <div id="profile-rating-display" style="font-size:13px;color:rgba(255,255,255,0.5);"></div>
-            <div id="profile-jobs-display" style="font-size:12px;color:rgba(255,255,255,0.35);margin-top:2px;"></div>
+            <div id="profile-jobs-display" style="font-size:11px;color:var(--teal);margin-top:3px;font-family:var(--font-mono);"></div>
           </div>
         </div>
 
         <!-- BIO -->
         <div class="job-detail-card" style="margin-bottom:12px;">
           <div class="detail-label" style="margin-bottom:8px;">About me</div>
-          <textarea id="profile-bio" rows="3" placeholder="Tell people a bit about yourself — what you're good at, your availability, neighborhood..." style="width:100%;background:transparent;border:none;outline:none;color:rgba(255,255,255,0.7);font-size:14px;font-family:'DM Sans',sans-serif;resize:none;line-height:1.6;"></textarea>
+          <textarea id="profile-bio" rows="3" placeholder="Tell people a bit about yourself — what you're good at, your availability, neighborhood..." style="width:100%;background:transparent;border:none;outline:none;color:rgba(255,255,255,0.7);font-size:14px;font-family:var(--font-body);resize:none;line-height:1.6;"></textarea>
           <button onclick="saveProfile()" style="margin-top:8px;padding:8px 16px;background:rgba(0,194,168,0.1);border:0.5px solid var(--teal);border-radius:var(--rs);color:var(--teal);font-size:13px;cursor:pointer;">Save</button>
         </div>
 
         <!-- STATS ROW -->
         <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:8px;margin-bottom:16px;">
           <div style="background:var(--dark2);border-radius:var(--rs);padding:14px 10px;text-align:center;">
-            <div id="stat-rating" style="font-family:'Syne',sans-serif;font-size:22px;font-weight:800;color:var(--teal);">—</div>
-            <div style="font-size:11px;color:rgba(255,255,255,0.4);margin-top:2px;">Avg Rating</div>
+            <div id="stat-rating" style="font-family:var(--font-display);font-size:22px;font-weight:800;color:var(--teal);">—</div>
+            <div style="font-size:10px;color:rgba(255,255,255,0.35);margin-top:2px;font-family:var(--font-mono);text-transform:uppercase;letter-spacing:0.06em;">Rating</div>
           </div>
           <div style="background:var(--dark2);border-radius:var(--rs);padding:14px 10px;text-align:center;">
-            <div id="stat-reviews" style="font-family:'Syne',sans-serif;font-size:22px;font-weight:800;color:var(--teal);">0</div>
-            <div style="font-size:11px;color:rgba(255,255,255,0.4);margin-top:2px;">Reviews</div>
+            <div id="stat-reviews" style="font-family:var(--font-display);font-size:22px;font-weight:800;color:var(--teal);">0</div>
+            <div style="font-size:10px;color:rgba(255,255,255,0.35);margin-top:2px;font-family:var(--font-mono);text-transform:uppercase;letter-spacing:0.06em;">Reviews</div>
           </div>
           <div style="background:var(--dark2);border-radius:var(--rs);padding:14px 10px;text-align:center;">
-            <div id="stat-jobs" style="font-family:'Syne',sans-serif;font-size:22px;font-weight:800;color:var(--teal);">0</div>
-            <div style="font-size:11px;color:rgba(255,255,255,0.4);margin-top:2px;">Jobs Done</div>
+            <div id="stat-jobs" style="font-family:var(--font-display);font-size:22px;font-weight:800;color:var(--green);">0</div>
+            <div style="font-size:10px;color:rgba(255,255,255,0.35);margin-top:2px;font-family:var(--font-mono);text-transform:uppercase;letter-spacing:0.06em;">Jobs Done</div>
           </div>
         </div>
 
@@ -892,7 +946,7 @@ textarea{resize:none}
         <button class="filter-btn" onclick="filterJobs('in_transit',this)">In Transit</button>
         <button class="filter-btn" onclick="filterJobs('completed',this)">Completed</button>
       </div>
-      <div id="my-jobs-list" class="jobs-list"><div class="empty-state">Loading your jobs...</div></div>
+      <div id="my-jobs-list" class="jobs-list"><div class="empty-state">No jobs yet.<br><span style="color:var(--teal);font-size:12px;font-family:var(--font-display);font-weight:700;">Post a delivery or accept a drive to get started.</span></div></div>
     </div>
 
     <!-- JOB DETAIL -->
@@ -913,7 +967,7 @@ textarea{resize:none}
     </button>
     <button class="nav-item" onclick="showView('view-post');setNavActive(this)">
       <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="1" y="3" width="15" height="13"/><polygon points="16 8 20 8 23 11 23 16 16 16 16 8"/><circle cx="5.5" cy="18.5" r="2.5"/><circle cx="18.5" cy="18.5" r="2.5"/></svg>
-      <span class="nav-label">Send</span>
+      <span class="nav-label">Deliver</span>
     </button>
     <button class="nav-item" onclick="showView('view-gigs');setNavActive(this)">
       <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="7" width="20" height="14" rx="2" ry="2"/><path d="M16 21V5a2 2 0 0 0-2-2h-4a2 2 0 0 0-2 2v16"/></svg>
@@ -933,7 +987,7 @@ textarea{resize:none}
   <canvas id="confetti-canvas" style="position:fixed;inset:0;pointer-events:none;z-index:10000;"></canvas>
   <div style="background:linear-gradient(135deg,#0d2e2b,#0a1f1d);border:1px solid rgba(0,194,168,0.4);border-radius:24px;padding:36px 28px;text-align:center;max-width:340px;width:100%;position:relative;z-index:10001;box-shadow:0 0 60px rgba(0,194,168,0.25);">
     <div id="accepted-emoji" style="font-size:64px;margin-bottom:16px;animation:celebPop 0.5s cubic-bezier(0.175,0.885,0.32,1.275);">🎉</div>
-    <div style="font-family:'Syne',sans-serif;font-size:26px;font-weight:800;color:#fff;margin-bottom:8px;">Driver Found!</div>
+    <div style="font-family:var(--font-display);font-size:26px;font-weight:800;color:#fff;margin-bottom:8px;">Driver Found!</div>
     <div id="accepted-driver-name" style="font-size:16px;color:var(--teal);font-weight:600;margin-bottom:16px;"></div>
     <div id="accepted-job-title" style="font-size:14px;color:rgba(255,255,255,0.6);margin-bottom:24px;"></div>
     <div style="background:rgba(0,194,168,0.1);border:1px solid rgba(0,194,168,0.2);border-radius:12px;padding:14px;margin-bottom:24px;">
@@ -1705,11 +1759,11 @@ function renderJobDetail(job,messages){
     <div style="display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:10px;">
       <div>
         <div style="font-size:11px;color:var(--teal);margin-bottom:4px;">${TL[job.job_type]||'📦 General'}</div>
-        <div style="font-family:'Syne',sans-serif;font-size:18px;font-weight:800;margin-bottom:6px;">${escHtml(job.title)}</div>
+        <div style="font-family:var(--font-display);font-size:18px;font-weight:800;margin-bottom:6px;">${escHtml(job.title)}</div>
         <span class="status-badge status-${job.status}">${ST[job.status]}</span>
       </div>
       <div style="text-align:right;">
-        <div style="font-family:'Syne',sans-serif;font-size:26px;font-weight:800;color:var(--teal);">$${parseFloat(job.offered_price).toFixed(2)}</div>
+        <div style="font-family:var(--font-display);font-size:26px;font-weight:800;color:var(--teal);">$${parseFloat(job.offered_price).toFixed(2)}</div>
         ${isDriver?`<div style="font-size:12px;color:var(--green);">You earn $${dp}</div>`:''}
       </div>
     </div>
@@ -1822,7 +1876,7 @@ function renderJobDetail(job,messages){
       <div class="star-row" id="star-row">
         ${[1,2,3,4,5].map(i=>`<span class="star" onclick="setRating(${i})" style="font-size:32px;cursor:pointer;filter:grayscale(1) opacity(0.3);transition:filter 0.15s;">★</span>`).join('')}
       </div>
-      <textarea id="rating-comment" placeholder="Leave a review (optional)..." style="margin-top:10px;width:100%;background:var(--dark2);border:0.5px solid rgba(255,255,255,0.1);border-radius:var(--rs);padding:10px;color:#fff;font-size:13px;font-family:'DM Sans',sans-serif;resize:none;" rows="2"></textarea>
+      <textarea id="rating-comment" placeholder="Leave a review (optional)..." style="margin-top:10px;width:100%;background:var(--dark2);border:0.5px solid rgba(255,255,255,0.1);border-radius:var(--rs);padding:10px;color:#fff;font-size:13px;font-family:var(--font-body);resize:none;" rows="2"></textarea>
       <button class="btn-secondary" style="margin-top:10px;width:100%;" onclick="submitRating('${job.id}')">Submit Rating →</button>
     </div>`;
   }
@@ -2152,7 +2206,7 @@ async function openUserProfile(userId){
       <div style="display:flex;align-items:center;gap:14px;margin-bottom:16px;">
         ${photoHtml}
         <div>
-          <div style="font-family:'Syne',sans-serif;font-size:18px;font-weight:800;">${escHtml(profile.name)}</div>
+          <div style="font-family:var(--font-display);font-size:18px;font-weight:800;">${escHtml(profile.name)}</div>
           <div style="font-size:13px;color:#FFD700;">${stars} ${profile.avg_rating||''}</div>
           <div style="font-size:12px;color:rgba(255,255,255,0.35);">${profile.job_count} jobs completed</div>
         </div>
@@ -2176,7 +2230,7 @@ function showModal(title, content){
   }
   modal.innerHTML=`<div style="background:var(--dark);border-radius:20px 20px 0 0;padding:20px;width:100%;max-height:85vh;overflow-y:auto;">
     <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:16px;">
-      <div style="font-family:'Syne',sans-serif;font-size:17px;font-weight:800;">${title}</div>
+      <div style="font-family:var(--font-display);font-size:17px;font-weight:800;">${title}</div>
       <button onclick="document.getElementById('generic-modal').style.display='none'" style="background:none;border:none;color:rgba(255,255,255,0.5);font-size:20px;cursor:pointer;">✕</button>
     </div>
     ${content}
@@ -2843,7 +2897,7 @@ function updateVerificationStatus(user){
 
   // Show status banner
   if(user.driver_approved){
-    el.innerHTML=`<div style="background:rgba(61,204,120,0.1);border:1.5px solid rgba(61,204,120,0.4);border-radius:12px;padding:16px 18px;display:flex;align-items:center;gap:14px;margin-bottom:14px;"><div style="font-size:32px;line-height:1;">✅</div><div><div style="font-family:'Syne',sans-serif;font-size:16px;font-weight:800;color:var(--green);margin-bottom:2px;">Verified Driver</div><div style="font-size:13px;color:rgba(255,255,255,0.5);line-height:1.5;">Your documents are approved. You can re-upload below if needed.</div></div></div>`;
+    el.innerHTML=`<div style="background:rgba(61,204,120,0.1);border:1.5px solid rgba(61,204,120,0.4);border-radius:12px;padding:16px 18px;display:flex;align-items:center;gap:14px;margin-bottom:14px;"><div style="font-size:32px;line-height:1;">✅</div><div><div style="font-family:var(--font-display);font-size:16px;font-weight:800;color:var(--green);margin-bottom:2px;">Verified Driver</div><div style="font-size:13px;color:rgba(255,255,255,0.5);line-height:1.5;">Your documents are approved. You can re-upload below if needed.</div></div></div>`;
   }else if(user.license_photo&&user.insurance_photo){
     el.innerHTML=`<div style="background:rgba(251,191,36,0.08);border:1px solid rgba(251,191,36,0.3);border-radius:12px;padding:16px 18px;display:flex;align-items:center;gap:14px;margin-bottom:14px;"><div style="font-size:28px;">⏳</div><div><div style="font-size:14px;font-weight:600;color:#FBBF24;margin-bottom:2px;">Under Review</div><div style="font-size:13px;color:rgba(255,255,255,0.5);">Both documents submitted — usually approved within 24 hours.</div></div></div>`;
   }else{
@@ -2990,7 +3044,7 @@ async function checkAndShowConnectPrompt(){
   if(!status.connected||!status.charges_enabled){
     topPrompt.style.display='block';
     topPrompt.style.cssText='border-color:rgba(0,194,168,0.4);margin-bottom:14px;display:block;';
-    topPrompt.innerHTML=`<div style="display:flex;gap:12px;align-items:flex-start;"><div style="font-size:22px;">💳</div><div style="flex:1;"><div style="font-family:'Syne',sans-serif;font-size:15px;font-weight:800;margin-bottom:4px;">Set up payouts to earn</div><div style="font-size:13px;color:rgba(255,255,255,0.55);margin-bottom:10px;line-height:1.5;">Connect your bank account so Detour can pay you after each delivery. Takes 2 minutes.</div><button class="btn-primary" style="margin:0;" onclick="startConnectOnboarding()">Connect Bank Account →</button></div></div>`;
+    topPrompt.innerHTML=`<div style="display:flex;gap:12px;align-items:flex-start;"><div style="font-size:22px;">💳</div><div style="flex:1;"><div style="font-family:var(--font-display);font-size:15px;font-weight:800;margin-bottom:4px;">Set up payouts to earn</div><div style="font-size:13px;color:rgba(255,255,255,0.55);margin-bottom:10px;line-height:1.5;">Connect your bank account so Detour can pay you after each delivery. Takes 2 minutes.</div><button class="btn-primary" style="margin:0;" onclick="startConnectOnboarding()">Connect Bank Account →</button></div></div>`;
   }else{
     topPrompt.style.cssText='border-color:rgba(61,204,120,0.3);margin-bottom:14px;display:block;';
     topPrompt.innerHTML=`<div style="display:flex;justify-content:space-between;align-items:center;"><div><div style="font-size:13px;color:var(--green);font-weight:600;">✓ Payout account connected</div><div style="font-size:12px;color:var(--gray);">Earnings deposited automatically</div></div><button class="btn-ghost" onclick="openStripeDashboard()">View earnings →</button></div>`;
