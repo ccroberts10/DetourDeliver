@@ -152,11 +152,18 @@ router.post('/update-profile', (req, res) => {
 });
 
 // Upload profile photo
-router.post('/profile-photo', requireAuth, upload.single('photo'), (req, res) => {
+router.post('/profile-photo', upload.single('photo'), requireAuth, (req, res) => {
   if (!req.file) return res.status(400).json({ error: 'No photo uploaded' });
+  const userId = req.session.userId || req.headers['x-user-id'];
+  if (!userId) return res.status(401).json({ error: 'Login required' });
   const photoPath = `/uploads/${req.file.filename}`;
-  db.prepare('UPDATE users SET profile_photo = ? WHERE id = ?').run(photoPath, req.session.userId);
-  res.json({ success: true, photo: photoPath });
+  try {
+    db.prepare('UPDATE users SET profile_photo = ? WHERE id = ?').run(photoPath, userId);
+    res.json({ success: true, photo: photoPath });
+  } catch(e) {
+    console.error('Profile photo DB error:', e.message);
+    res.status(500).json({ error: 'Could not save photo' });
+  }
 });
 
 // Get public profile for any user
