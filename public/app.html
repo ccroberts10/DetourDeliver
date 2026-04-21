@@ -2144,13 +2144,15 @@ function renderMyReviews(reviews){
 
 async function uploadProfilePhoto(input){
   if(!input.files?.length) return;
+  const uid = currentUser?.userId || currentUser?.id || localStorage.getItem('detour_uid') || '';
+  if(!uid){ toast('Please sign in again to upload a photo'); return; }
   const fd = new FormData();
   fd.append('photo', input.files[0]);
   try{
-    toast('Uploading...');
+    toast('Uploading photo...');
     const res = await fetch('/api/auth/profile-photo',{
-      method:'POST',body:fd,credentials:'include',
-      headers:{'x-user-id':currentUser?.userId||localStorage.getItem('detour_uid')||''}
+      method:'POST', body:fd, credentials:'include',
+      headers:{'x-user-id': uid}
     });
     const data = await res.json();
     if(!res.ok) throw new Error(data.error||'Upload failed');
@@ -2159,11 +2161,10 @@ async function uploadProfilePhoto(input){
     img.src = data.photo;
     img.style.display='block';
     placeholder.style.display='none';
-    // Also update header avatar if present
-    currentUser.profile_photo = data.photo;
+    if(currentUser) currentUser.profile_photo = data.photo;
     updateHeaderAvatar(data.photo);
     toast('Profile photo updated ✓');
-  }catch(e){toast('Could not upload photo: '+e.message);}
+  }catch(e){ toast('Could not upload photo: '+e.message); }
 }
 
 async function saveProfile(){
