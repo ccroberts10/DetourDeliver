@@ -1265,7 +1265,7 @@ async function register(){
   if(!name||!email||!password){document.getElementById('reg-error').textContent='Name, email, and password required';return;}
   if(password.length<8){document.getElementById('reg-error').textContent='Password must be at least 8 characters';return;}
   if(!document.getElementById('reg-terms').checked){document.getElementById('reg-error').textContent='Please agree to the Terms of Service to continue';return;}
-  try{const r=await api('POST','/api/auth/register',{name,email,phone,password,vehicle_type,license_plate});currentUser=r;localStorage.setItem('detour_uid',r.userId);localStorage.setItem('detour_name',r.name);enterApp(r.name);if(vehicle_type){setTimeout(()=>{showView('view-drive');setNavActive(document.querySelectorAll('.nav-item')[1]);toast('Welcome! Upload your license and insurance below to start accepting jobs.');},400);}}
+  try{const r=await api('POST','/api/auth/register',{name,email,phone,password,vehicle_type,license_plate});currentUser=r;localStorage.setItem('detour_uid',r.userId);localStorage.setItem('detour_name',r.name);enterApp(r.name);if(vehicle_type){setTimeout(()=>showDriverOnboard(),400);}}
   catch(e){document.getElementById('reg-error').textContent=e.message;}
 }
 async function logout(){
@@ -3176,6 +3176,149 @@ function toast(msg){const el=document.getElementById('toast');el.textContent=msg
   }
 })();
 
+
+// ── DRIVER ONBOARDING ──
+let _obLicenseDone=false, _obInsuranceDone=false;
+
+function showDriverOnboard(){
+  const m=document.getElementById('driver-onboard-modal');
+  if(m){ m.style.display='flex'; m.scrollTop=0; }
+}
+
+function obUpdateProgress(){
+  const done=(_obLicenseDone?1:0)+(_obInsuranceDone?1:0);
+  document.getElementById('ob-progress').style.width=(done*50)+'%';
+  const btn=document.getElementById('ob-submit-btn');
+  if(done===2){ btn.style.opacity='1'; btn.style.pointerEvents='auto'; }
+  // Step 2 dot lights up when license done
+  if(_obLicenseDone){
+    document.getElementById('ob-step2-dot').style.background='rgba(0,194,168,0.3)';
+    document.getElementById('ob-step2-dot').style.color='var(--teal)';
+  }
+}
+
+async function obUploadDoc(type, input){
+  if(!input.files?.length) return;
+  const uid=currentUser?.userId||localStorage.getItem('detour_uid')||'';
+  const statusEl=document.getElementById('ob-'+type+'-status');
+  const checkEl=document.getElementById('ob-'+type+'-check');
+  const btnEl=document.getElementById('ob-'+type+'-btn');
+  const previewEl=document.getElementById('ob-'+type+'-preview');
+  const imgEl=document.getElementById('ob-'+type+'-img');
+  statusEl.textContent='Uploading...';
+  statusEl.style.color='var(--teal)';
+  const fd=new FormData();
+  fd.append(type==='license'?'license_card':'insurance_card', input.files[0]);
+  try{
+    const endpoint=type==='license'?'/api/auth/license':'/api/auth/insurance';
+    const res=await fetch(endpoint,{method:'POST',body:fd,credentials:'include',headers:{'x-user-id':uid}});
+    const data=await res.json();
+    if(!res.ok) throw new Error(data.error||'Upload failed');
+    // Show preview
+    const reader=new FileReader();
+    reader.onload=e=>{ imgEl.src=e.target.result; previewEl.style.display='block'; };
+    reader.readAsDataURL(input.files[0]);
+    // Mark done
+    checkEl.style.background='rgba(0,194,168,0.15)';
+    checkEl.style.border='1.5px solid var(--teal)';
+    checkEl.textContent='✓';
+    checkEl.style.color='var(--teal)';
+    checkEl.style.fontSize='16px';
+    statusEl.textContent='Uploaded successfully';
+    statusEl.style.color='var(--teal)';
+    btnEl.textContent=type==='license'?'🪪 Re-upload License':'📋 Re-upload Insurance';
+    if(type==='license') _obLicenseDone=true;
+    else _obInsuranceDone=true;
+    obUpdateProgress();
+  }catch(e){
+    statusEl.textContent='Upload failed — try again';
+    statusEl.style.color='var(--red)';
+  }
+}
+
+function obFinish(){
+  const m=document.getElementById('driver-onboard-modal');
+  if(m) m.style.display='none';
+  showView('view-drive');
+  setNavActive(document.querySelectorAll('.nav-item')[1]);
+  toast('Documents submitted! We'll review within 24 hours. Check back tomorrow to start earning.');
+}
+
+function obSkip(){
+  const m=document.getElementById('driver-onboard-modal');
+  if(m) m.style.display='none';
+  showView('view-drive');
+  setNavActive(document.querySelectorAll('.nav-item')[1]);
+  toast('Heads up — upload your license and insurance in the Drive tab to start accepting jobs.');
+}
+
 </script>
+
+<!-- DRIVER ONBOARDING MODAL -->
+<div id="driver-onboard-modal" style="display:none;position:fixed;inset:0;z-index:9998;background:var(--black);flex-direction:column;overflow-y:auto;">
+  <div style="max-width:480px;margin:0 auto;padding:40px 28px 60px;min-height:100vh;display:flex;flex-direction:column;">
+    <!-- Header -->
+    <div style="text-align:center;margin-bottom:32px;">
+      <div style="display:inline-flex;align-items:center;gap:6px;margin-bottom:20px;">
+        <div style="width:32px;height:32px;background:var(--teal);border-radius:0 16px 16px 0;position:relative;display:flex;align-items:center;justify-content:center;flex-shrink:0;">
+          <div style="width:13px;height:13px;background:var(--black);border-radius:50%;position:absolute;"></div>
+        </div>
+        <span style="font-family:var(--font-display);font-size:24px;font-weight:800;letter-spacing:-1px;">etour</span>
+      </div>
+      <div style="background:rgba(0,194,168,0.1);border:1px solid rgba(0,194,168,0.25);border-radius:30px;display:inline-block;padding:6px 18px;font-family:var(--font-mono);font-size:11px;color:var(--teal);letter-spacing:0.08em;margin-bottom:20px;">DRIVER SETUP — 2 MINUTES</div>
+      <h1 style="font-family:var(--font-display);font-size:32px;font-weight:800;letter-spacing:-1px;line-height:1.1;margin-bottom:10px;">One last step<br>before you <span style="color:var(--teal);">earn.</span></h1>
+      <p style="font-size:14px;color:rgba(255,255,255,0.45);line-height:1.7;">Upload your driver's license and proof of insurance. We review within 24 hours — then you can start accepting jobs and getting paid.</p>
+    </div>
+
+    <!-- Progress indicator -->
+    <div style="display:flex;align-items:center;gap:8px;margin-bottom:28px;">
+      <div id="ob-step1-dot" style="width:28px;height:28px;border-radius:50%;background:var(--teal);display:flex;align-items:center;justify-content:center;font-family:var(--font-mono);font-size:12px;color:#000;font-weight:700;flex-shrink:0;">1</div>
+      <div style="flex:1;height:2px;background:rgba(255,255,255,0.1);border-radius:2px;"><div id="ob-progress" style="height:100%;width:0%;background:var(--teal);border-radius:2px;transition:width 0.3s;"></div></div>
+      <div id="ob-step2-dot" style="width:28px;height:28px;border-radius:50%;background:rgba(255,255,255,0.1);display:flex;align-items:center;justify-content:center;font-family:var(--font-mono);font-size:12px;color:rgba(255,255,255,0.4);font-weight:700;flex-shrink:0;">2</div>
+    </div>
+
+    <!-- Step 1: Driver's License -->
+    <div id="ob-license-section" style="background:var(--dark);border:0.5px solid rgba(255,255,255,0.08);border-radius:16px;padding:20px;margin-bottom:14px;">
+      <div style="display:flex;align-items:center;gap:12px;margin-bottom:14px;">
+        <div id="ob-license-check" style="width:36px;height:36px;border-radius:50%;background:rgba(255,255,255,0.06);border:1.5px solid rgba(255,255,255,0.12);display:flex;align-items:center;justify-content:center;font-size:18px;flex-shrink:0;">🪪</div>
+        <div>
+          <div style="font-family:var(--font-display);font-size:16px;font-weight:800;letter-spacing:-0.3px;">Driver's License</div>
+          <div style="font-size:12px;color:rgba(255,255,255,0.4);margin-top:2px;" id="ob-license-status">Required before accepting jobs</div>
+        </div>
+      </div>
+      <div id="ob-license-preview" style="display:none;margin-bottom:10px;">
+        <img id="ob-license-img" style="width:100%;border-radius:8px;border:1px solid rgba(0,194,168,0.3);" src="" alt="License">
+      </div>
+      <input type="file" id="ob-license-file" accept="image/*" style="display:none" onchange="obUploadDoc('license',this)">
+      <button onclick="document.getElementById('ob-license-file').click()" id="ob-license-btn" class="btn-secondary" style="margin:0;">🪪 Upload Driver's License</button>
+    </div>
+
+    <!-- Step 2: Insurance -->
+    <div id="ob-insurance-section" style="background:var(--dark);border:0.5px solid rgba(255,255,255,0.08);border-radius:16px;padding:20px;margin-bottom:24px;">
+      <div style="display:flex;align-items:center;gap:12px;margin-bottom:14px;">
+        <div id="ob-insurance-check" style="width:36px;height:36px;border-radius:50%;background:rgba(255,255,255,0.06);border:1.5px solid rgba(255,255,255,0.12);display:flex;align-items:center;justify-content:center;font-size:18px;flex-shrink:0;">📋</div>
+        <div>
+          <div style="font-family:var(--font-display);font-size:16px;font-weight:800;letter-spacing:-0.3px;">Proof of Insurance</div>
+          <div style="font-size:12px;color:rgba(255,255,255,0.4);margin-top:2px;" id="ob-insurance-status">Required before accepting jobs</div>
+        </div>
+      </div>
+      <div id="ob-insurance-preview" style="display:none;margin-bottom:10px;">
+        <img id="ob-insurance-img" style="width:100%;border-radius:8px;border:1px solid rgba(0,194,168,0.3);" src="" alt="Insurance">
+      </div>
+      <input type="file" id="ob-insurance-file" accept="image/*" style="display:none" onchange="obUploadDoc('insurance',this)">
+      <button onclick="document.getElementById('ob-insurance-file').click()" id="ob-insurance-btn" class="btn-secondary" style="margin:0;">📋 Upload Insurance Card</button>
+    </div>
+
+    <!-- Info box -->
+    <div style="background:rgba(0,194,168,0.05);border:0.5px solid rgba(0,194,168,0.15);border-radius:12px;padding:14px 16px;margin-bottom:24px;font-size:13px;color:rgba(255,255,255,0.5);line-height:1.7;">
+      🔒 Documents are reviewed by Detour staff and <strong style="color:rgba(255,255,255,0.8);">never shared publicly.</strong> Approval usually takes less than 24 hours.
+    </div>
+
+    <!-- CTA buttons -->
+    <button id="ob-submit-btn" class="btn-primary btn-large" onclick="obFinish()" style="opacity:0.35;pointer-events:none;">Submit for Review →</button>
+    <button onclick="obSkip()" style="background:none;border:none;color:rgba(255,255,255,0.25);font-size:13px;font-family:var(--font-body);cursor:pointer;padding:16px;text-align:center;width:100%;margin-top:4px;">I'll do this later</button>
+  </div>
+</div>
+
 </body>
 </html>
