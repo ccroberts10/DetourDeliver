@@ -370,6 +370,20 @@ textarea{resize:none}
         <div class="home-buzz">Free afternoon? Log on. Find a job. Get paid.</div>
       </div>
 
+      <!-- DRIVER CTA BANNER — shows for unverified drivers, hides when approved -->
+      <div id="home-driver-cta" style="display:none;background:linear-gradient(135deg,#080808,#0f1f1c);border:1.5px solid var(--teal);border-radius:var(--r);padding:20px;margin-bottom:16px;">
+        <div style="font-family:var(--font-mono);font-size:10px;color:var(--teal);letter-spacing:0.12em;text-transform:uppercase;margin-bottom:8px;">🚗 Become a Driver</div>
+        <div style="font-family:var(--font-display);font-size:22px;font-weight:800;letter-spacing:-0.5px;line-height:1.15;margin-bottom:6px;">Your drive just got<br><span style="color:var(--teal);">a raise.</span></div>
+        <div style="font-size:13px;color:rgba(255,255,255,0.5);line-height:1.6;margin-bottom:14px;">Earn $20–$80 picking up deliveries on drives you already make. Upload your license and insurance to get started.</div>
+        <div style="display:flex;gap:8px;margin-bottom:12px;">
+          <div style="background:rgba(0,194,168,0.1);border:0.5px solid rgba(0,194,168,0.2);border-radius:20px;padding:5px 12px;font-family:var(--font-mono);font-size:10px;color:var(--teal);">$20–$80 per job</div>
+          <div style="background:rgba(0,194,168,0.1);border:0.5px solid rgba(0,194,168,0.2);border-radius:20px;padding:5px 12px;font-family:var(--font-mono);font-size:10px;color:var(--teal);">75% to you</div>
+          <div style="background:rgba(0,194,168,0.1);border:0.5px solid rgba(0,194,168,0.2);border-radius:20px;padding:5px 12px;font-family:var(--font-mono);font-size:10px;color:var(--teal);">Free to join</div>
+        </div>
+        <button class="btn-primary" onclick="showDriverOnboard()" style="font-size:15px;padding:14px;margin:0;">🚗 Complete Driver Setup →</button>
+        <div id="home-driver-cta-status" style="font-size:12px;color:rgba(255,255,255,0.3);margin-top:10px;text-align:center;"></div>
+      </div>
+
       <!-- QUICK POST -->
       <button class="quick-post-btn" onclick="showQuickPost()">⚡ Post a Delivery — Someone's Already Going Your Way</button>
 
@@ -1284,9 +1298,11 @@ function enterApp(name){
       const me = await api('GET','/api/auth/me');
       if(me.profile_photo){
         updateHeaderAvatar(me.profile_photo);
-        // Also store on currentUser
         if(currentUser) currentUser.profile_photo = me.profile_photo;
       }
+      // Show driver CTA banner if not yet approved
+      currentUser = Object.assign(currentUser||{}, me);
+      updateVerificationStatus(me);
     }catch(e){}
   }, 500);
   const soon=new Date(Date.now()+3600000);
@@ -2940,6 +2956,29 @@ function updateVerificationStatus(user){
   if(user.insurance_photo&&insThumb&&insPreview){insThumb.src=user.insurance_photo;insPreview.style.display='block';}
 
   // Show status banner
+  // Show/hide home CTA banner
+  const homeCta = document.getElementById('home-driver-cta');
+  const homeCtaStatus = document.getElementById('home-driver-cta-status');
+  if(homeCta){
+    if(!user.driver_approved){
+      homeCta.style.display = 'block';
+      if(homeCtaStatus){
+        if(user.license_photo && user.insurance_photo){
+          homeCtaStatus.textContent = '⏳ Documents submitted — under review. Usually approved within 24 hours.';
+          homeCta.querySelector('.btn-primary').textContent = '✓ Documents Submitted — Under Review';
+          homeCta.querySelector('.btn-primary').style.opacity = '0.6';
+          homeCta.querySelector('.btn-primary').style.pointerEvents = 'none';
+        } else if(user.license_photo || user.insurance_photo){
+          homeCtaStatus.textContent = 'Almost there — one more document needed.';
+        } else {
+          homeCtaStatus.textContent = 'Takes 2 minutes. Approved within 24 hours.';
+        }
+      }
+    } else {
+      homeCta.style.display = 'none';
+    }
+  }
+
   if(user.driver_approved){
     el.innerHTML=`<div style="background:rgba(61,204,120,0.1);border:1.5px solid rgba(61,204,120,0.4);border-radius:12px;padding:16px 18px;display:flex;align-items:center;gap:14px;margin-bottom:14px;"><div style="font-size:32px;line-height:1;">✅</div><div><div style="font-family:var(--font-display);font-size:16px;font-weight:800;color:var(--green);margin-bottom:2px;">Verified Driver</div><div style="font-size:13px;color:rgba(255,255,255,0.5);line-height:1.5;">Your documents are approved. You can re-upload below if needed.</div></div></div>`;
   }else if(user.license_photo&&user.insurance_photo){
