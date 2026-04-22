@@ -295,14 +295,32 @@ textarea{resize:none}
         <button class="btn-primary" onclick="login()">Sign In →</button>
       </div>
       <div id="register-form" style="display:none">
+
+        <!-- ROLE SELECTOR -->
+        <div style="margin-bottom:18px;">
+          <div style="font-family:var(--font-mono);font-size:10px;color:var(--teal);letter-spacing:0.12em;text-transform:uppercase;margin-bottom:10px;">I want to...</div>
+          <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;">
+            <div id="role-driver" onclick="selectRole('driver')" style="background:rgba(0,194,168,0.08);border:1.5px solid var(--teal);border-radius:var(--r);padding:14px 12px;cursor:pointer;text-align:center;transition:all 0.2s;">
+              <div style="font-size:24px;margin-bottom:6px;">&#x1F697;</div>
+              <div style="font-family:var(--font-display);font-size:13px;font-weight:800;color:var(--white);letter-spacing:-0.3px;">Drive &amp; Earn</div>
+              <div style="font-size:11px;color:rgba(255,255,255,0.5);margin-top:3px;">$20&#x2013;$80 per job</div>
+            </div>
+            <div id="role-shipper" onclick="selectRole('shipper')" style="background:var(--dark2);border:1.5px solid rgba(255,255,255,0.1);border-radius:var(--r);padding:14px 12px;cursor:pointer;text-align:center;transition:all 0.2s;">
+              <div style="font-size:24px;margin-bottom:6px;">&#x1F4E6;</div>
+              <div style="font-family:var(--font-display);font-size:13px;font-weight:800;color:var(--white);letter-spacing:-0.3px;">Post a Job</div>
+              <div style="font-size:11px;color:rgba(255,255,255,0.5);margin-top:3px;">Delivery or gig work</div>
+            </div>
+          </div>
+        </div>
+
         <div class="field-group"><label>Full Name</label><input type="text" id="reg-name" placeholder="Casey Brown"></div>
         <div class="field-group"><label>Email</label><input type="email" id="reg-email" placeholder="you@email.com"></div>
         <div class="field-group"><label>Phone</label><input type="tel" id="reg-phone" placeholder="(970) 555-0100"></div>
         <div class="field-group"><label>Password</label><input type="password" id="reg-password" placeholder="Min 8 characters"></div>
-        <div class="field-group">
-          <label>Vehicle (if driving)</label>
+        <div class="field-group" id="vehicle-field" style="display:none;">
+          <label>Your Vehicle</label>
           <select id="reg-vehicle">
-            <option value="">Shipper only — no vehicle</option>
+            <option value="">Select vehicle type</option>
             <option value="sedan">Sedan / Hatchback</option>
             <option value="suv">SUV / Crossover</option>
             <option value="truck">Pickup Truck</option>
@@ -1189,6 +1207,27 @@ const SZ={envelope:'Envelope / Doc',small_box:'Small Box',medium_box:'Medium Box
 const ST={open:'Open',accepted:'Driver Matched',in_transit:'In Transit',completed:'Completed'};
 const TL={standard:'📦 Delivery',marketplace:'🛋️ Marketplace',retail:'🚴 Retail',errand:'🛍️ Errand',business:'🏢 Business',yard_work:'🌿 Yard & Outdoor',labor:'💪 Labor & Moving',dump_run:'🚛 Dump Run',cleaning:'🧹 Cleaning',handyman:'🔧 Handyman'};
 const TH={standard:'Standard delivery between two locations.',marketplace:'Sold an item online? Get it delivered. Buyer or seller can post. Item photos required.',retail:'Shop delivering to a customer, or customer needs a shop purchase brought to them.',errand:'Need someone to pick something up for you from a store.',business:'Business-to-business delivery — products, documents, samples.',yard_work:'Lawn mowing, landscaping, snow removal, firewood, or any outdoor work.',labor:'Moving help, furniture assembly, loading/unloading, or general labor.',dump_run:'Need a load hauled to the dump or transfer station? Post it here.',cleaning:'House cleaning, deep clean, move-in/out cleaning, or office cleaning.',handyman:'Minor repairs, painting, mounting, patching — no licensed trade work.'};
+
+function selectRole(role){
+  const driver = document.getElementById('role-driver');
+  const shipper = document.getElementById('role-shipper');
+  const vehicleField = document.getElementById('vehicle-field');
+  const vehicle = document.getElementById('reg-vehicle');
+  if(role === 'driver'){
+    driver.style.background = 'rgba(0,194,168,0.15)';
+    driver.style.border = '1.5px solid var(--teal)';
+    shipper.style.background = 'var(--dark2)';
+    shipper.style.border = '1.5px solid rgba(255,255,255,0.1)';
+    vehicleField.style.display = 'block';
+  } else {
+    shipper.style.background = 'rgba(0,194,168,0.15)';
+    shipper.style.border = '1.5px solid var(--teal)';
+    driver.style.background = 'var(--dark2)';
+    driver.style.border = '1.5px solid rgba(255,255,255,0.1)';
+    vehicleField.style.display = 'none';
+    vehicle.value = '';
+  }
+}
 
 function showTab(t){
   document.getElementById('login-form').style.display=t==='login'?'block':'none';
