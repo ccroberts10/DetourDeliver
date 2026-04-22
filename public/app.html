@@ -295,14 +295,31 @@ textarea{resize:none}
         <button class="btn-primary" onclick="login()">Sign In →</button>
       </div>
       <div id="register-form" style="display:none">
+
+        <div style="margin-bottom:18px;">
+          <div style="font-family:var(--font-mono);font-size:10px;color:var(--teal);letter-spacing:0.12em;text-transform:uppercase;margin-bottom:10px;">I want to...</div>
+          <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;">
+            <div id="role-driver" onclick="selectRole('driver')" style="background:rgba(0,194,168,0.08);border:1.5px solid var(--teal);border-radius:var(--r);padding:14px 12px;cursor:pointer;text-align:center;">
+              <div style="font-size:24px;margin-bottom:6px;">&#x1F697;</div>
+              <div style="font-family:var(--font-display);font-size:13px;font-weight:800;color:var(--white);">Drive &amp; Earn</div>
+              <div style="font-size:11px;color:rgba(255,255,255,0.5);margin-top:3px;">$20&#x2013;$80 per job</div>
+            </div>
+            <div id="role-shipper" onclick="selectRole('shipper')" style="background:var(--dark2);border:1.5px solid rgba(255,255,255,0.1);border-radius:var(--r);padding:14px 12px;cursor:pointer;text-align:center;">
+              <div style="font-size:24px;margin-bottom:6px;">&#x1F4E6;</div>
+              <div style="font-family:var(--font-display);font-size:13px;font-weight:800;color:var(--white);">Post a Job</div>
+              <div style="font-size:11px;color:rgba(255,255,255,0.5);margin-top:3px;">Delivery or gig work</div>
+            </div>
+          </div>
+        </div>
+
         <div class="field-group"><label>Full Name</label><input type="text" id="reg-name" placeholder="Casey Brown"></div>
         <div class="field-group"><label>Email</label><input type="email" id="reg-email" placeholder="you@email.com"></div>
         <div class="field-group"><label>Phone</label><input type="tel" id="reg-phone" placeholder="(970) 555-0100"></div>
         <div class="field-group"><label>Password</label><input type="password" id="reg-password" placeholder="Min 8 characters"></div>
-        <div class="field-group">
-          <label>Vehicle (if driving)</label>
+        <div class="field-group" id="vehicle-field" style="display:none;">
+          <label>Your Vehicle</label>
           <select id="reg-vehicle">
-            <option value="">Shipper only — no vehicle</option>
+            <option value="">Select vehicle type</option>
             <option value="sedan">Sedan / Hatchback</option>
             <option value="suv">SUV / Crossover</option>
             <option value="truck">Pickup Truck</option>
@@ -1226,7 +1243,7 @@ async function register(){
   if(!name||!email||!password){document.getElementById('reg-error').textContent='Name, email, and password required';return;}
   if(password.length<8){document.getElementById('reg-error').textContent='Password must be at least 8 characters';return;}
   if(!document.getElementById('reg-terms').checked){document.getElementById('reg-error').textContent='Please agree to the Terms of Service to continue';return;}
-  try{const r=await api('POST','/api/auth/register',{name,email,phone,password,vehicle_type,license_plate});currentUser=r;localStorage.setItem('detour_uid',r.userId);localStorage.setItem('detour_name',r.name);enterApp(r.name);}
+  try{const r=await api('POST','/api/auth/register',{name,email,phone,password,vehicle_type,license_plate});currentUser=r;localStorage.setItem('detour_uid',r.userId);localStorage.setItem('detour_name',r.name);enterApp(r.name);if(vehicle_type){setTimeout(()=>showDriverOnboard(),400);}}
   catch(e){document.getElementById('reg-error').textContent=e.message;}
 }
 async function logout(){
@@ -3138,5 +3155,101 @@ function toast(msg){const el=document.getElementById('toast');el.textContent=msg
 })();
 
 </script>
+
+<!-- DRIVER ONBOARDING MODAL -->
+<div id="driver-onboard-modal" style="display:none;position:fixed;inset:0;z-index:9998;background:var(--black);overflow-y:auto;flex-direction:column;">
+  <div style="max-width:480px;margin:0 auto;padding:40px 28px 60px;display:flex;flex-direction:column;">
+    <div style="text-align:center;margin-bottom:28px;">
+      <div style="display:inline-flex;align-items:center;gap:6px;margin-bottom:16px;">
+        <div style="width:28px;height:28px;background:var(--teal);border-radius:0 14px 14px 0;position:relative;display:flex;align-items:center;justify-content:center;flex-shrink:0;"><div style="width:12px;height:12px;background:var(--black);border-radius:50%;position:absolute;"></div></div>
+        <span style="font-family:var(--font-display);font-size:22px;font-weight:800;letter-spacing:-1px;">etour</span>
+      </div>
+      <div style="background:rgba(0,194,168,0.1);border:1px solid rgba(0,194,168,0.25);border-radius:30px;display:inline-block;padding:6px 16px;font-family:var(--font-mono);font-size:10px;color:var(--teal);letter-spacing:0.1em;margin-bottom:18px;">DRIVER SETUP — 2 MINUTES</div>
+      <h2 style="font-family:var(--font-display);font-size:28px;font-weight:800;letter-spacing:-1px;line-height:1.15;margin-bottom:10px;">One last step<br>before you <span style="color:var(--teal);">earn.</span></h2>
+      <p style="font-size:14px;color:rgba(255,255,255,0.45);line-height:1.7;">Upload your driver&#x27;s license and proof of insurance. We review within 24 hours — then you start getting paid.</p>
+    </div>
+    <div style="display:flex;align-items:center;gap:8px;margin-bottom:24px;">
+      <div id="ob-step1-dot" style="width:26px;height:26px;border-radius:50%;background:var(--teal);display:flex;align-items:center;justify-content:center;font-family:var(--font-mono);font-size:12px;color:#000;font-weight:700;flex-shrink:0;">1</div>
+      <div style="flex:1;height:2px;background:rgba(255,255,255,0.1);border-radius:2px;"><div id="ob-progress" style="height:100%;width:0%;background:var(--teal);border-radius:2px;transition:width 0.3s;"></div></div>
+      <div id="ob-step2-dot" style="width:26px;height:26px;border-radius:50%;background:rgba(255,255,255,0.1);display:flex;align-items:center;justify-content:center;font-family:var(--font-mono);font-size:12px;color:rgba(255,255,255,0.4);font-weight:700;flex-shrink:0;">2</div>
+    </div>
+    <div style="background:var(--dark);border:0.5px solid rgba(255,255,255,0.08);border-radius:var(--r);padding:18px;margin-bottom:12px;">
+      <div style="display:flex;align-items:center;gap:12px;margin-bottom:12px;">
+        <div id="ob-license-check" style="width:34px;height:34px;border-radius:50%;background:rgba(255,255,255,0.06);border:1.5px solid rgba(255,255,255,0.12);display:flex;align-items:center;justify-content:center;font-size:16px;flex-shrink:0;">&#x1FAA9;</div>
+        <div><div style="font-family:var(--font-display);font-size:15px;font-weight:800;">Driver&#x27;s License</div><div style="font-size:12px;color:rgba(255,255,255,0.4);margin-top:2px;" id="ob-license-status">Required before accepting jobs</div></div>
+      </div>
+      <div id="ob-license-preview" style="display:none;margin-bottom:10px;"><img id="ob-license-img" style="width:100%;border-radius:8px;border:1px solid rgba(0,194,168,0.3);" src="" alt="License"></div>
+      <input type="file" id="ob-license-file" accept="image/*" style="display:none" onchange="obUploadDoc(&#x27;license&#x27;,this)">
+      <button class="btn-secondary" style="margin:0;width:100%;" onclick="document.getElementById(&#x27;ob-license-file&#x27;).click()">&#x1FAA9; Upload Driver&#x27;s License</button>
+    </div>
+    <div style="background:var(--dark);border:0.5px solid rgba(255,255,255,0.08);border-radius:var(--r);padding:18px;margin-bottom:20px;">
+      <div style="display:flex;align-items:center;gap:12px;margin-bottom:12px;">
+        <div id="ob-insurance-check" style="width:34px;height:34px;border-radius:50%;background:rgba(255,255,255,0.06);border:1.5px solid rgba(255,255,255,0.12);display:flex;align-items:center;justify-content:center;font-size:16px;flex-shrink:0;">&#x1F4CB;</div>
+        <div><div style="font-family:var(--font-display);font-size:15px;font-weight:800;">Proof of Insurance</div><div style="font-size:12px;color:rgba(255,255,255,0.4);margin-top:2px;" id="ob-insurance-status">Required before accepting jobs</div></div>
+      </div>
+      <div id="ob-insurance-preview" style="display:none;margin-bottom:10px;"><img id="ob-insurance-img" style="width:100%;border-radius:8px;border:1px solid rgba(0,194,168,0.3);" src="" alt="Insurance"></div>
+      <input type="file" id="ob-insurance-file" accept="image/*" style="display:none" onchange="obUploadDoc(&#x27;insurance&#x27;,this)">
+      <button class="btn-secondary" style="margin:0;width:100%;" onclick="document.getElementById(&#x27;ob-insurance-file&#x27;).click()">&#x1F4CB; Upload Insurance Card</button>
+    </div>
+    <div style="background:rgba(0,194,168,0.05);border:0.5px solid rgba(0,194,168,0.15);border-radius:var(--rs);padding:12px 14px;margin-bottom:20px;font-size:13px;color:rgba(255,255,255,0.45);line-height:1.7;">&#x1F512; Documents reviewed by Detour staff and never shared publicly. Approval within 24 hours.</div>
+    <button id="ob-submit-btn" class="btn-primary btn-large" onclick="obFinish()" style="opacity:0.35;pointer-events:none;">Submit for Review &#x2192;</button>
+    <button onclick="obSkip()" style="background:none;border:none;color:rgba(255,255,255,0.25);font-size:13px;font-family:var(--font-body);cursor:pointer;padding:14px;text-align:center;width:100%;margin-top:4px;">I&#x27;ll do this later</button>
+  </div>
+</div>
+
+<script>
+// ── DRIVER ONBOARDING ──
+var _obLicenseDone=false,_obInsuranceDone=false;
+function selectRole(role){
+  var d=document.getElementById('role-driver'),s=document.getElementById('role-shipper'),vf=document.getElementById('vehicle-field'),v=document.getElementById('reg-vehicle');
+  if(role==='driver'){d.style.background='rgba(0,194,168,0.15)';d.style.border='1.5px solid var(--teal)';s.style.background='var(--dark2)';s.style.border='1.5px solid rgba(255,255,255,0.1)';if(vf)vf.style.display='block';}
+  else{s.style.background='rgba(0,194,168,0.15)';s.style.border='1.5px solid var(--teal)';d.style.background='var(--dark2)';d.style.border='1.5px solid rgba(255,255,255,0.1)';if(vf)vf.style.display='none';if(v)v.value='';}
+}
+function showDriverOnboard(){
+  var m=document.getElementById('driver-onboard-modal');
+  if(m){m.style.display='flex';m.scrollTop=0;}
+}
+function obUpdateProgress(){
+  var done=(_obLicenseDone?1:0)+(_obInsuranceDone?1:0);
+  var p=document.getElementById('ob-progress');if(p)p.style.width=(done*50)+'%';
+  var btn=document.getElementById('ob-submit-btn');if(btn&&done===2){btn.style.opacity='1';btn.style.pointerEvents='auto';}
+  if(_obLicenseDone){var d2=document.getElementById('ob-step2-dot');if(d2){d2.style.background='rgba(0,194,168,0.3)';d2.style.color='var(--teal)';}}
+}
+async function obUploadDoc(type,input){
+  if(!input.files||!input.files.length)return;
+  var uid=currentUser&&currentUser.userId?currentUser.userId:localStorage.getItem('detour_uid')||'';
+  var statusEl=document.getElementById('ob-'+type+'-status');
+  var checkEl=document.getElementById('ob-'+type+'-check');
+  var previewEl=document.getElementById('ob-'+type+'-preview');
+  var imgEl=document.getElementById('ob-'+type+'-img');
+  if(statusEl){statusEl.textContent='Uploading...';statusEl.style.color='var(--teal)';}
+  var fd=new FormData();
+  fd.append(type==='license'?'license_card':'insurance_card',input.files[0]);
+  try{
+    var endpoint=type==='license'?'/api/auth/license':'/api/auth/insurance';
+    var res=await fetch(endpoint,{method:'POST',body:fd,credentials:'include',headers:{'x-user-id':uid}});
+    var data=await res.json();
+    if(!res.ok)throw new Error(data.error||'Upload failed');
+    var reader=new FileReader();
+    reader.onload=function(e){if(imgEl)imgEl.src=e.target.result;if(previewEl)previewEl.style.display='block';};
+    reader.readAsDataURL(input.files[0]);
+    if(checkEl){checkEl.style.background='rgba(0,194,168,0.15)';checkEl.style.border='1.5px solid var(--teal)';checkEl.textContent='✓';checkEl.style.color='var(--teal)';checkEl.style.fontSize='16px';}
+    if(statusEl){statusEl.textContent='Uploaded successfully';statusEl.style.color='var(--teal)';}
+    if(type==='license')_obLicenseDone=true;else _obInsuranceDone=true;
+    obUpdateProgress();
+  }catch(e){if(statusEl){statusEl.textContent='Upload failed — try again';statusEl.style.color='var(--red)';}}
+}
+function obFinish(){
+  var m=document.getElementById('driver-onboard-modal');if(m)m.style.display='none';
+  showView('view-drive');setNavActive(document.querySelectorAll('.nav-item')[1]);
+  toast('Documents submitted! We'll review within 24 hours. Check back tomorrow to start earning.');
+}
+function obSkip(){
+  var m=document.getElementById('driver-onboard-modal');if(m)m.style.display='none';
+  showView('view-drive');setNavActive(document.querySelectorAll('.nav-item')[1]);
+  toast('Upload your license and insurance in the Drive tab to start accepting jobs.');
+}
+</script>
+
 </body>
 </html>
