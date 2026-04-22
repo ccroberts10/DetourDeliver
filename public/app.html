@@ -1265,7 +1265,7 @@ async function register(){
   if(!name||!email||!password){document.getElementById('reg-error').textContent='Name, email, and password required';return;}
   if(password.length<8){document.getElementById('reg-error').textContent='Password must be at least 8 characters';return;}
   if(!document.getElementById('reg-terms').checked){document.getElementById('reg-error').textContent='Please agree to the Terms of Service to continue';return;}
-  try{const r=await api('POST','/api/auth/register',{name,email,phone,password,vehicle_type,license_plate});currentUser=r;localStorage.setItem('detour_uid',r.userId);localStorage.setItem('detour_name',r.name);enterApp(r.name);}
+  try{const r=await api('POST','/api/auth/register',{name,email,phone,password,vehicle_type,license_plate});currentUser=r;localStorage.setItem('detour_uid',r.userId);localStorage.setItem('detour_name',r.name);enterApp(r.name);if(vehicle_type){setTimeout(()=>{showView('view-drive');setNavActive(document.querySelectorAll('.nav-item')[1]);toast('Welcome! Upload your license and insurance below to start accepting jobs.');},400);}}
   catch(e){document.getElementById('reg-error').textContent=e.message;}
 }
 async function logout(){
