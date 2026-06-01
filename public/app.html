@@ -991,9 +991,13 @@ textarea{resize:none}
 
     <!-- JOB DETAIL -->
     <div id="view-job" class="view">
-      <div class="view-header">
+      <div class="view-header" style="display:flex;align-items:center;justify-content:space-between;">
         <button class="back-btn" id="job-back-btn" onclick="showView('view-home')">← Back</button>
         <h2>Job Details</h2>
+        <button id="share-job-btn" onclick="shareJob()" style="background:rgba(0,194,168,0.1);border:1px solid rgba(0,194,168,0.3);color:var(--teal);padding:8px 14px;border-radius:20px;font-size:13px;font-family:var(--font-body);cursor:pointer;display:flex;align-items:center;gap:6px;">
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><circle cx="18" cy="5" r="3"/><circle cx="6" cy="12" r="3"/><circle cx="18" cy="19" r="3"/><line x1="8.59" y1="13.51" x2="15.42" y2="17.49"/><line x1="15.41" y1="6.51" x2="8.59" y2="10.49"/></svg>
+          Share
+        </button>
       </div>
       <div id="job-detail-content"></div>
     </div>
@@ -3307,6 +3311,28 @@ function obSkip(){
   showView('view-drive');setNavActive(document.querySelectorAll('.nav-item')[1]);
   toast('Upload your license and insurance in the Drive tab to start accepting jobs.');
 }
+
+// ── SHARE JOB ──
+function shareJob(){
+  if(!currentJobId) return;
+  const url = window.location.origin + '/job/' + currentJobId;
+  if(navigator.share){
+    navigator.share({
+      title: 'Detour — Delivery Job',
+      text: 'Know anyone heading to Durango? This delivery needs a driver.',
+      url: url
+    }).catch(()=>{});
+  } else {
+    navigator.clipboard.writeText(url).then(()=>{
+      const btn = document.getElementById('share-job-btn');
+      const orig = btn.innerHTML;
+      btn.innerHTML = '✓ Link Copied!';
+      btn.style.background = 'rgba(0,194,168,0.2)';
+      setTimeout(()=>{ btn.innerHTML = orig; btn.style.background = 'rgba(0,194,168,0.1)'; }, 2000);
+    });
+  }
+}
+
 </script>
 
 </body>
