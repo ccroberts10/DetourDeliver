@@ -304,6 +304,104 @@ app.get('/terms', (req, res) => res.sendFile(path.join(__dirname, 'public', 'ter
 app.get('/privacy', (req, res) => res.sendFile(path.join(__dirname, 'public', 'privacy.html')));
 app.get('/admin', (req, res) => res.sendFile(path.join(__dirname, 'public', 'admin.html')));
 app.get('/app', (req, res) => res.sendFile(path.join(__dirname, 'public', 'app.html')));
+
+// Public shareable job page — no login required
+app.get('/job/:jobId', (req, res) => {
+  const job = db.prepare(`
+    SELECT j.*, u.name as shipper_name
+    FROM jobs j
+    LEFT JOIN users u ON j.shipper_id = u.id
+    WHERE j.id = ?
+  `).get(req.params.jobId);
+
+  if (!job) return res.status(404).send('Job not found');
+
+  const extra = job.extra_data ? JSON.parse(job.extra_data) : {};
+  const statusLabels = { open:'Open', accepted:'Driver Found', picked_up:'Picked Up', delivered:'Delivered', cancelled:'Cancelled' };
+  const typeLabels = { delivery:'📦 Delivery', marketplace:'🛒 Marketplace', gig_yard:'🌿 Yard Work', gig_labor:'💪 Labor', gig_dump:'🚛 Dump Run', gig_clean:'🧹 Cleaning', gig_handyman:'🔧 Handyman' };
+
+  const isOpen = job.status === 'open';
+
+  res.send(`<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta property="og:title" content="Detour — ${job.title}">
+<meta property="og:description" content="${typeLabels[job.job_type]||'Delivery'} · $${job.price} · ${job.pickup_address ? job.pickup_address.split(',')[0] : ''} → ${job.dropoff_address ? job.dropoff_address.split(',')[0] : ''}">
+<meta property="og:url" content="https://detourdeliver.com/job/${job.id}">
+<title>Detour — ${job.title}</title>
+<link href="https://fonts.googleapis.com/css2?family=Syne:wght@700;800&family=DM+Sans:wght@300;400;500&family=DM+Mono:wght@400;500&display=swap" rel="stylesheet">
+<style>
+*{margin:0;padding:0;box-sizing:border-box}
+body{background:#080808;color:#fff;font-family:'DM Sans',sans-serif;min-height:100vh;padding-bottom:60px}
+nav{background:rgba(8,8,8,0.97);border-bottom:0.5px solid rgba(255,255,255,0.07);padding:14px 24px;display:flex;align-items:center;justify-content:space-between}
+.logo{display:flex;align-items:center;gap:6px;text-decoration:none}
+.d-mark{width:28px;height:28px;background:#00C2A8;border-radius:0 14px 14px 0;position:relative;display:flex;align-items:center;justify-content:center;flex-shrink:0}
+.d-mark::after{content:'';width:11px;height:11px;background:#080808;border-radius:50%;position:absolute}
+.wordmark{font-family:'Syne',sans-serif;font-size:20px;font-weight:800;letter-spacing:-1px;color:#fff}
+.signup-btn{background:#00C2A8;color:#000;padding:9px 18px;border-radius:20px;font-size:13px;font-weight:600;text-decoration:none;font-family:'DM Sans',sans-serif}
+.card{background:#111;border:0.5px solid rgba(255,255,255,0.07);border-radius:16px;padding:20px;margin:16px 24px}
+.tag{display:inline-block;background:rgba(0,194,168,0.1);border:0.5px solid rgba(0,194,168,0.25);color:#00C2A8;padding:4px 12px;border-radius:20px;font-size:12px;font-family:'DM Mono',monospace;letter-spacing:0.06em;margin-bottom:12px}
+h1{font-family:'Syne',sans-serif;font-size:28px;font-weight:800;letter-spacing:-1px;margin-bottom:8px}
+.price{font-family:'Syne',sans-serif;font-size:36px;font-weight:800;color:#00C2A8;letter-spacing:-1px}
+.label{font-size:11px;color:rgba(255,255,255,0.35);letter-spacing:0.08em;text-transform:uppercase;margin-bottom:4px;font-family:'DM Mono',monospace}
+.val{font-size:15px;font-weight:500;margin-bottom:16px}
+.status-badge{display:inline-block;padding:5px 14px;border-radius:20px;font-size:12px;font-weight:600;background:${isOpen ? 'rgba(0,194,168,0.15)' : 'rgba(255,255,255,0.08)'};color:${isOpen ? '#00C2A8' : 'rgba(255,255,255,0.5)'};border:0.5px solid ${isOpen ? 'rgba(0,194,168,0.4)' : 'rgba(255,255,255,0.1)'};margin-bottom:16px}
+.cta{display:block;background:#00C2A8;color:#000;padding:16px;border-radius:14px;text-align:center;font-family:'Syne',sans-serif;font-size:17px;font-weight:800;letter-spacing:-0.3px;text-decoration:none;margin:0 24px;transition:background 0.2s}
+.cta:hover{background:#00DDB8}
+.cta-sub{text-align:center;font-size:12px;color:rgba(255,255,255,0.3);margin-top:10px;padding:0 24px}
+.divider{height:0.5px;background:rgba(255,255,255,0.06);margin:4px 0 16px}
+.hero-price{display:flex;align-items:flex-start;justify-content:space-between}
+</style>
+</head>
+<body>
+<nav>
+  <a class="logo" href="https://detourdeliver.com">
+    <div class="d-mark"></div>
+    <span class="wordmark">etour</span>
+  </a>
+  <a class="signup-btn" href="https://detourdeliver.com/app">Sign up to deliver →</a>
+</nav>
+
+<div style="padding:24px 24px 8px;">
+  <div class="tag">${typeLabels[job.job_type] || '📦 Delivery'}</div>
+  <div class="hero-price">
+    <h1>${job.title}</h1>
+    <div class="price">$${parseFloat(job.price).toFixed(2)}</div>
+  </div>
+  <div class="status-badge">${statusLabels[job.status] || job.status}</div>
+</div>
+
+<div class="card">
+  ${job.description ? `<div class="label">Description</div><div class="val">${job.description}</div><div class="divider"></div>` : ''}
+  ${job.size ? `<div class="label">Size</div><div class="val">${job.size}</div>` : ''}
+  ${job.weight ? `<div class="label">Weight</div><div class="val">${job.weight} lbs</div>` : ''}
+</div>
+
+<div class="card">
+  <div class="label">Pickup</div>
+  <div class="val">${job.pickup_address || 'See app for details'}</div>
+  <div class="divider"></div>
+  <div class="label">Dropoff</div>
+  <div class="val">${job.dropoff_address || 'See app for details'}</div>
+  ${job.delivery_date ? `<div class="divider"></div><div class="label">Needed by</div><div class="val">${new Date(job.delivery_date).toLocaleDateString('en-US',{weekday:'long',month:'long',day:'numeric'})}</div>` : ''}
+</div>
+
+${isOpen ? `
+<a class="cta" href="https://detourdeliver.com/app">🚗 I can deliver this — Sign up</a>
+<div class="cta-sub">Free to join · Takes 2 minutes · $${parseFloat(job.price * 0.75).toFixed(2)} goes to you</div>
+` : `
+<div style="text-align:center;padding:20px 24px;color:rgba(255,255,255,0.35);font-size:14px;">This job has already been claimed. <a href="https://detourdeliver.com/app" style="color:#00C2A8;">Browse other jobs →</a></div>
+`}
+
+<div style="text-align:center;margin-top:32px;font-size:12px;color:rgba(255,255,255,0.2);font-family:'DM Mono',monospace;">
+  detourdeliver.com · Durango, CO
+</div>
+</body>
+</html>`);
+});
+
 app.get('*', (req, res) => res.sendFile(path.join(__dirname, 'public', 'app.html')));
 
 app.listen(PORT, () => console.log(`Detour running on port ${PORT}`));
