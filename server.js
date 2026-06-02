@@ -29,11 +29,9 @@ app.use((req, res, next) => {
   next();
 });
 
-const Database = require('better-sqlite3');
-const dbPath = VOLUME_PATH ? path.join(VOLUME_PATH, 'detour.db') : path.join(__dirname, 'data', 'detour.db');
-console.log('Database at:', dbPath);
-const db = new Database(dbPath);
-require('./db/schema')(db);
+// DB — schema.js creates and exports the db instance
+const db = require('./db/schema');
+console.log('Database ready');
 app.locals.db = db;
 
 const uploadsPath = VOLUME_PATH ? path.join(VOLUME_PATH, 'uploads') : path.join(__dirname, 'public', 'uploads');
@@ -54,7 +52,7 @@ app.get('/api/debug/db', (req, res) => {
   try {
     const users = db.prepare('SELECT COUNT(*) as count FROM users').get();
     const jobs = db.prepare('SELECT COUNT(*) as count FROM jobs').get();
-    res.json({ status: 'ok', db_path: dbPath, volume_path: VOLUME_PATH || null, volume_exists: VOLUME_PATH ? fs.existsSync(VOLUME_PATH) : false, users: users.count, jobs: jobs.count });
+    res.json({ status: 'ok', volume_path: VOLUME_PATH || null, volume_exists: VOLUME_PATH ? fs.existsSync(VOLUME_PATH) : false, users: users.count, jobs: jobs.count });
   } catch(e) { res.status(500).json({ error: e.message }); }
 });
 
@@ -67,7 +65,7 @@ app.get('/api/debug/stripe-ping', async (req, res) => {
     const stripe = require('stripe')(process.env.STRIPE_SECRET_KEY);
     const t0 = Date.now();
     const acct = await stripe.account.retrieve();
-    res.json({ ok: true, account_id: acct.id, country: acct.country, charges_enabled: acct.charges_enabled, payouts_enabled: acct.payouts_enabled, latency_ms: Date.now() - t0 });
+    res.json({ ok: true, account_id: acct.id, charges_enabled: acct.charges_enabled, payouts_enabled: acct.payouts_enabled, latency_ms: Date.now() - t0 });
   } catch(e) { res.status(500).json({ ok: false, error: e.message }); }
 });
 
@@ -76,11 +74,11 @@ app.get('/terms', (req, res) => res.sendFile(path.join(__dirname, 'public', 'ter
 app.get('/privacy', (req, res) => res.sendFile(path.join(__dirname, 'public', 'privacy.html')));
 app.get('/app', (req, res) => res.sendFile(path.join(__dirname, 'public', 'app.html')));
 
-// Public shareable job page
+// Public shareable job page — no login required
 app.get('/job/:jobId', (req, res) => {
   try {
     const job = db.prepare(
-      'SELECT j.id, j.title, j.description, j.price, j.status, j.job_type, j.size, j.weight, j.pickup_address, j.dropoff_address, j.delivery_date FROM jobs j WHERE j.id = ?'
+      'SELECT id, title, description, price, status, job_type, size, weight, pickup_address, dropoff_address, delivery_date FROM jobs WHERE id = ?'
     ).get(req.params.jobId);
 
     if (!job) return res.status(404).send('<h2 style="color:#fff;font-family:sans-serif;padding:40px">Job not found</h2>');
@@ -112,7 +110,7 @@ app.get('/job/:jobId', (req, res) => {
     }
     if (isOpen) {
       parts.push('<a class="cta" href="https://detourdeliver.com/app">I can deliver this - Sign up free</a>');
-      parts.push('<div class="sub">Free to join - $' + driverEarns + ' goes straight to you - Takes 2 minutes</div>');
+      parts.push('<div class="sub">Free to join - $' + driverEarns + ' goes to you - Takes 2 minutes</div>');
     } else {
       parts.push('<div style="text-align:center;padding:24px;color:rgba(255,255,255,0.35);font-size:14px">This job has been claimed. <a href="https://detourdeliver.com/app" style="color:#00C2A8">Browse others</a></div>');
     }
@@ -120,11 +118,10 @@ app.get('/job/:jobId', (req, res) => {
     res.send(parts.join(''));
   } catch(e) {
     console.error('Job page error:', e.message);
-    res.status(500).send('<h3 style="color:#fff;font-family:sans-serif;padding:40px">Error loading job. <a href="https://detourdeliver.com/app" style="color:#00C2A8">Go to app</a></h3>');
+    res.status(500).send('<h3 style="color:#fff;font-family:sans-serif;padding:40px">Error. <a href="https://detourdeliver.com/app" style="color:#00C2A8">Go to app</a></h3>');
   }
 });
 
-// Catch-all — must be last
 app.get('*', (req, res) => res.sendFile(path.join(__dirname, 'public', 'app.html')));
 
 app.listen(PORT, () => console.log('Detour running on port ' + PORT));
