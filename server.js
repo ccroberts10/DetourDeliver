@@ -78,7 +78,7 @@ app.get('/app', (req, res) => res.sendFile(path.join(__dirname, 'public', 'app.h
 app.get('/job/:jobId', (req, res) => {
   try {
     const job = db.prepare(
-      'SELECT id, title, description, offered_price as price, status, job_type, size, weight, pickup_address, dropoff_address, delivery_date FROM jobs WHERE id = ?'
+      'SELECT id, title, description, offered_price as price, status, job_type, item_size as size, item_weight as weight, pickup_address, dropoff_address FROM jobs WHERE id = ?'
     ).get(req.params.jobId);
 
     if (!job) return res.status(404).send('<h2 style="color:#fff;font-family:sans-serif;padding:40px">Job not found</h2>');
