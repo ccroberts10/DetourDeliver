@@ -19,21 +19,24 @@
 <link href="https://fonts.googleapis.com/css2?family=Syne:wght@700;800&family=DM+Sans:wght@300;400;500&family=DM+Mono:wght@400;500&display=swap" rel="stylesheet">
 <style>
 :root{
-  --teal:#00C2A8;--teal2:#00DDB8;--teal3:#00F5CC;--teal-dark:#008F7A;
-  --black:#080808;--dark:#111111;--dark2:#1A1A1A;--dark3:#222222;--dark4:#2A2A2A;
-  --white:#FFFFFF;--cream:#F5F0E8;
-  --gray:#777777;--gray2:#444444;
-  --green:#3DCC78;--red:#F05555;--yellow:#F5C542;
+  --teal:#00C2A8;--teal2:#00B89E;--teal3:#00F5CC;--teal-dark:#008F7A;
+  --black:#0F0F0F;--dark:#FFFFFF;--dark2:#F5F0E8;--dark3:#EDE8DF;--dark4:#E0D9CE;
+  --white:#0F0F0F;--cream:#F5F0E8;
+  --gray:#999999;--gray2:#CCCCCC;
+  --green:#0A8A4A;--red:#C0392B;--yellow:#B07800;
+  --surface:#FFFFFF;--page:#F5F0E8;
+  --text:#0F0F0F;--text2:#666666;--text3:#AAAAAA;
+  --border:rgba(0,0,0,0.08);--border2:rgba(0,0,0,0.12);
   --r:14px;--rs:8px;
   --font-display:'Syne',sans-serif;
   --font-body:'DM Sans',sans-serif;
   --font-mono:'DM Mono',monospace;
 }
 *{margin:0;padding:0;box-sizing:border-box;-webkit-tap-highlight-color:transparent}
-html,body{height:100%;background:var(--black);color:var(--white);font-family:var(--font-body);font-size:15px;line-height:1.5;overflow:hidden}
+html,body{height:100%;background:var(--page);color:var(--text);font-family:var(--font-body);font-size:15px;line-height:1.5;overflow:hidden}
 .screen{display:none;height:100vh;flex-direction:column}
 .screen.active{display:flex}
-.auth-wrap{display:flex;flex-direction:column;height:100vh;background:var(--black);position:relative;overflow:hidden}
+.auth-wrap{display:flex;flex-direction:column;height:100vh;background:var(--page);position:relative;overflow:hidden}
 .auth-wrap::before{content:'';position:absolute;width:300px;height:300px;border-radius:50%;background:radial-gradient(circle,rgba(0,194,168,0.08) 0%,transparent 70%);top:-80px;right:-80px;pointer-events:none}
 .auth-wrap::after{content:'';position:absolute;width:200px;height:200px;border-radius:50%;background:radial-gradient(circle,rgba(0,194,168,0.05) 0%,transparent 70%);bottom:200px;left:-60px;pointer-events:none}
 .auth-top{flex:1;display:flex;flex-direction:column;align-items:center;justify-content:center;padding:40px 28px 28px;position:relative;z-index:1}
@@ -41,21 +44,21 @@ html,body{height:100%;background:var(--black);color:var(--white);font-family:var
 /* D-MARK LOGO */
 .auth-logo-wrap{display:flex;align-items:center;gap:6px;margin-bottom:16px}
 .auth-d-mark{width:56px;height:56px;background:var(--teal);border-radius:0 28px 28px 0;position:relative;flex-shrink:0;display:flex;align-items:center;justify-content:center}
-.auth-d-mark::before{content:'';width:24px;height:24px;background:var(--black);border-radius:50%;position:absolute}
-.auth-wordmark{font-family:var(--font-display);font-size:52px;font-weight:800;letter-spacing:-3px;line-height:1;color:var(--white)}
-.auth-tagline{font-family:var(--font-display);font-size:17px;font-weight:700;color:rgba(255,255,255,0.55);text-align:center;letter-spacing:-0.3px;line-height:1.3;max-width:260px}
+.auth-d-mark::before{content:'';width:24px;height:24px;background:var(--page);border-radius:50%;position:absolute}
+.auth-wordmark{font-family:var(--font-display);font-size:52px;font-weight:800;letter-spacing:-3px;line-height:1;color:var(--text)}
+.auth-tagline{font-family:var(--font-display);font-size:17px;font-weight:700;color:var(--text2);text-align:center;letter-spacing:-0.3px;line-height:1.3;max-width:260px}
 .auth-tagline em{color:var(--teal);font-style:normal}
 .auth-pills{display:flex;gap:8px;margin-top:22px;flex-wrap:wrap;justify-content:center}
-.auth-pill{background:rgba(0,194,168,0.06);border:0.5px solid rgba(0,194,168,0.2);border-radius:30px;padding:6px 14px;font-size:11px;color:rgba(255,255,255,0.5);font-family:var(--font-mono);letter-spacing:0.04em}
-.auth-bottom{background:var(--dark);border-radius:28px 28px 0 0;border-top:0.5px solid rgba(255,255,255,0.08);padding:24px 24px 40px;overflow-y:auto;position:relative;z-index:1}
-.tab-switch{display:flex;background:var(--dark2);border-radius:var(--rs);padding:4px;margin-bottom:22px;gap:4px}
-.tab-btn{flex:1;padding:9px;border:none;background:none;color:var(--gray);font-size:14px;font-family:var(--font-body);font-weight:500;border-radius:6px;cursor:pointer;transition:all 0.2s}
+.auth-pill{background:rgba(0,194,168,0.06);border:0.5px solid rgba(0,194,168,0.2);border-radius:30px;padding:6px 14px;font-size:11px;color:var(--text2);font-family:var(--font-body);letter-spacing:0.04em}
+.auth-bottom{background:var(--surface);border-radius:28px 28px 0 0;border-top:0.5px solid var(--border2);padding:24px 24px 40px;overflow-y:auto;position:relative;z-index:1}
+.tab-switch{display:flex;background:var(--dark3);border-radius:var(--rs);padding:4px;margin-bottom:22px;gap:4px}
+.tab-btn{flex:1;padding:9px;border:none;background:none;color:var(--text2);font-size:14px;font-family:var(--font-body);font-weight:500;border-radius:6px;cursor:pointer;transition:all 0.2s}
 .tab-btn.active{background:var(--teal);color:#000;font-weight:600}
 .field-group{margin-bottom:14px}
-.field-group label{display:block;font-size:10px;font-weight:500;color:rgba(255,255,255,0.35);text-transform:uppercase;letter-spacing:0.1em;margin-bottom:5px;font-family:var(--font-mono)}
-.field-group input,.field-group select,.field-group textarea{width:100%;background:var(--dark2);border:0.5px solid rgba(255,255,255,0.08);border-radius:var(--rs);color:var(--white);font-size:15px;font-family:var(--font-body);padding:12px 14px;outline:none;transition:border-color 0.2s,box-shadow 0.2s;-webkit-appearance:none;appearance:none}
+.field-group label{display:block;font-size:11px;font-weight:500;color:var(--text3);letter-spacing:0.06em;margin-bottom:5px;font-family:var(--font-body)}
+.field-group input,.field-group select,.field-group textarea{width:100%;background:var(--dark2);border:0.5px solid var(--border2);border-radius:var(--rs);color:var(--text);font-size:15px;font-family:var(--font-body);padding:12px 14px;outline:none;transition:border-color 0.2s,box-shadow 0.2s;-webkit-appearance:none;appearance:none}
 .field-group input:focus,.field-group select:focus,.field-group textarea:focus{border-color:var(--teal);box-shadow:0 0 0 3px rgba(0,194,168,0.1)}
-.field-group select option{background:var(--dark2)}
+.field-group select option{background:var(--surface)}
 textarea{resize:none}
 .field-row{display:flex;gap:10px}
 .field-row .field-group{flex:1}
@@ -67,14 +70,14 @@ textarea{resize:none}
 .btn-primary.btn-sm{width:auto;padding:11px 18px;margin-top:0;white-space:nowrap}
 .btn-secondary{width:100%;padding:13px;background:transparent;color:var(--teal);border:1px solid rgba(0,194,168,0.4);border-radius:var(--r);font-size:14px;font-family:var(--font-body);font-weight:500;cursor:pointer;margin-top:6px;transition:all 0.2s}
 .btn-secondary:hover{background:rgba(0,194,168,0.08);border-color:var(--teal)}
-.btn-ghost{background:none;border:none;color:var(--gray);font-size:13px;font-family:var(--font-body);cursor:pointer;padding:4px 6px;transition:color 0.2s}
+.btn-ghost{background:none;border:none;color:var(--text2);font-size:13px;font-family:var(--font-body);cursor:pointer;padding:4px 6px;transition:color 0.2s}
 .btn-ghost:hover{color:var(--teal)}
 #app-screen{background:var(--black)}
-.app-header{background:rgba(8,8,8,0.97);backdrop-filter:blur(12px);border-bottom:0.5px solid rgba(255,255,255,0.07);padding:12px 20px;display:flex;align-items:center;justify-content:space-between;flex-shrink:0}
+.app-header{background:rgba(245,240,232,0.97);backdrop-filter:blur(12px);border-bottom:0.5px solid var(--border2);padding:12px 20px;display:flex;align-items:center;justify-content:space-between;flex-shrink:0}
 .header-logo-wrap{display:flex;align-items:center;gap:5px}
 .header-d-mark{width:26px;height:26px;background:var(--teal);border-radius:0 13px 13px 0;position:relative;flex-shrink:0;display:flex;align-items:center;justify-content:center}
-.header-d-mark::before{content:'';width:11px;height:11px;background:var(--black);border-radius:50%;position:absolute}
-.header-wordmark{font-family:var(--font-display);font-size:20px;font-weight:800;letter-spacing:-0.8px;color:var(--white)}
+.header-d-mark::before{content:'';width:11px;height:11px;background:var(--page);border-radius:50%;position:absolute}
+.header-wordmark{font-family:var(--font-display);font-size:20px;font-weight:800;letter-spacing:-0.8px;color:var(--text)}
 .header-logo{font-family:var(--font-display);font-size:22px;font-weight:800;letter-spacing:-1px;color:var(--white)}
 .header-logo span{color:var(--teal)}
 .header-user{display:flex;align-items:center;gap:6px;font-size:13px;color:var(--gray)}
@@ -82,10 +85,10 @@ textarea{resize:none}
 .view{display:none;height:100%;overflow-y:auto;padding:20px 20px 100px}
 .view.active{display:block}
 .view-header{display:flex;align-items:center;gap:10px;margin-bottom:22px}
-.view-header h2{font-family:var(--font-display);font-size:22px;font-weight:800;letter-spacing:-0.5px}
+.view-header h2{font-family:var(--font-display);font-size:22px;font-weight:800;letter-spacing:-0.8px;color:var(--text)}
 .back-btn{background:none;border:none;color:var(--teal);font-size:14px;font-family:var(--font-body);cursor:pointer;padding:0;white-space:nowrap}
 .home-hero{margin-bottom:20px;padding:16px 0 4px}
-.home-greeting{font-family:var(--font-display);font-size:24px;font-weight:800;letter-spacing:-0.5px;line-height:1.1}
+.home-greeting{font-family:var(--font-display);font-size:26px;font-weight:800;letter-spacing:-0.8px;line-height:1.1;color:var(--text)}
 .home-sub{font-size:14px;color:var(--gray);margin-top:4px;font-weight:300}
 .home-buzz{font-family:var(--font-display);font-size:13px;font-weight:700;color:var(--teal);margin-top:6px;letter-spacing:-0.2px}
 .action-grid{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:24px}
@@ -97,12 +100,12 @@ textarea{resize:none}
 .action-title{font-family:var(--font-display);font-size:14px;font-weight:700;line-height:1.25;margin-bottom:4px;letter-spacing:-0.2px}
 .action-sub{font-size:11px;color:var(--gray);line-height:1.4}
 .action-earn{font-size:11px;color:var(--green);font-weight:600;margin-top:5px;font-family:var(--font-mono)}
-.section-head{display:flex;justify-content:space-between;align-items:center;font-size:10px;font-weight:500;color:rgba(255,255,255,0.35);text-transform:uppercase;letter-spacing:0.12em;margin-bottom:10px;font-family:var(--font-mono)}
+.section-head{display:flex;justify-content:space-between;align-items:center;font-size:11px;font-weight:500;color:var(--text3);letter-spacing:0.06em;margin-bottom:10px;font-family:var(--font-body)}
 .jobs-list{display:flex;flex-direction:column;gap:10px}
-.job-card{background:var(--dark);border:0.5px solid rgba(255,255,255,0.07);border-radius:var(--r);padding:14px;cursor:pointer;transition:border-color 0.2s,background 0.2s}
-.job-card:hover{border-color:rgba(0,194,168,0.35);background:rgba(0,194,168,0.02)}
+.job-card{background:var(--surface);border:0.5px solid var(--border2);border-radius:var(--r);padding:14px;cursor:pointer;transition:border-color 0.2s,background 0.2s}
+.job-card:hover{border-color:var(--teal);background:rgba(0,194,168,0.03)}
 .job-card-header{display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:9px}
-.job-card-title{font-family:var(--font-display);font-size:14px;font-weight:700;flex:1;margin-right:10px;line-height:1.3}
+.job-card-title{font-family:var(--font-display);font-size:15px;font-weight:700;flex:1;margin-right:10px;line-height:1.3;color:var(--text)}
 .job-price{font-family:var(--font-display);font-size:18px;font-weight:800;color:var(--teal);flex-shrink:0}
 .job-route{display:flex;align-items:center;gap:7px;margin-bottom:8px}
 .route-dot{width:7px;height:7px;border-radius:50%;flex-shrink:0}
@@ -116,13 +119,13 @@ textarea{resize:none}
 .status-accepted{background:rgba(0,194,168,0.12);color:var(--teal2)}
 .status-in_transit{background:rgba(96,165,250,0.12);color:#60A5FA}
 .status-completed{background:rgba(255,255,255,0.06);color:var(--gray)}
-.form-section{background:var(--dark);border:0.5px solid rgba(255,255,255,0.07);border-radius:var(--r);padding:16px;margin-bottom:12px}
-.form-section-title{font-size:11px;font-weight:500;color:rgba(255,255,255,0.4);text-transform:uppercase;letter-spacing:0.09em;margin-bottom:14px}
+.form-section{background:var(--surface);border:0.5px solid var(--border2);border-radius:var(--r);padding:16px;margin-bottom:12px}
+.form-section-title{font-size:11px;font-weight:500;color:var(--text3);letter-spacing:0.06em;margin-bottom:14px}
 .type-picker{display:flex;gap:6px;flex-wrap:wrap;margin-bottom:10px}
 .type-opt{display:flex;flex-direction:column;align-items:center;gap:3px;padding:10px 8px;background:var(--dark2);border:0.5px solid rgba(255,255,255,0.08);border-radius:var(--rs);cursor:pointer;transition:all 0.2s;flex:1;min-width:50px}
 .type-opt.active{background:rgba(0,194,168,0.1);border-color:var(--teal)}
 .type-emoji{font-size:17px}
-.type-name{font-size:10px;color:rgba(255,255,255,0.5);text-align:center}
+.type-name{font-size:10px;color:var(--text3);text-align:center}
 .type-opt.active .type-name{color:var(--teal)}
 .type-hint{font-size:12px;color:var(--gray);line-height:1.5;padding:6px 2px 0}
 .toggle-row{display:flex;justify-content:space-between;align-items:center;padding:4px 0}
@@ -133,7 +136,7 @@ textarea{resize:none}
 .toggle-slider:before{content:'';position:absolute;width:18px;height:18px;left:3px;top:3px;background:var(--gray);border-radius:50%;transition:transform 0.2s,background 0.2s}
 .toggle input:checked+.toggle-slider{background:rgba(0,194,168,0.18);border-color:var(--teal)}
 .toggle input:checked+.toggle-slider:before{transform:translateX(20px);background:var(--teal)}
-.price-input-wrap{display:flex;align-items:center;background:var(--dark2);border:0.5px solid rgba(255,255,255,0.1);border-radius:var(--rs);overflow:hidden}
+.price-input-wrap{display:flex;align-items:center;background:var(--surface);border:0.5px solid var(--border2);border-radius:var(--rs);overflow:hidden}
 .price-dollar{padding:11px 4px 11px 14px;font-size:18px;color:var(--teal);font-weight:600}
 .price-input-wrap input{border:none;background:none;padding:11px 14px 11px 4px;font-size:18px;font-weight:600;flex:1;color:var(--white)}
 .price-input-wrap input:focus{outline:none}
@@ -144,8 +147,8 @@ textarea{resize:none}
 .price-val.green{color:var(--green)}
 .price-val.muted{color:var(--gray)}
 .drive-mode-switch{display:flex;gap:8px;margin-bottom:18px}
-.drive-mode-btn{flex:1;padding:11px;background:var(--dark);border:0.5px solid rgba(255,255,255,0.08);border-radius:var(--r);color:var(--gray);font-size:13px;font-family:var(--font-body);font-weight:500;cursor:pointer;transition:all 0.2s}
-.drive-mode-btn.active{background:rgba(0,194,168,0.08);border-color:var(--teal);color:var(--white)}
+.drive-mode-btn{flex:1;padding:11px;background:var(--surface);border:0.5px solid var(--border2);border-radius:var(--r);color:var(--text2);font-size:13px;font-family:var(--font-body);font-weight:500;cursor:pointer;transition:all 0.2s}
+.drive-mode-btn.active{background:rgba(0,194,168,0.1);border-color:var(--teal);color:var(--teal)}
 .haul-types{display:flex;flex-wrap:wrap;gap:7px;margin-top:6px}
 .haul-tag{display:flex;align-items:center;gap:6px;background:var(--dark2);border:0.5px solid rgba(255,255,255,0.08);border-radius:20px;padding:6px 11px;font-size:12px;color:rgba(255,255,255,0.65);cursor:pointer}
 .haul-tag input{accent-color:var(--teal)}
@@ -156,9 +159,9 @@ textarea{resize:none}
 .size-tag{font-size:10px;padding:3px 8px;background:rgba(255,255,255,0.05);border:0.5px solid rgba(255,255,255,0.08);border-radius:20px;color:rgba(255,255,255,0.45)}
 .filter-row{display:flex;gap:8px;flex-wrap:wrap}
 .filter-group{flex:1;min-width:80px}
-.filter-group label{display:block;font-size:10px;font-weight:500;color:rgba(255,255,255,0.4);text-transform:uppercase;letter-spacing:0.07em;margin-bottom:4px}
-.filter-group select{width:100%;background:var(--dark2);border:0.5px solid rgba(255,255,255,0.1);border-radius:var(--rs);color:var(--white);font-size:12px;font-family:var(--font-body);padding:8px 10px;outline:none;-webkit-appearance:none;appearance:none}
-.job-detail-card{background:var(--dark);border:0.5px solid rgba(255,255,255,0.07);border-radius:var(--r);padding:16px;margin-bottom:12px}
+.filter-group label{display:block;font-size:11px;font-weight:500;color:var(--text3);letter-spacing:0.04em;margin-bottom:4px}
+.filter-group select{width:100%;background:var(--surface);border:0.5px solid var(--border2);border-radius:var(--rs);color:var(--text);font-size:12px;font-family:var(--font-body);padding:8px 10px;outline:none;-webkit-appearance:none;appearance:none}
+.job-detail-card{background:var(--surface);border:0.5px solid var(--border2);border-radius:var(--r);padding:16px;margin-bottom:12px}
 .detail-label{font-size:11px;color:var(--gray);text-transform:uppercase;letter-spacing:0.06em;margin-bottom:4px}
 .detail-val{font-size:15px;color:var(--white);font-weight:500}
 .detail-grid{display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-bottom:12px}
@@ -181,12 +184,12 @@ textarea{resize:none}
 .star-row{display:flex;gap:5px;margin:7px 0}
 .star{font-size:26px;cursor:pointer;filter:grayscale(1) opacity(0.3);transition:filter 0.15s}
 .star.active{filter:none}
-.home-filter-pill{background:var(--dark2);border:0.5px solid rgba(255,255,255,0.1);border-radius:50px;padding:6px 14px;font-size:12px;color:rgba(255,255,255,0.5);cursor:pointer;white-space:nowrap;font-family:var(--font-body);transition:all 0.2s}
+.home-filter-pill{background:var(--surface);border:0.5px solid var(--border2);border-radius:50px;padding:6px 14px;font-size:12px;color:var(--text2);cursor:pointer;white-space:nowrap;font-family:var(--font-body);transition:all 0.2s}
 .home-filter-pill.active{background:rgba(0,194,168,0.15);border-color:var(--teal);color:var(--teal);font-weight:600}
 .avatar{width:72px;height:72px;border-radius:50%;object-fit:cover;border:2px solid var(--teal);flex-shrink:0}
-.avatar-placeholder{width:72px;height:72px;border-radius:50%;background:var(--dark2);border:2px solid rgba(255,255,255,0.1);display:flex;align-items:center;justify-content:center;font-size:28px;flex-shrink:0;cursor:pointer}
+.avatar-placeholder{width:72px;height:72px;border-radius:50%;background:var(--dark3);border:2px solid var(--border2);display:flex;align-items:center;justify-content:center;font-size:28px;flex-shrink:0;cursor:pointer}
 .avatar-sm{width:36px;height:36px;border-radius:50%;object-fit:cover;border:1.5px solid rgba(255,255,255,0.15);flex-shrink:0}
-.avatar-placeholder-sm{width:36px;height:36px;border-radius:50%;background:var(--dark2);border:1.5px solid rgba(255,255,255,0.1);display:flex;align-items:center;justify-content:center;font-size:14px;flex-shrink:0}
+.avatar-placeholder-sm{width:36px;height:36px;border-radius:50%;background:var(--dark3);border:1.5px solid var(--border2);display:flex;align-items:center;justify-content:center;font-size:14px;flex-shrink:0}
 .review-card{background:var(--dark2);border-radius:var(--rs);padding:12px 14px;margin-bottom:8px}
 .star-display{color:#FFD700;font-size:13px;letter-spacing:1px}
 @keyframes shake{0%,100%{transform:translateX(0)}25%{transform:translateX(-6px)}75%{transform:translateX(6px)}}
@@ -197,25 +200,25 @@ textarea{resize:none}
 .gig-cat-title{font-size:15px;font-weight:700;color:#fff;margin-bottom:2px}
 .gig-cat-sub{font-size:12px;color:rgba(255,255,255,0.45);line-height:1.4}
 .gig-cat-earn{font-size:12px;color:var(--green);font-weight:600;margin-top:4px}
-.bottom-nav{position:fixed;bottom:0;left:0;right:0;background:rgba(12,12,12,0.97);backdrop-filter:blur(16px);border-top:0.5px solid rgba(255,255,255,0.07);display:flex;flex-direction:row;padding:8px 0 20px;z-index:50}
-.nav-item{flex:1;background:none;border:none;display:flex;flex-direction:column;align-items:center;gap:3px;cursor:pointer;padding:5px 0;opacity:0.3;transition:opacity 0.2s}
+.bottom-nav{position:fixed;bottom:0;left:0;right:0;background:rgba(255,255,255,0.97);backdrop-filter:blur(16px);border-top:0.5px solid var(--border2);display:flex;flex-direction:row;padding:8px 0 20px;z-index:50}
+.nav-item{flex:1;background:none;border:none;display:flex;flex-direction:column;align-items:center;gap:3px;cursor:pointer;padding:5px 0;opacity:0.25;transition:opacity 0.2s}
 .nav-item.active{opacity:1}
 .nav-icon{font-size:19px}
 .nav-label{font-size:9px;color:var(--white);font-family:var(--font-mono);letter-spacing:0.05em;text-transform:uppercase}
-.nav-item svg{color:var(--white);stroke:currentColor}
+.nav-item svg{color:var(--text);stroke:currentColor}
 .nav-item.active svg{color:var(--teal);stroke:var(--teal)}
-.filter-btn{padding:6px 14px;border-radius:20px;font-size:12px;font-family:var(--font-body);font-weight:500;cursor:pointer;border:0.5px solid rgba(255,255,255,0.1);background:transparent;color:rgba(255,255,255,0.4);transition:all 0.2s}
+.filter-btn{padding:6px 14px;border-radius:20px;font-size:12px;font-family:var(--font-body);font-weight:500;cursor:pointer;border:0.5px solid var(--border2);background:transparent;color:var(--text2);transition:all 0.2s}
 .filter-btn.active{background:rgba(0,194,168,0.12);border-color:var(--teal);color:var(--teal)}
 .home-filter-pill{background:var(--dark2);border:0.5px solid rgba(255,255,255,0.08);border-radius:50px;padding:6px 14px;font-size:12px;color:rgba(255,255,255,0.45);cursor:pointer;white-space:nowrap;font-family:var(--font-body);transition:all 0.2s}
 .home-filter-pill.active{background:rgba(0,194,168,0.12);border-color:var(--teal);color:var(--teal);font-weight:600}
-.empty-state{text-align:center;color:var(--gray);font-size:14px;padding:36px 20px;line-height:1.6}
+.empty-state{text-align:center;color:var(--text3);font-size:14px;padding:36px 20px;line-height:1.6}
 .error-msg{color:var(--red);font-size:13px;min-height:16px;margin-bottom:4px}
-.toast{position:fixed;bottom:88px;left:50%;transform:translateX(-50%) translateY(14px);background:var(--dark3);border:0.5px solid rgba(255,255,255,0.12);color:var(--white);padding:11px 18px;border-radius:30px;font-size:13px;opacity:0;transition:all 0.28s;pointer-events:none;white-space:nowrap;z-index:200;max-width:90vw;text-align:center}
+.toast{position:fixed;bottom:88px;left:50%;transform:translateX(-50%) translateY(14px);background:var(--text);border:0.5px solid rgba(0,0,0,0.15);color:#FFFFFF;padding:11px 18px;border-radius:30px;font-size:13px;opacity:0;transition:all 0.28s;pointer-events:none;white-space:nowrap;z-index:200;max-width:90vw;text-align:center}
 .toast.show{opacity:1;transform:translateX(-50%) translateY(0)}
 
 /* UX IMPROVEMENTS */
 /* Quick post button */
-.quick-post-btn{width:100%;padding:16px;background:linear-gradient(135deg,var(--teal),var(--teal2));color:#000;border:none;border-radius:var(--r);font-size:16px;font-family:var(--font-display);font-weight:800;cursor:pointer;margin-bottom:10px;display:flex;align-items:center;justify-content:center;gap:8px;letter-spacing:-0.3px}
+.quick-post-btn{width:100%;padding:16px;background:var(--teal);color:#000;border:none;border-radius:var(--r);font-size:16px;font-family:var(--font-display);font-weight:800;cursor:pointer;margin-bottom:10px;display:flex;align-items:center;justify-content:center;gap:8px;letter-spacing:-0.3px}
 /* Swipe job cards */
 .job-card-wrap{position:relative;overflow:hidden;border-radius:var(--r);margin-bottom:10px}
 .job-card-wrap .job-card{margin-bottom:0;border-radius:var(--r)}
@@ -233,15 +236,15 @@ textarea{resize:none}
 .timeline-line{flex:1;height:2px;background:rgba(255,255,255,0.08);margin:0 2px;margin-bottom:16px}
 .timeline-line.done{background:var(--teal)}
 /* Price suggestion */
-.price-suggestion{font-size:12px;color:rgba(255,255,255,0.4);padding:6px 0;margin-top:-4px}
+.price-suggestion{font-size:12px;color:var(--text3);padding:6px 0;margin-top:-4px}
 .price-suggestion span{color:var(--teal);cursor:pointer;font-weight:500}
 /* Im here button */
 .im-here-btn{width:100%;padding:14px;background:rgba(61,204,120,0.1);color:var(--green);border:1px solid rgba(61,204,120,0.3);border-radius:var(--r);font-size:15px;font-family:var(--font-body);font-weight:500;cursor:pointer;margin-top:8px;display:flex;align-items:center;justify-content:center;gap:8px}
 /* Quick post modal */
 .modal-overlay{position:fixed;inset:0;background:rgba(0,0,0,0.7);z-index:300;display:flex;align-items:flex-end;backdrop-filter:blur(4px)}
-.modal-sheet{background:var(--dark);border-radius:24px 24px 0 0;padding:24px 20px 48px;width:100%;max-height:85vh;overflow-y:auto}
-.modal-sheet-handle{width:40px;height:4px;background:rgba(255,255,255,0.2);border-radius:2px;margin:0 auto 20px}
-.modal-sheet-title{font-family:var(--font-display);font-size:20px;font-weight:800;margin-bottom:18px}
+.modal-sheet{background:var(--surface);border-radius:24px 24px 0 0;padding:24px 20px 48px;width:100%;max-height:85vh;overflow-y:auto}
+.modal-sheet-handle{width:40px;height:4px;background:var(--border2);border-radius:2px;margin:0 auto 20px}
+.modal-sheet-title{font-family:var(--font-display);font-size:20px;font-weight:800;margin-bottom:18px;color:var(--text)}
 /* Notification badge */
 .nav-badge{position:absolute;top:2px;right:8px;width:8px;height:8px;background:var(--red);border-radius:50%;border:2px solid var(--dark)}
 .nav-item{position:relative}
@@ -290,7 +293,7 @@ textarea{resize:none}
         <div id="login-error" class="error-msg"></div>
         <div style="display:flex;align-items:center;gap:10px;margin:10px 0;">
           <input type="checkbox" id="keep-signed-in" checked style="width:16px;height:16px;accent-color:var(--teal);cursor:pointer;">
-          <label for="keep-signed-in" style="font-size:13px;color:rgba(255,255,255,0.5);cursor:pointer;text-transform:none;letter-spacing:0;">Keep me signed in</label>
+          <label for="keep-signed-in" style="font-size:13px;color:var(--text2);cursor:pointer;text-transform:none;letter-spacing:0;">Keep me signed in</label>
         </div>
         <button class="btn-primary" onclick="login()">Sign In →</button>
       </div>
@@ -302,12 +305,12 @@ textarea{resize:none}
             <div id="role-driver" onclick="selectRole('driver')" style="background:rgba(0,194,168,0.08);border:1.5px solid var(--teal);border-radius:var(--r);padding:14px 12px;cursor:pointer;text-align:center;">
               <div style="font-size:24px;margin-bottom:6px;">&#x1F697;</div>
               <div style="font-family:var(--font-display);font-size:13px;font-weight:800;color:var(--white);">Drive &amp; Earn</div>
-              <div style="font-size:11px;color:rgba(255,255,255,0.5);margin-top:3px;">$20&#x2013;$80 per job</div>
+              <div style="font-size:11px;color:var(--text2);margin-top:3px;">$20&#x2013;$80 per job</div>
             </div>
-            <div id="role-shipper" onclick="selectRole('shipper')" style="background:var(--dark2);border:1.5px solid rgba(255,255,255,0.1);border-radius:var(--r);padding:14px 12px;cursor:pointer;text-align:center;">
+            <div id="role-shipper" onclick="selectRole('shipper')" style="background:var(--surface);border:1.5px solid var(--border2);border-radius:var(--r);padding:14px 12px;cursor:pointer;text-align:center;">
               <div style="font-size:24px;margin-bottom:6px;">&#x1F4E6;</div>
               <div style="font-family:var(--font-display);font-size:13px;font-weight:800;color:var(--white);">Post a Job</div>
-              <div style="font-size:11px;color:rgba(255,255,255,0.5);margin-top:3px;">Delivery or gig work</div>
+              <div style="font-size:11px;color:var(--text2);margin-top:3px;">Delivery or gig work</div>
             </div>
           </div>
         </div>
@@ -334,7 +337,7 @@ textarea{resize:none}
         <div id="reg-error" class="error-msg"></div>
         <div style="display:flex;align-items:flex-start;gap:10px;margin:10px 0;background:var(--dark2);border-radius:var(--rs);padding:12px 14px;">
           <input type="checkbox" id="reg-terms" style="margin-top:3px;width:16px;height:16px;accent-color:var(--teal);flex-shrink:0;cursor:pointer;">
-          <label for="reg-terms" style="font-size:12px;color:rgba(255,255,255,0.5);line-height:1.5;cursor:pointer;text-transform:none;letter-spacing:0;">
+          <label for="reg-terms" style="font-size:12px;color:var(--text2);line-height:1.5;cursor:pointer;text-transform:none;letter-spacing:0;">
             I agree to Detour's <a href="/terms" target="_blank" style="color:var(--teal);text-decoration:none;">Terms of Service</a> and <a href="/privacy" target="_blank" style="color:var(--teal);text-decoration:none;">Privacy Policy</a>. I understand Detour is a technology marketplace and not a carrier.
           </label>
         </div>
@@ -355,7 +358,7 @@ textarea{resize:none}
       <div onclick="showView('view-gigs');setNavActive(document.querySelectorAll('.nav-item')[2]);switchGigsMode('profile')" style="cursor:pointer;display:flex;align-items:center;gap:6px;">
         <div id="header-avatar-placeholder" style="width:28px;height:28px;border-radius:50%;background:var(--dark2);border:1.5px solid rgba(255,255,255,0.15);display:flex;align-items:center;justify-content:center;font-size:12px;">👤</div>
         <img id="header-avatar" style="width:28px;height:28px;border-radius:50%;object-fit:cover;border:1.5px solid var(--teal);display:none;" src="" alt="">
-        <span id="header-name" style="font-size:13px;color:var(--gray);"></span>
+        <span id="header-name" style="font-size:13px;color:var(--text2);"></span>
       </div>
       <button class="btn-ghost" onclick="logout()">Sign out</button>
     </div>
@@ -371,17 +374,17 @@ textarea{resize:none}
       </div>
 
       <!-- DRIVER CTA BANNER — shows for unverified drivers, hides when approved -->
-      <div id="home-driver-cta" style="display:none;background:linear-gradient(135deg,#080808,#0f1f1c);border:1.5px solid var(--teal);border-radius:var(--r);padding:20px;margin-bottom:16px;">
+      <div id="home-driver-cta" style="display:none;background:var(--surface);border:1.5px solid var(--teal);border-radius:var(--r);padding:20px;margin-bottom:16px;">
         <div style="font-family:var(--font-mono);font-size:10px;color:var(--teal);letter-spacing:0.12em;text-transform:uppercase;margin-bottom:8px;">🚗 Become a Driver</div>
         <div style="font-family:var(--font-display);font-size:22px;font-weight:800;letter-spacing:-0.5px;line-height:1.15;margin-bottom:6px;">Your drive just got<br><span style="color:var(--teal);">a raise.</span></div>
-        <div style="font-size:13px;color:rgba(255,255,255,0.5);line-height:1.6;margin-bottom:14px;">Earn $20–$80 picking up deliveries on drives you already make. Upload your license and insurance to get started.</div>
+        <div style="font-size:13px;color:var(--text2);line-height:1.6;margin-bottom:14px;">Earn $20–$80 picking up deliveries on drives you already make. Upload your license and insurance to get started.</div>
         <div style="display:flex;gap:8px;margin-bottom:12px;">
           <div style="background:rgba(0,194,168,0.1);border:0.5px solid rgba(0,194,168,0.2);border-radius:20px;padding:5px 12px;font-family:var(--font-mono);font-size:10px;color:var(--teal);">$20–$80 per job</div>
           <div style="background:rgba(0,194,168,0.1);border:0.5px solid rgba(0,194,168,0.2);border-radius:20px;padding:5px 12px;font-family:var(--font-mono);font-size:10px;color:var(--teal);">75% to you</div>
           <div style="background:rgba(0,194,168,0.1);border:0.5px solid rgba(0,194,168,0.2);border-radius:20px;padding:5px 12px;font-family:var(--font-mono);font-size:10px;color:var(--teal);">Free to join</div>
         </div>
         <button class="btn-primary" onclick="showDriverOnboard()" style="font-size:15px;padding:14px;margin:0;">🚗 Complete Driver Setup →</button>
-        <div id="home-driver-cta-status" style="font-size:12px;color:rgba(255,255,255,0.3);margin-top:10px;text-align:center;"></div>
+        <div id="home-driver-cta-status" style="font-size:12px;color:var(--text3);margin-top:10px;text-align:center;"></div>
       </div>
 
       <!-- QUICK POST -->
@@ -414,8 +417,8 @@ textarea{resize:none}
 
       <!-- JOB SEARCH -->
       <div style="display:flex;gap:8px;margin-bottom:14px;align-items:center;">
-        <div style="flex:1;background:var(--dark2);border:0.5px solid rgba(255,255,255,0.1);border-radius:50px;display:flex;align-items:center;padding:0 14px;gap:8px;">
-          <span style="color:rgba(255,255,255,0.3);font-size:14px;">🔍</span>
+        <div style="flex:1;background:var(--surface);border:0.5px solid var(--border2);border-radius:50px;display:flex;align-items:center;padding:0 14px;gap:8px;">
+          <span style="color:var(--text3);font-size:14px;">🔍</span>
           <input type="text" id="home-search" placeholder="Search jobs near you..." style="background:none;border:none;outline:none;color:#fff;font-size:14px;flex:1;padding:10px 0;" oninput="filterOpenJobs(this.value)">
         </div>
         <button onclick="showJobFilters()" style="background:var(--dark2);border:0.5px solid rgba(255,255,255,0.1);border-radius:50px;padding:10px 14px;font-size:12px;color:rgba(255,255,255,0.6);cursor:pointer;white-space:nowrap;">⚙️ Filter</button>
@@ -890,7 +893,7 @@ textarea{resize:none}
       <div id="gigs-earn-panel" style="display:none;">
 
         <!-- BECOME A DRIVER CTA — shows for unverified drivers -->
-        <div id="earn-driver-cta" style="display:none;background:linear-gradient(135deg,#080808,#0f1f1c);border:1.5px solid var(--teal);border-radius:var(--r);padding:18px;margin-bottom:16px;">
+        <div id="earn-driver-cta" style="display:none;background:var(--surface);border:1.5px solid var(--teal);border-radius:var(--r);padding:18px;margin-bottom:16px;">
           <div style="font-family:var(--font-mono);font-size:10px;color:var(--teal);letter-spacing:0.12em;text-transform:uppercase;margin-bottom:8px;">🚗 Become a Driver</div>
           <div style="font-family:var(--font-display);font-size:20px;font-weight:800;letter-spacing:-0.5px;margin-bottom:6px;">Your drive just got <span style="color:var(--teal);">a raise.</span></div>
           <div style="font-size:13px;color:rgba(255,255,255,0.5);line-height:1.6;margin-bottom:14px;">Upload your license and insurance to start accepting deliveries and earning $20–$80 per job.</div>
@@ -951,15 +954,15 @@ textarea{resize:none}
 
         <!-- STATS ROW -->
         <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:8px;margin-bottom:16px;">
-          <div style="background:var(--dark2);border-radius:var(--rs);padding:14px 10px;text-align:center;">
+          <div style="background:var(--dark3);border-radius:var(--rs);padding:14px 10px;text-align:center;">
             <div id="stat-rating" style="font-family:var(--font-display);font-size:22px;font-weight:800;color:var(--teal);">—</div>
             <div style="font-size:10px;color:rgba(255,255,255,0.35);margin-top:2px;font-family:var(--font-mono);text-transform:uppercase;letter-spacing:0.06em;">Rating</div>
           </div>
-          <div style="background:var(--dark2);border-radius:var(--rs);padding:14px 10px;text-align:center;">
+          <div style="background:var(--dark3);border-radius:var(--rs);padding:14px 10px;text-align:center;">
             <div id="stat-reviews" style="font-family:var(--font-display);font-size:22px;font-weight:800;color:var(--teal);">0</div>
             <div style="font-size:10px;color:rgba(255,255,255,0.35);margin-top:2px;font-family:var(--font-mono);text-transform:uppercase;letter-spacing:0.06em;">Reviews</div>
           </div>
-          <div style="background:var(--dark2);border-radius:var(--rs);padding:14px 10px;text-align:center;">
+          <div style="background:var(--dark3);border-radius:var(--rs);padding:14px 10px;text-align:center;">
             <div id="stat-jobs" style="font-family:var(--font-display);font-size:22px;font-weight:800;color:var(--green);">0</div>
             <div style="font-size:10px;color:rgba(255,255,255,0.35);margin-top:2px;font-family:var(--font-mono);text-transform:uppercase;letter-spacing:0.06em;">Jobs Done</div>
           </div>
@@ -1075,7 +1078,7 @@ textarea{resize:none}
     <!-- DELIVERY FIELDS -->
     <div id="qp-delivery-fields">
       <div class="field-group"><label>What needs delivering? <span class="req">*</span></label><input type="text" id="qp-title" placeholder="e.g. Sofa, Coffee beans, Bike..."></div>
-      <div style="background:var(--dark2);border-radius:var(--rs);padding:12px 14px;margin-bottom:14px;">
+      <div style="background:var(--dark3);border-radius:var(--rs);padding:12px 14px;margin-bottom:14px;">
         <div style="font-size:10px;color:var(--teal);text-transform:uppercase;letter-spacing:0.08em;margin-bottom:10px;">📍 Pickup Location</div>
         <div class="field-group" style="margin-bottom:8px;">
           <div class="autocomplete-wrap">
@@ -1089,7 +1092,7 @@ textarea{resize:none}
           <div class="field-group" style="flex:1;margin:0;"><input type="text" id="qp-from-zip" placeholder="Zip" maxlength="5" style="font-size:14px;" inputmode="numeric"></div>
         </div>
       </div>
-      <div style="background:var(--dark2);border-radius:var(--rs);padding:12px 14px;margin-bottom:14px;">
+      <div style="background:var(--dark3);border-radius:var(--rs);padding:12px 14px;margin-bottom:14px;">
         <div style="font-size:10px;color:var(--green);text-transform:uppercase;letter-spacing:0.08em;margin-bottom:10px;">🏁 Dropoff Location</div>
         <div class="field-group" style="margin-bottom:8px;">
           <div class="autocomplete-wrap">
@@ -1148,7 +1151,7 @@ textarea{resize:none}
         </div>
       </div>
       <div class="field-group"><label id="qp-service-label">Describe the job <span class="req">*</span></label><textarea id="qp-service-desc" rows="3" placeholder="What needs to be done, where, and any special requirements..."></textarea></div>
-      <div style="background:var(--dark2);border-radius:var(--rs);padding:12px 14px;margin-bottom:14px;">
+      <div style="background:var(--dark3);border-radius:var(--rs);padding:12px 14px;margin-bottom:14px;">
         <div style="font-size:10px;color:var(--teal);text-transform:uppercase;letter-spacing:0.08em;margin-bottom:10px;">📍 Location</div>
         <div class="field-group" style="margin-bottom:8px;">
           <div class="autocomplete-wrap">
@@ -1172,7 +1175,7 @@ textarea{resize:none}
       </div>
     </div>
 
-    <div style="background:var(--dark2);border-radius:var(--rs);padding:12px 14px;margin-bottom:14px;" id="qp-payment-section">
+    <div style="background:var(--dark3);border-radius:var(--rs);padding:12px 14px;margin-bottom:14px;" id="qp-payment-section">
       <div style="font-size:10px;color:rgba(255,255,255,0.4);text-transform:uppercase;letter-spacing:0.08em;margin-bottom:10px;">💳 Payment — charged when helper accepts</div>
       <div id="qp-payment-status">
         <div style="display:flex;align-items:center;justify-content:center;padding:12px;color:rgba(255,255,255,0.3);font-size:13px;">Checking payment method...</div>
@@ -3219,7 +3222,7 @@ function toast(msg){const el=document.getElementById('toast');el.textContent=msg
 </script>
 
 <!-- DRIVER ONBOARDING MODAL -->
-<div id="driver-onboard-modal" style="display:none;position:fixed;inset:0;z-index:9998;background:var(--black);overflow-y:auto;flex-direction:column;">
+<div id="driver-onboard-modal" style="display:none;position:fixed;inset:0;z-index:9998;background:var(--page);overflow-y:auto;flex-direction:column;">
   <div style="max-width:480px;margin:0 auto;padding:40px 28px 60px;display:flex;flex-direction:column;">
     <div style="text-align:center;margin-bottom:28px;">
       <div style="display:inline-flex;align-items:center;gap:6px;margin-bottom:16px;">
