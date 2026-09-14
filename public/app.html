@@ -1752,7 +1752,21 @@ function jobCard(job,isDriver=false){
   const payout=((job.offered_price||0)*(isService?0.80:0.75)).toFixed(2);
   const pickupLoc=job.pickup_state?`${escHtml(job.pickup_city)}, ${escHtml(job.pickup_state)}`:escHtml(job.pickup_city);
   const dropoffLoc=job.dropoff_state?`${escHtml(job.dropoff_city)}, ${escHtml(job.dropoff_state)}`:escHtml(job.dropoff_city);
-  const card=`<div class="job-card" onclick="openJob('${job.id}','${isDriver?'driver':'shipper'}')"><div class="job-card-header"><div class="job-card-title">${escHtml(job.title)}</div><div class="job-price">$${parseFloat(job.offered_price).toFixed(2)}</div></div><div class="job-route"><div class="route-dot start"></div><div class="route-city">${pickupLoc}</div><div class="route-line"></div><div class="route-city">${dropoffLoc}</div><div class="route-dot end"></div></div><div class="job-meta"><span class="status-badge status-${job.status}">${ST[job.status]||job.status}</span><span>${TL[job.job_type]||'📦 General'}</span><span>${SZ[job.item_size]||job.item_size}</span>${job.fragile?'<span>⚠️ Fragile</span>':''}${isDriver?`<span style="color:var(--green);font-weight:600;">Earn $${payout}</span><span style="color:rgba(255,255,255,0.3);font-size:10px;">← swipe to accept</span>`:''}</div></div>`;
+  // Driver/shipper photo pill for accepted jobs
+  var personPhoto = '';
+  if(job.status !== 'open' && !isDriver && job.driver_photo){
+    personPhoto = `<div style="display:flex;align-items:center;gap:7px;margin-top:8px;padding-top:8px;border-top:0.5px solid var(--border);">
+      <img src="${escHtml(job.driver_photo)}" style="width:24px;height:24px;border-radius:50%;object-fit:cover;border:1.5px solid var(--teal);">
+      <span style="font-size:12px;color:var(--text2);">Driver: <strong style="color:var(--text);">${escHtml(job.driver_name||'Your driver')}</strong></span>
+      ${job.driver_approved?'<span style="font-size:10px;background:rgba(61,204,120,0.1);color:var(--green);padding:2px 7px;border-radius:20px;font-weight:600;margin-left:auto;">✓ Verified</span>':''}
+    </div>`;
+  } else if(job.status !== 'open' && isDriver && job.shipper_photo){
+    personPhoto = `<div style="display:flex;align-items:center;gap:7px;margin-top:8px;padding-top:8px;border-top:0.5px solid var(--border);">
+      <img src="${escHtml(job.shipper_photo)}" style="width:24px;height:24px;border-radius:50%;object-fit:cover;border:1.5px solid rgba(0,0,0,0.1);">
+      <span style="font-size:12px;color:var(--text2);">Posted by <strong style="color:var(--text);">${escHtml(job.shipper_name||'Shipper')}</strong></span>
+    </div>`;
+  }
+  const card=`<div class="job-card" onclick="openJob('${job.id}','${isDriver?'driver':'shipper'}')"><div class="job-card-header"><div class="job-card-title">${escHtml(job.title)}</div><div class="job-price">$${parseFloat(job.offered_price).toFixed(2)}</div></div><div class="job-route"><div class="route-dot start"></div><div class="route-city">${pickupLoc}</div><div class="route-line"></div><div class="route-city">${dropoffLoc}</div><div class="route-dot end"></div></div><div class="job-meta"><span class="status-badge status-${job.status}">${ST[job.status]||job.status}</span><span>${TL[job.job_type]||'📦 General'}</span><span>${SZ[job.item_size]||job.item_size}</span>${job.fragile?'<span>⚠️ Fragile</span>':''}${isDriver?`<span style="color:var(--green);font-weight:600;">Earn $${payout}</span><span style="color:rgba(255,255,255,0.3);font-size:10px;">← swipe to accept</span>`:''}</div>${personPhoto}</div>`;
   if(isDriver&&job.status==='open'){
     const id=`sw-${job.id}`;
     setTimeout(()=>{const el=document.getElementById(id);if(el)makeSwipeable(el,job.id);},50);
@@ -1884,6 +1898,37 @@ function renderJobDetail(job,messages){
       ${job.notes?`<div style="margin-top:8px;"><div class="detail-label">Notes</div><div class="detail-val" style="font-size:13px;">${escHtml(job.notes)}</div></div>`:''}
       ${(isDriver||currentJobPerspective==='driver')?mapsButtons(job):''}
     </div>`;
+  }
+
+  // ── DRIVER / SHIPPER PHOTO CARD ──
+  if(job.status !== 'open'){
+    if(isShipper && job.driver_name){
+      const driverImg = job.driver_photo
+        ? `<img src="${escHtml(job.driver_photo)}" style="width:52px;height:52px;border-radius:50%;object-fit:cover;border:2.5px solid var(--teal);flex-shrink:0;">`
+        : `<div style="width:52px;height:52px;border-radius:50%;background:var(--dark3);border:2px solid var(--border2);display:flex;align-items:center;justify-content:center;font-size:22px;flex-shrink:0;">🚗</div>`;
+      const verBadge = job.driver_approved
+        ? `<span style="font-size:10px;background:rgba(61,204,120,0.12);color:var(--green);padding:3px 8px;border-radius:20px;font-weight:600;">✓ Verified Driver</span>`
+        : `<span style="font-size:10px;background:rgba(255,255,255,0.06);color:var(--text3);padding:3px 8px;border-radius:20px;">Pending verification</span>`;
+      h+=`<div class="job-detail-card" style="display:flex;align-items:center;gap:14px;">
+        ${driverImg}
+        <div style="flex:1;">
+          <div style="font-size:11px;color:var(--text3);letter-spacing:0.06em;text-transform:uppercase;margin-bottom:3px;">Your Driver</div>
+          <div style="font-size:16px;font-weight:700;color:var(--text);margin-bottom:6px;">${escHtml(job.driver_name)}</div>
+          ${verBadge}
+        </div>
+      </div>`;
+    } else if(isDriver && job.shipper_name){
+      const shipperImg = job.shipper_photo
+        ? `<img src="${escHtml(job.shipper_photo)}" style="width:52px;height:52px;border-radius:50%;object-fit:cover;border:2px solid var(--border2);flex-shrink:0;">`
+        : `<div style="width:52px;height:52px;border-radius:50%;background:var(--dark3);border:2px solid var(--border2);display:flex;align-items:center;justify-content:center;font-size:22px;flex-shrink:0;">📦</div>`;
+      h+=`<div class="job-detail-card" style="display:flex;align-items:center;gap:14px;">
+        ${shipperImg}
+        <div style="flex:1;">
+          <div style="font-size:11px;color:var(--text3);letter-spacing:0.06em;text-transform:uppercase;margin-bottom:3px;">Posted by</div>
+          <div style="font-size:16px;font-weight:700;color:var(--text);">${escHtml(job.shipper_name)}</div>
+        </div>
+      </div>`;
+    }
   }
 
   // ── ACCEPT BUTTON ──
@@ -3005,15 +3050,67 @@ function updateVerificationStatus(user){
     }
   }
 
-  if(user.driver_approved){
-    el.innerHTML=`<div style="background:rgba(61,204,120,0.1);border:1.5px solid rgba(61,204,120,0.4);border-radius:12px;padding:16px 18px;display:flex;align-items:center;gap:14px;margin-bottom:14px;"><div style="font-size:32px;line-height:1;">✅</div><div><div style="font-family:var(--font-display);font-size:16px;font-weight:800;color:var(--green);margin-bottom:2px;">Verified Driver</div><div style="font-size:13px;color:rgba(255,255,255,0.5);line-height:1.5;">Your documents are approved. You can re-upload below if needed.</div></div></div>`;
-  }else if(user.license_photo&&user.insurance_photo){
-    el.innerHTML=`<div style="background:rgba(251,191,36,0.08);border:1px solid rgba(251,191,36,0.3);border-radius:12px;padding:16px 18px;display:flex;align-items:center;gap:14px;margin-bottom:14px;"><div style="font-size:28px;">⏳</div><div><div style="font-size:14px;font-weight:600;color:#FBBF24;margin-bottom:2px;">Under Review</div><div style="font-size:13px;color:rgba(255,255,255,0.5);">Both documents submitted — usually approved within 24 hours.</div></div></div>`;
-  }else{
-    const missing=[];
-    if(!user.license_photo)missing.push("driver's license");
-    if(!user.insurance_photo)missing.push("proof of insurance");
-    el.innerHTML=`<div style="background:rgba(240,85,85,0.08);border:1px solid rgba(240,85,85,0.25);border-radius:12px;padding:14px 16px;font-size:13px;color:var(--red);margin-bottom:14px;">⚠️ Upload your ${missing.join(' and ')} to start accepting jobs</div>`;
+  // ── DRIVER PROGRESS BAR ──
+  const hasPhoto = !!(user.profile_photo);
+  const hasVehicle = !!(user.vehicle_type);
+  const hasLicense = !!(user.license_photo);
+  const hasInsurance = !!(user.insurance_photo);
+  const isApproved = !!(user.driver_approved);
+
+  // Calculate steps
+  const steps = [
+    { id:'step-photo', label:'Profile photo', done: hasPhoto, icon:'📸', action:"document.getElementById('profile-photo-input').click()", tab:null },
+    { id:'step-vehicle', label:'Vehicle info', done: hasVehicle, icon:'🚗', action:"showView('view-drive');setNavActive(document.querySelectorAll('.nav-item')[1]);", tab:null },
+    { id:'step-license', label:"Driver's license", done: hasLicense, icon:'🪪', action:"showDriverOnboard()", tab:null },
+    { id:'step-insurance', label:'Proof of insurance', done: hasInsurance, icon:'📋', action:"showDriverOnboard()", tab:null },
+    { id:'step-approved', label:'Approval (24 hrs)', done: isApproved, icon:'✅', action:null, tab:null },
+  ];
+  const doneCount = steps.filter(s=>s.done).length;
+  const pct = Math.round((doneCount / steps.length) * 100);
+
+  if(isApproved){
+    el.innerHTML=\`<div style="background:rgba(61,204,120,0.08);border:1.5px solid rgba(61,204,120,0.3);border-radius:14px;padding:16px 18px;margin-bottom:14px;">
+      <div style="display:flex;align-items:center;gap:12px;margin-bottom:12px;">
+        <div style="width:40px;height:40px;border-radius:50%;background:rgba(61,204,120,0.15);display:flex;align-items:center;justify-content:center;font-size:20px;flex-shrink:0;">✅</div>
+        <div>
+          <div style="font-family:var(--font-display);font-size:16px;font-weight:800;color:var(--green);">Verified Driver</div>
+          <div style="font-size:12px;color:var(--text3);margin-top:2px;">You're approved and can accept deliveries</div>
+        </div>
+        <div style="margin-left:auto;font-family:var(--font-mono);font-size:12px;color:var(--green);font-weight:600;">100%</div>
+      </div>
+      <div style="height:6px;background:rgba(61,204,120,0.15);border-radius:10px;overflow:hidden;">
+        <div style="height:100%;width:100%;background:var(--green);border-radius:10px;transition:width 0.5s;"></div>
+      </div>
+    </div>\`;
+  } else {
+    var stepsHtml = steps.map(function(s){
+      var color = s.done ? 'var(--green)' : (s.id==='step-approved'&&hasLicense&&hasInsurance ? '#FBBF24' : 'var(--text3)');
+      var bg = s.done ? 'rgba(61,204,120,0.1)' : 'rgba(0,0,0,0.03)';
+      var border = s.done ? '1px solid rgba(61,204,120,0.3)' : '1px solid var(--border)';
+      var clickable = !s.done && s.action;
+      return \`<div onclick="\${s.action||''}" style="display:flex;align-items:center;gap:10px;padding:10px 12px;border-radius:10px;background:\${bg};border:\${border};margin-bottom:6px;\${clickable?'cursor:pointer;':''}">
+        <div style="width:28px;height:28px;border-radius:50%;background:\${s.done?'rgba(61,204,120,0.15)':'rgba(0,0,0,0.06)'};border:1.5px solid \${s.done?'rgba(61,204,120,0.4)':'var(--border2)'};display:flex;align-items:center;justify-content:center;font-size:13px;flex-shrink:0;">
+          \${s.done ? '✓' : s.icon}
+        </div>
+        <div style="flex:1;">
+          <div style="font-size:13px;font-weight:600;color:\${s.done?'var(--text)':'var(--text2)'};">\${s.label}</div>
+          \${!s.done && s.action ? '<div style="font-size:11px;color:var(--teal);margin-top:1px;">Tap to complete →</div>' : ''}
+          \${s.id==='step-approved'&&hasLicense&&hasInsurance&&!s.done ? '<div style="font-size:11px;color:#FBBF24;margin-top:1px;">Under review — usually 24 hours</div>' : ''}
+        </div>
+        <div style="font-size:16px;color:\${color};">\${s.done ? '✓' : (s.id==='step-approved'&&hasLicense&&hasInsurance ? '⏳' : '○')}</div>
+      </div>\`;
+    }).join('');
+
+    el.innerHTML=\`<div style="background:var(--surface);border:1px solid var(--border2);border-radius:14px;padding:16px 18px;margin-bottom:14px;">
+      <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:10px;">
+        <div style="font-family:var(--font-display);font-size:15px;font-weight:800;color:var(--text);">Driver Setup</div>
+        <div style="font-family:var(--font-mono);font-size:12px;color:var(--teal);font-weight:600;">\${doneCount}/\${steps.length} complete</div>
+      </div>
+      <div style="height:6px;background:var(--border2);border-radius:10px;overflow:hidden;margin-bottom:16px;">
+        <div style="height:100%;width:\${pct}%;background:var(--teal);border-radius:10px;transition:width 0.5s;"></div>
+      </div>
+      \${stepsHtml}
+    </div>\`;
   }
 }
 async function sendMsg(jobId){
