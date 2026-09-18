@@ -150,7 +150,8 @@ textarea{resize:none}
 .drive-mode-btn{flex:1;padding:11px;background:var(--surface);border:0.5px solid var(--border2);border-radius:var(--r);color:var(--text2);font-size:13px;font-family:var(--font-body);font-weight:500;cursor:pointer;transition:all 0.2s}
 .drive-mode-btn.active{background:rgba(0,194,168,0.1);border-color:var(--teal);color:var(--teal)}
 .haul-types{display:flex;flex-wrap:wrap;gap:7px;margin-top:6px}
-.haul-tag{display:flex;align-items:center;gap:6px;background:var(--dark2);border:0.5px solid rgba(255,255,255,0.08);border-radius:20px;padding:6px 11px;font-size:12px;color:rgba(255,255,255,0.65);cursor:pointer}
+.haul-tag{display:flex;align-items:center;gap:6px;background:var(--dark3);border:1px solid var(--border2);border-radius:20px;padding:6px 11px;font-size:12px;color:var(--text2);cursor:pointer;transition:border-color 0.15s,background 0.15s}
+.haul-tag:has(input:checked){background:rgba(0,194,168,0.12);border-color:var(--teal);color:var(--teal)}
 .haul-tag input{accent-color:var(--teal)}
 .route-filter{display:flex;gap:8px;align-items:flex-end;margin-bottom:18px}
 .driver-route-card{border-color:rgba(61,204,120,0.15)}
@@ -668,8 +669,8 @@ textarea{resize:none}
         <div class="form-section">
           <div class="form-section-title">Announce your drive — get matched with deliveries</div>
           <div class="field-row">
-            <div class="field-group"><label>From <span class="req">*</span></label><input type="text" id="route-origin" placeholder="Durango, CO"></div>
-            <div class="field-group"><label>To <span class="req">*</span></label><input type="text" id="route-dest" placeholder="Telluride, CO"></div>
+            <div class="field-group" style="position:relative"><label>From <span class="req">*</span></label><input type="text" id="route-origin" placeholder="Durango, CO" autocomplete="off" oninput="cityAutocomplete(this,'route-origin-ac')"><div id="route-origin-ac" class="autocomplete-list" style="display:none"></div></div>
+            <div class="field-group" style="position:relative"><label>To <span class="req">*</span></label><input type="text" id="route-dest" placeholder="Telluride, CO" autocomplete="off" oninput="cityAutocomplete(this,'route-dest-ac')"><div id="route-dest-ac" class="autocomplete-list" style="display:none"></div></div>
           </div>
           <div class="field-row">
             <div class="field-group"><label>Leaving at <span class="req">*</span></label><input type="datetime-local" id="route-depart"></div>
@@ -2068,6 +2069,44 @@ function fmtDate(ts, isLocal){
   }catch(e){return'';}
 }
 let acTimers={};
+function cityAutocomplete(input, listId){
+  const query=input.value.trim();
+  const list=document.getElementById(listId);
+  if(!list)return;
+  if(query.length<2){list.style.display='none';return;}
+  clearTimeout(acTimers[listId]);
+  acTimers[listId]=setTimeout(async()=>{
+    try{
+      const q=encodeURIComponent(`${query}, USA`);
+      const res=await fetch(`https://nominatim.openstreetmap.org/search?q=${q}&format=json&limit=6&addressdetails=1&featuretype=city`,{
+        headers:{'Accept':'application/json','User-Agent':'DetourDeliver/1.0'}
+      });
+      const results=await res.json();
+      const cities=results.filter(r=>r.address&&(r.address.city||r.address.town||r.address.village||r.address.county));
+      if(!cities.length){list.style.display='none';return;}
+      list.style.display='block';
+      list.innerHTML=cities.map((r,i)=>{
+        const addr=r.address;
+        const city=addr.city||addr.town||addr.village||addr.county||'';
+        const state=addr.state_code||addr.state||'';
+        const display=state?`${city}, ${state}`:city;
+        return`<div class="autocomplete-item" onclick="selectCity('${input.id}','${listId}',${i})">${escHtml(display)}</div>`;
+      }).join('');
+      list._results=cities;
+    }catch(e){list.style.display='none';}
+  },350);
+}
+function selectCity(inputId, listId, index){
+  const list=document.getElementById(listId);
+  if(!list||!list._results)return;
+  const r=list._results[index];
+  const addr=r.address;
+  const city=addr.city||addr.town||addr.village||addr.county||'';
+  const state=addr.state_code||addr.state||'';
+  const el=document.getElementById(inputId);
+  if(el)el.value=state?`${city}, ${state}`:city;
+  list.style.display='none';
+}
 function addressAutocomplete(input, listId, zipId, cityId, stateId){
   const query=input.value.trim();
   const list=document.getElementById(listId);
