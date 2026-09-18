@@ -2090,7 +2090,7 @@ function cityAutocomplete(input, listId){
         return`<div class="autocomplete-item" onclick="selectCity('${input.id}','${listId}',${i})">${escHtml(display)}</div>`;
       }).join('');
       list._results=cities;
-    }catch(e){list.style.display='none';}
+    }catch(e){console.error('cityAutocomplete error:',e.message);list.style.display='none';}
   },350);
 }
 function selectCity(inputId, listId, index){
