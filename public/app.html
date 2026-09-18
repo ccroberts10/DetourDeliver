@@ -202,12 +202,12 @@ textarea{resize:none}
 .gig-cat-sub{font-size:12px;color:rgba(255,255,255,0.45);line-height:1.4}
 .gig-cat-earn{font-size:12px;color:var(--green);font-weight:600;margin-top:4px}
 .bottom-nav{position:fixed;bottom:0;left:0;right:0;background:rgba(255,255,255,0.97);backdrop-filter:blur(16px);border-top:0.5px solid var(--border2);display:flex;flex-direction:row;padding:8px 0 20px;z-index:50}
-.nav-item{flex:1;background:none;border:none;display:flex;flex-direction:column;align-items:center;gap:3px;cursor:pointer;padding:5px 0;opacity:0.25;transition:opacity 0.2s}
-.nav-item.active{opacity:1}
+.nav-item{flex:1;background:none;border:none;display:flex;flex-direction:column;align-items:center;gap:3px;cursor:pointer;padding:5px 0;color:var(--text3);transition:color 0.2s}
+.nav-item.active{color:var(--teal)}
 .nav-icon{font-size:19px}
 .nav-label{font-size:9px;color:var(--white);font-family:var(--font-mono);letter-spacing:0.05em;text-transform:uppercase}
-.nav-item svg{color:var(--text);stroke:currentColor}
-.nav-item.active svg{color:var(--teal);stroke:var(--teal)}
+.nav-item svg{stroke:currentColor}
+.nav-item span{color:currentColor}
 .filter-btn{padding:6px 14px;border-radius:20px;font-size:12px;font-family:var(--font-body);font-weight:500;cursor:pointer;border:0.5px solid var(--border2);background:transparent;color:var(--text2);transition:all 0.2s}
 .filter-btn.active{background:rgba(0,194,168,0.12);border-color:var(--teal);color:var(--teal)}
 .home-filter-pill{background:var(--dark2);border:0.5px solid rgba(255,255,255,0.08);border-radius:50px;padding:6px 14px;font-size:12px;color:rgba(255,255,255,0.45);cursor:pointer;white-space:nowrap;font-family:var(--font-body);transition:all 0.2s}
@@ -2078,17 +2078,17 @@ function cityAutocomplete(input, listId){
   acTimers[listId]=setTimeout(async()=>{
     try{
       const q=encodeURIComponent(`${query}, USA`);
-      const res=await fetch(`https://nominatim.openstreetmap.org/search?q=${q}&format=json&limit=6&addressdetails=1&featuretype=city`,{
+      const res=await fetch(`https://nominatim.openstreetmap.org/search?q=${q}&format=json&limit=8&addressdetails=1`,{
         headers:{'Accept':'application/json','User-Agent':'DetourDeliver/1.0'}
       });
       const results=await res.json();
-      const cities=results.filter(r=>r.address&&(r.address.city||r.address.town||r.address.village||r.address.county));
+      const cities=results.filter(r=>r.address&&(r.address.city||r.address.town||r.address.village||r.address.county||r.address.municipality)).slice(0,5);
       if(!cities.length){list.style.display='none';return;}
       list.style.display='block';
       list.innerHTML=cities.map((r,i)=>{
         const addr=r.address;
-        const city=addr.city||addr.town||addr.village||addr.county||'';
-        const state=addr.state_code||addr.state||'';
+        const city=addr.city||addr.town||addr.village||addr.municipality||addr.county||'';
+        const state=addr.state_code||(addr.state?addr.state.substring(0,2).toUpperCase():'');
         const display=state?`${city}, ${state}`:city;
         return`<div class="autocomplete-item" onclick="selectCity('${input.id}','${listId}',${i})">${escHtml(display)}</div>`;
       }).join('');
@@ -2101,8 +2101,8 @@ function selectCity(inputId, listId, index){
   if(!list||!list._results)return;
   const r=list._results[index];
   const addr=r.address;
-  const city=addr.city||addr.town||addr.village||addr.county||'';
-  const state=addr.state_code||addr.state||'';
+  const city=addr.city||addr.town||addr.village||addr.municipality||addr.county||'';
+  const state=addr.state_code||(addr.state?addr.state.substring(0,2).toUpperCase():'');
   const el=document.getElementById(inputId);
   if(el)el.value=state?`${city}, ${state}`:city;
   list.style.display='none';
