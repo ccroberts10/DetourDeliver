@@ -3,10 +3,13 @@ const router = express.Router();
 const db = require('../db/schema');
 const { notifyDriverApproved, notifyDriverRejected } = require('../utils/email');
 
-const ADMIN_PASSWORD = (process.env.ADMIN_PASSWORD || 'detour-admin-2025').replace(/^["']|["']$/g, '');
+const ADMIN_PASSWORD = process.env.ADMIN_PASSWORD
+  ? process.env.ADMIN_PASSWORD.replace(/^["']|["']$/g, '')
+  : null;
 
 function requireAdmin(req, res, next) {
-  const auth = req.headers['x-admin-password'] || req.query.pw;
+  if (!ADMIN_PASSWORD) return res.status(503).json({ error: 'Admin not configured — set ADMIN_PASSWORD env var' });
+  const auth = req.headers['x-admin-password'] || req.headers['authorization']?.replace('Bearer ','');
   if (auth !== ADMIN_PASSWORD) return res.status(401).json({ error: 'Unauthorized' });
   next();
 }
