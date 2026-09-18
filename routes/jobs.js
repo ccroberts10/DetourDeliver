@@ -89,8 +89,8 @@ router.post('/driver-routes', requireAuth, (req, res) => {
   setImmediate(async () => {
     try {
       const [originCoords, destCoords] = await Promise.all([
-        geocode(`${origin_city}, CO`),
-        geocode(`${destination_city}, CO`)
+        geocode(`${origin_city}, USA`),
+        geocode(`${destination_city}, USA`)
       ]);
       if (originCoords && destCoords) {
         db.prepare(`UPDATE driver_routes SET origin_lat=?, origin_lng=?, destination_lat=?, destination_lng=? WHERE id=?`)
@@ -232,6 +232,12 @@ router.post('/', requireAuth, upload.array('listing_photos', 6), async (req, res
       stripeError = { message: e.message, code: e.code, type: e.type };
       console.error('Stripe charge error:', e.message, e.code);
     }
+  }
+
+  // Require a payment method — don't create job if no card on file and Stripe is configured
+  if (process.env.STRIPE_SECRET_KEY && !paymentIntentId && !stripeError) {
+    // stripeError means card exists but charge failed; no error AND no PI means no card at all
+    return res.status(400).json({ error: 'Please add a payment method before posting a job.' });
   }
 
   db.prepare(`INSERT INTO jobs (id, shipper_id, job_type, title, description, item_size, item_weight,
@@ -397,27 +403,15 @@ router.post('/:id/accept', requireAuth, async (req, res) => {
 
     db.prepare("UPDATE jobs SET driver_id = ?, status = 'accepted' WHERE id = ?").run(req.session.userId, job.id);
 
-    // Charge the shipper's saved card on accept
-    if (process.env.STRIPE_SECRET_KEY) {
+    // Charge if no PI already created at post time
+    if (process.env.STRIPE_SECRET_KEY && !job.stripe_payment_intent_id) {
       setImmediate(async () => {
         try {
           const shipper = db.prepare('SELECT stripe_customer_id FROM users WHERE id = ?').get(job.shipper_id);
-          if (!shipper?.stripe_customer_id) {
-            console.log('No stripe customer for shipper — skip charge');
-            return;
-          }
-          // Get the default saved payment method
-          const paymentMethods = await stripe.paymentMethods.list({
-            customer: shipper.stripe_customer_id,
-            type: 'card',
-            limit: 1
-          });
-          if (!paymentMethods.data.length) {
-            console.log('No saved card for shipper — skip charge');
-            return;
-          }
+          if (!shipper?.stripe_customer_id) { console.log('No stripe customer for shipper — skip charge'); return; }
+          const paymentMethods = await stripe.paymentMethods.list({ customer: shipper.stripe_customer_id, type: 'card', limit: 1 });
+          if (!paymentMethods.data.length) { console.log('No saved card for shipper — skip charge'); return; }
           const pmId = paymentMethods.data[0].id;
-          // Create and confirm PI with the saved card — off_session since shipper isn't present
           const pi = await stripe.paymentIntents.create({
             amount: Math.round(job.offered_price * 100),
             currency: 'usd',
@@ -432,6 +426,8 @@ router.post('/:id/accept', requireAuth, async (req, res) => {
           console.log('Charged on accept:', pi.id, 'status:', pi.status, 'job:', job.id);
         } catch(e) {
           console.error('Charge on accept error:', e.message, e.code);
+          // Revert accept if charge fails
+          db.prepare("UPDATE jobs SET status = 'open', driver_id = NULL WHERE id = ?").run(job.id);
         }
       });
     }
@@ -562,7 +558,8 @@ router.post('/:id/rate', requireAuth, (req, res) => {
   if (!isShipper && !isDriver) return res.status(403).json({ error: 'Access denied' });
   const existing = db.prepare('SELECT id FROM ratings WHERE job_id = ? AND rater_id = ?').get(job.id, req.session.userId);
   if (existing) return res.status(400).json({ error: 'Already rated' });
-  const s = Math.min(5, Math.max(1, parseInt(score)));
+  const s = Math.min(5, Math.max(1, parseInt(score, 10)));
+  if (isNaN(s)) return res.status(400).json({ error: 'Invalid rating score' });
   const rateeId = isShipper ? job.driver_id : job.shipper_id;
   const role = isShipper ? 'helper' : 'poster'; // who is being rated
   db.prepare('INSERT INTO ratings (id, job_id, rater_id, ratee_id, score, comment, role) VALUES (?, ?, ?, ?, ?, ?, ?)')
