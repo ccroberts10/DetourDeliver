@@ -4,235 +4,439 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Detour Admin</title>
-<link href="https://fonts.googleapis.com/css2?family=Syne:wght@700;800&family=DM+Sans:wght@400;500&display=swap" rel="stylesheet">
 <style>
 *{margin:0;padding:0;box-sizing:border-box}
-body{background:#080808;color:#fff;font-family:'DM Sans',sans-serif;font-size:14px;line-height:1.6}
-.admin-header{background:#111;border-bottom:1px solid rgba(255,255,255,0.08);padding:16px 28px;display:flex;align-items:center;justify-content:space-between}
-.admin-logo{font-family:'Syne',sans-serif;font-size:18px;font-weight:800;letter-spacing:-0.5px}
-.admin-logo span{color:#00C2A8}
-.admin-badge{background:rgba(0,194,168,0.15);color:#00C2A8;font-size:11px;padding:4px 10px;border-radius:20px;letter-spacing:0.05em}
-.container{max-width:1100px;margin:0 auto;padding:32px 24px}
-h2{font-family:'Syne',sans-serif;font-size:22px;font-weight:800;margin-bottom:24px}
-.stats-row{display:grid;grid-template-columns:repeat(4,1fr);gap:16px;margin-bottom:36px}
-.stat{background:#111;border:1px solid rgba(255,255,255,0.07);border-radius:12px;padding:20px}
-.stat-num{font-family:'Syne',sans-serif;font-size:32px;font-weight:800;color:#00C2A8}
-.stat-label{font-size:12px;color:#666;margin-top:4px}
-.section-title{font-family:'Syne',sans-serif;font-size:14px;font-weight:700;color:#00C2A8;text-transform:uppercase;letter-spacing:0.08em;margin-bottom:16px}
-.driver-card{background:#111;border:1px solid rgba(255,255,255,0.07);border-radius:12px;padding:20px;margin-bottom:14px;display:flex;gap:20px;align-items:flex-start}
-.driver-info{flex:1}
-.driver-name{font-family:'Syne',sans-serif;font-size:16px;font-weight:700}
-.driver-meta{font-size:12px;color:#666;margin-top:3px}
-.driver-detail{font-size:13px;color:rgba(255,255,255,0.6);margin-top:8px}
-.insurance-img{width:200px;height:130px;object-fit:cover;border-radius:8px;border:1px solid rgba(255,255,255,0.1);cursor:pointer;transition:transform 0.2s}
-.insurance-img:hover{transform:scale(1.02)}
-.actions{display:flex;flex-direction:column;gap:8px;min-width:120px}
-.btn-approve{background:#00C2A8;color:#000;border:none;padding:10px 16px;border-radius:8px;font-size:13px;font-weight:600;cursor:pointer;font-family:'DM Sans',sans-serif;transition:background 0.2s}
-.btn-approve:hover{background:#00DDB8}
-.btn-reject{background:rgba(240,85,85,0.15);color:#F05555;border:1px solid rgba(240,85,85,0.3);padding:10px 16px;border-radius:8px;font-size:13px;font-weight:500;cursor:pointer;font-family:'DM Sans',sans-serif}
-.btn-reject:hover{background:rgba(240,85,85,0.25)}
-.status-badge{display:inline-block;padding:3px 10px;border-radius:20px;font-size:11px;font-weight:500;letter-spacing:0.05em}
-.status-pending{background:rgba(251,191,36,0.15);color:#FBBF24}
-.status-approved{background:rgba(0,194,168,0.15);color:#00C2A8}
-.status-rejected{background:rgba(240,85,85,0.15);color:#F05555}
-.empty{text-align:center;padding:48px;color:#444;font-size:15px}
-.login-wrap{display:flex;align-items:center;justify-content:center;min-height:100vh}
-.login-box{background:#111;border:1px solid rgba(255,255,255,0.08);border-radius:16px;padding:36px;width:320px}
-.login-title{font-family:'Syne',sans-serif;font-size:22px;font-weight:800;margin-bottom:24px;text-align:center}
-.field{margin-bottom:14px}
-.field label{display:block;font-size:11px;color:#666;text-transform:uppercase;letter-spacing:0.07em;margin-bottom:5px}
-.field input{width:100%;background:#1C1C1C;border:1px solid rgba(255,255,255,0.1);border-radius:8px;color:#fff;font-size:14px;padding:10px 12px;font-family:'DM Sans',sans-serif;outline:none}
-.field input:focus{border-color:#00C2A8}
-.btn-login{width:100%;background:#00C2A8;color:#000;border:none;padding:12px;border-radius:8px;font-size:14px;font-weight:600;cursor:pointer;font-family:'DM Sans',sans-serif;margin-top:8px}
-.error{color:#F05555;font-size:13px;margin-top:8px;text-align:center}
-.modal{display:none;position:fixed;inset:0;background:rgba(0,0,0,0.85);z-index:1000;align-items:center;justify-content:center}
-.modal.active{display:flex}
-.modal img{max-width:90vw;max-height:85vh;border-radius:8px}
-.modal-close{position:fixed;top:20px;right:20px;color:#fff;font-size:28px;cursor:pointer;background:rgba(0,0,0,0.5);width:40px;height:40px;border-radius:50%;display:flex;align-items:center;justify-content:center}
+body{background:#0a0a0a;color:#e8e8e8;font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;font-size:14px}
+:root{--teal:#00C2A8;--teal2:rgba(0,194,168,0.12);--border:rgba(255,255,255,0.08);--surface:#141414;--surface2:#1a1a1a;--red:#ff4d4d;--yellow:#f5c542;--green:#2ecc71}
+#login-screen{display:flex;align-items:center;justify-content:center;min-height:100vh}
+.login-box{background:var(--surface);border:1px solid var(--border);border-radius:16px;padding:40px;width:360px}
+.login-box h1{font-size:22px;font-weight:700;margin-bottom:6px;letter-spacing:-0.5px}
+.login-box p{color:#666;font-size:13px;margin-bottom:28px}
+.login-box input{width:100%;background:#0a0a0a;border:1px solid var(--border);border-radius:10px;padding:12px 14px;color:#e8e8e8;font-size:14px;outline:none;margin-bottom:12px}
+.login-box input:focus{border-color:var(--teal)}
+.login-box button{width:100%;background:var(--teal);color:#000;border:none;border-radius:10px;padding:13px;font-weight:700;font-size:15px;cursor:pointer}
+.err{color:var(--red);font-size:13px;margin-top:10px;text-align:center;display:none}
+#app{display:none}
+nav{background:var(--surface);border-bottom:1px solid var(--border);padding:0 24px;display:flex;align-items:center;height:52px}
+.nav-logo{font-size:16px;font-weight:800;letter-spacing:-0.5px;margin-right:32px;color:var(--teal)}
+.nav-tab{padding:0 16px;height:52px;display:flex;align-items:center;font-size:13px;cursor:pointer;color:#888;border-bottom:2px solid transparent;transition:all .15s}
+.nav-tab:hover{color:#e8e8e8}
+.nav-tab.active{color:var(--teal);border-bottom-color:var(--teal)}
+.nav-right{margin-left:auto;display:flex;align-items:center;gap:12px}
+.badge{background:var(--red);color:#fff;border-radius:20px;padding:2px 8px;font-size:11px;font-weight:700}
+.logout-btn{background:transparent;border:1px solid var(--border);color:#888;padding:6px 14px;border-radius:8px;font-size:13px;cursor:pointer}
+.logout-btn:hover{color:#e8e8e8}
+main{padding:24px;max-width:1400px}
+.stats-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(160px,1fr));gap:12px;margin-bottom:24px}
+.stat{background:var(--surface);border:1px solid var(--border);border-radius:12px;padding:18px 20px}
+.stat-label{font-size:11px;color:#666;text-transform:uppercase;letter-spacing:0.08em;margin-bottom:8px}
+.stat-value{font-size:28px;font-weight:800;letter-spacing:-1px}
+.stat-value.teal{color:var(--teal)}
+.stat-value.yellow{color:var(--yellow)}
+.stat-value.green{color:var(--green)}
+.section-head{display:flex;align-items:center;justify-content:space-between;margin-bottom:14px}
+.section-head h2{font-size:16px;font-weight:700}
+.refresh-btn{background:transparent;border:1px solid var(--border);color:#888;padding:5px 12px;border-radius:8px;font-size:12px;cursor:pointer}
+.refresh-btn:hover{color:#e8e8e8}
+.tbl-wrap{background:var(--surface);border:1px solid var(--border);border-radius:12px;overflow:hidden;margin-bottom:24px}
+table{width:100%;border-collapse:collapse}
+th{background:var(--surface2);padding:10px 14px;text-align:left;font-size:11px;color:#666;text-transform:uppercase;letter-spacing:0.06em;font-weight:600;border-bottom:1px solid var(--border)}
+td{padding:11px 14px;border-bottom:1px solid rgba(255,255,255,0.04);vertical-align:middle}
+tr:last-child td{border-bottom:none}
+tr:hover td{background:rgba(255,255,255,0.02)}
+.driver-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(320px,1fr));gap:16px;margin-bottom:24px}
+.driver-card{background:var(--surface);border:1px solid var(--border);border-radius:12px;overflow:hidden}
+.driver-card-head{padding:16px;border-bottom:1px solid var(--border);display:flex;align-items:center;gap:12px}
+.driver-avatar{width:42px;height:42px;border-radius:50%;background:var(--teal2);border:1px solid rgba(0,194,168,0.3);display:flex;align-items:center;justify-content:center;font-size:16px;font-weight:700;color:var(--teal);flex-shrink:0}
+.driver-name{font-weight:600;font-size:15px}
+.driver-email{font-size:12px;color:#666;margin-top:2px}
+.driver-card-body{padding:14px 16px}
+.driver-row{display:flex;justify-content:space-between;margin-bottom:8px;font-size:13px}
+.driver-row .lbl{color:#666}
+.photos-row{display:flex;gap:8px;margin:12px 0}
+.photo-thumb{flex:1;background:#111;border:1px solid var(--border);border-radius:8px;overflow:hidden;cursor:pointer;aspect-ratio:4/3;display:flex;align-items:center;justify-content:center;color:#444;font-size:12px;text-align:center;position:relative}
+.photo-thumb img{width:100%;height:100%;object-fit:cover}
+.photo-thumb .ph-label{position:absolute;bottom:4px;left:0;right:0;text-align:center;font-size:10px;color:#fff;background:rgba(0,0,0,0.6);padding:2px}
+.driver-actions{display:flex;gap:8px;margin-top:12px}
+.btn-approve{flex:1;background:var(--teal);color:#000;border:none;border-radius:8px;padding:9px;font-weight:700;font-size:13px;cursor:pointer}
+.btn-approve:hover{background:#00dfc2}
+.btn-reject{flex:1;background:rgba(255,77,77,0.12);color:var(--red);border:1px solid rgba(255,77,77,0.25);border-radius:8px;padding:9px;font-weight:600;font-size:13px;cursor:pointer}
+.btn-reject:hover{background:rgba(255,77,77,0.2)}
+.approved-badge{display:inline-flex;align-items:center;gap:4px;background:rgba(46,204,113,0.12);color:var(--green);border:1px solid rgba(46,204,113,0.25);border-radius:20px;padding:4px 10px;font-size:12px;font-weight:600}
+.pending-badge{display:inline-flex;align-items:center;gap:4px;background:rgba(245,197,66,0.12);color:var(--yellow);border:1px solid rgba(245,197,66,0.25);border-radius:20px;padding:4px 10px;font-size:12px;font-weight:600}
+.dot{width:8px;height:8px;border-radius:50%;display:inline-block;margin-right:5px}
+.dot.open{background:var(--teal)}
+.dot.accepted{background:var(--yellow)}
+.dot.delivered,.dot.completed{background:var(--green)}
+.dot.cancelled{background:#666}
+#lightbox{display:none;position:fixed;inset:0;background:rgba(0,0,0,0.9);z-index:9999;align-items:center;justify-content:center;cursor:pointer}
+#lightbox img{max-width:90vw;max-height:90vh;border-radius:8px}
+#lightbox.open{display:flex}
+.tab-content{display:none}
+.tab-content.active{display:block}
+.empty{padding:40px;text-align:center;color:#444;font-size:14px}
+#reject-modal{display:none;position:fixed;inset:0;background:rgba(0,0,0,0.7);z-index:9998;align-items:center;justify-content:center}
+#reject-modal.open{display:flex}
+.modal-box{background:var(--surface);border:1px solid var(--border);border-radius:14px;padding:28px;width:420px}
+.modal-box h3{font-size:16px;font-weight:700;margin-bottom:14px}
+.modal-box textarea{width:100%;background:#0a0a0a;border:1px solid var(--border);border-radius:10px;padding:12px;color:#e8e8e8;font-size:13px;height:100px;resize:vertical;outline:none;font-family:inherit}
+.modal-box textarea:focus{border-color:var(--teal)}
+.modal-actions{display:flex;gap:10px;margin-top:16px}
+.modal-actions button{flex:1;padding:10px;border-radius:8px;font-weight:600;font-size:14px;cursor:pointer}
+.modal-cancel{background:transparent;border:1px solid var(--border);color:#888}
+.modal-confirm{background:var(--red);color:#fff;border:none}
+#user-modal{display:none;position:fixed;inset:0;background:rgba(0,0,0,0.7);z-index:9997;align-items:center;justify-content:center}
+#user-modal.open{display:flex}
+.user-modal-box{background:var(--surface);border:1px solid var(--border);border-radius:14px;padding:28px;width:500px;max-height:80vh;overflow-y:auto}
+.user-modal-box h3{font-size:18px;font-weight:700;margin-bottom:18px}
+.user-detail-row{display:flex;justify-content:space-between;padding:10px 0;border-bottom:1px solid rgba(255,255,255,0.05);font-size:13px}
+.user-detail-row:last-child{border-bottom:none}
+.user-detail-row .k{color:#666}
+.user-detail-row .v{color:#e8e8e8;text-align:right;max-width:280px;word-break:break-all}
+.modal-close{background:transparent;border:1px solid var(--border);color:#888;padding:8px 18px;border-radius:8px;cursor:pointer;margin-top:20px;font-size:13px}
+.loader{padding:40px;text-align:center;color:#444}
+.loading-dots::after{content:'...';animation:dots 1.5s infinite}
+@keyframes dots{0%,33%{content:'.'}34%,66%{content:'..'}67%,100%{content:'...'}}
+#toast{position:fixed;bottom:24px;left:50%;transform:translateX(-50%);background:#222;border:1px solid var(--border);border-radius:10px;padding:10px 20px;font-size:14px;z-index:99999;opacity:0;transition:opacity .3s;pointer-events:none}
+#toast.show{opacity:1}
+#toast.success{border-color:var(--green);color:var(--green)}
+#toast.error{border-color:var(--red);color:var(--red)}
+a{color:var(--teal);text-decoration:none}
+a:hover{text-decoration:underline}
 </style>
 </head>
 <body>
 
-<!-- IMAGE MODAL -->
-<div id="img-modal" class="modal" onclick="closeModal()">
-  <div class="modal-close">×</div>
-  <img id="modal-img" src="" alt="Insurance card">
-</div>
-
-<!-- LOGIN SCREEN -->
-<div id="login-screen" class="login-wrap">
+<div id="login-screen">
   <div class="login-box">
-    <div class="login-title">De<span style="color:#00C2A8">tour</span> Admin</div>
-    <div class="field"><label>Password</label><input type="password" id="admin-pw" placeholder="Enter admin password" onkeydown="if(event.key==='Enter')adminLogin()"></div>
-    <button class="btn-login" onclick="adminLogin()">Sign In →</button>
-    <div id="login-error" class="error"></div>
+    <h1>Detour Admin</h1>
+    <p>Enter your admin password to continue</p>
+    <input type="password" id="pw-input" placeholder="Admin password" autocomplete="current-password">
+    <button onclick="login()">Sign in</button>
+    <div class="err" id="login-err">Incorrect password</div>
   </div>
 </div>
 
-<!-- ADMIN PANEL -->
-<div id="admin-panel" style="display:none">
-  <div class="admin-header">
-    <div class="admin-logo">De<span>tour</span></div>
-    <div class="admin-badge">Admin Panel</div>
-  </div>
-  <div class="container">
-    <div class="stats-row" id="stats-row">
-      <div class="stat"><div class="stat-num" id="stat-total">—</div><div class="stat-label">Total Users</div></div>
-      <div class="stat"><div class="stat-num" id="stat-drivers">—</div><div class="stat-label">Drivers</div></div>
-      <div class="stat"><div class="stat-num" id="stat-pending">—</div><div class="stat-label">Pending Review</div></div>
-      <div class="stat"><div class="stat-num" id="stat-approved">—</div><div class="stat-label">Approved Drivers</div></div>
+<div id="app">
+  <nav>
+    <div class="nav-logo">⬡ Detour Admin</div>
+    <div class="nav-tab active" onclick="showTab('overview',this)">Overview</div>
+    <div class="nav-tab" onclick="showTab('drivers',this)">Drivers <span id="pending-badge" class="badge" style="display:none;margin-left:6px">0</span></div>
+    <div class="nav-tab" onclick="showTab('jobs',this)">Jobs</div>
+    <div class="nav-tab" onclick="showTab('users',this)">Users</div>
+    <div class="nav-right">
+      <button class="logout-btn" onclick="logout()">Sign out</button>
+    </div>
+  </nav>
+  <main>
+    <div id="tab-overview" class="tab-content active">
+      <div class="section-head">
+        <h2>Platform Overview</h2>
+        <button class="refresh-btn" onclick="loadOverview()">&#8635; Refresh</button>
+      </div>
+      <div class="stats-grid" id="stats-grid">
+        <div class="loader"><span class="loading-dots">Loading</span></div>
+      </div>
     </div>
 
-    <div class="section-title">⏳ Pending Insurance Review</div>
-    <div id="pending-list"></div>
+    <div id="tab-drivers" class="tab-content">
+      <div class="section-head">
+        <h2>Drivers</h2>
+        <div style="display:flex;gap:8px;align-items:center">
+          <select id="driver-filter" onchange="renderDrivers()" style="background:#111;border:1px solid var(--border);color:#e8e8e8;padding:5px 10px;border-radius:8px;font-size:13px">
+            <option value="pending">Pending Approval</option>
+            <option value="approved">Approved</option>
+            <option value="all">All</option>
+          </select>
+          <button class="refresh-btn" onclick="loadDrivers()">&#8635; Refresh</button>
+        </div>
+      </div>
+      <div id="drivers-grid" class="driver-grid">
+        <div class="loader"><span class="loading-dots">Loading</span></div>
+      </div>
+    </div>
 
-    <div class="section-title" style="margin-top:32px;">✅ Approved Drivers</div>
-    <div id="approved-list"></div>
+    <div id="tab-jobs" class="tab-content">
+      <div class="section-head">
+        <h2>All Jobs</h2>
+        <button class="refresh-btn" onclick="loadJobs()">&#8635; Refresh</button>
+      </div>
+      <div class="tbl-wrap">
+        <table>
+          <thead><tr>
+            <th>ID</th><th>Title</th><th>Type</th><th>Status</th>
+            <th>Shipper</th><th>Driver</th><th>Price</th><th>Fee</th><th>Created</th>
+          </tr></thead>
+          <tbody id="jobs-tbody"><tr><td colspan="9" class="loader"><span class="loading-dots">Loading</span></td></tr></tbody>
+        </table>
+      </div>
+    </div>
 
-    <div class="section-title" style="margin-top:32px;">👥 All Users</div>
-    <div id="all-users-list"></div>
+    <div id="tab-users" class="tab-content">
+      <div class="section-head">
+        <h2>All Users</h2>
+        <button class="refresh-btn" onclick="loadUsers()">&#8635; Refresh</button>
+      </div>
+      <div class="tbl-wrap">
+        <table>
+          <thead><tr>
+            <th>Name</th><th>Email</th><th>Phone</th><th>Driver</th><th>Rating</th><th>Joined</th><th></th>
+          </tr></thead>
+          <tbody id="users-tbody"><tr><td colspan="7" class="loader"><span class="loading-dots">Loading</span></td></tr></tbody>
+        </table>
+      </div>
+    </div>
+  </main>
+</div>
+
+<div id="lightbox" onclick="closeLightbox()">
+  <img id="lightbox-img" src="" alt="Document photo">
+</div>
+
+<div id="reject-modal">
+  <div class="modal-box">
+    <h3>Reject Driver</h3>
+    <p style="font-size:13px;color:#888;margin-bottom:14px">This clears their submitted photos and notifies them by email.</p>
+    <textarea id="reject-reason" placeholder="Reason (optional — default message sent if blank)"></textarea>
+    <div class="modal-actions">
+      <button class="modal-cancel" onclick="closeRejectModal()">Cancel</button>
+      <button class="modal-confirm" onclick="confirmReject()">Reject Driver</button>
+    </div>
   </div>
 </div>
+
+<div id="user-modal">
+  <div class="user-modal-box">
+    <h3 id="user-modal-name">User Detail</h3>
+    <div id="user-modal-body"></div>
+    <div style="display:flex;gap:10px;margin-top:20px">
+      <button class="modal-close" onclick="closeUserModal()">Close</button>
+      <button id="user-delete-btn" style="background:rgba(255,77,77,0.12);color:var(--red);border:1px solid rgba(255,77,77,0.25);padding:8px 18px;border-radius:8px;cursor:pointer;font-size:13px;font-weight:600" onclick="deleteUser()">Delete User</button>
+    </div>
+  </div>
+</div>
+
+<div id="toast"></div>
 
 <script>
-let ADMIN_PW = '';
+const API='/api/admin';
+let adminPw='',allDrivers=[],rejectTargetId=null,viewingUserId=null;
 
-function adminLogin() {
-  const pw = document.getElementById('admin-pw').value;
-  if (!pw) { document.getElementById('login-error').textContent = 'Enter password'; return; }
-  ADMIN_PW = pw;
-  // Verify against server instead of client-side check
-  fetch('/api/admin/drivers', {
-    headers: { 'Content-Type': 'application/json', 'x-admin-password': pw },
-    credentials: 'include'
-  }).then(res => {
-    if (res.status === 401) {
-      ADMIN_PW = '';
-      document.getElementById('login-error').textContent = 'Incorrect password';
-    } else {
-      document.getElementById('login-screen').style.display = 'none';
-      document.getElementById('admin-panel').style.display = 'block';
-      res.json().then(data => renderAll(data));
+function login(){
+  const pw=document.getElementById('pw-input').value.trim();
+  if(!pw)return;
+  adminPw=pw;
+  fetch(API+'/overview',{headers:{'x-admin-password':pw}}).then(r=>{
+    if(r.status===401||r.status===503){
+      document.getElementById('login-err').style.display='block';
+      adminPw='';return;
     }
-  }).catch(() => {
-    document.getElementById('login-error').textContent = 'Connection error — try again';
-  });
+    localStorage.setItem('admin_pw',pw);showApp();
+  }).catch(()=>{document.getElementById('login-err').style.display='block';adminPw='';});
+}
+function logout(){
+  adminPw='';localStorage.removeItem('admin_pw');
+  document.getElementById('app').style.display='none';
+  document.getElementById('login-screen').style.display='flex';
+  document.getElementById('pw-input').value='';
+}
+function showApp(){
+  document.getElementById('login-screen').style.display='none';
+  document.getElementById('app').style.display='block';
+  loadOverview();loadDrivers();loadJobs();loadUsers();
+}
+document.getElementById('pw-input').addEventListener('keydown',e=>{if(e.key==='Enter')login();});
+const saved=localStorage.getItem('admin_pw');
+if(saved){adminPw=saved;fetch(API+'/overview',{headers:{'x-admin-password':saved}}).then(r=>{if(r.ok)showApp();else{adminPw='';localStorage.removeItem('admin_pw');}});}
+
+function showTab(name,el){
+  document.querySelectorAll('.tab-content').forEach(t=>t.classList.remove('active'));
+  document.querySelectorAll('.nav-tab').forEach(t=>t.classList.remove('active'));
+  document.getElementById('tab-'+name).classList.add('active');
+  el.classList.add('active');
 }
 
-function viewImg(src) {
-  document.getElementById('modal-img').src = src;
-  document.getElementById('img-modal').classList.add('active');
+function api(path,opts={}){
+  return fetch(API+path,{...opts,headers:{'x-admin-password':adminPw,'Content-Type':'application/json',...(opts.headers||{})}}).then(r=>r.json());
 }
 
-function closeModal() {
-  document.getElementById('img-modal').classList.remove('active');
+function toast(msg,type=''){
+  const t=document.getElementById('toast');
+  t.textContent=msg;t.className='show '+type;
+  setTimeout(()=>t.className='',3000);
+}
+function esc(s){return String(s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');}
+function fmtDate(s){if(!s)return'—';return new Date(s).toLocaleDateString('en-US',{month:'short',day:'numeric',year:'numeric'});}
+function fmtMoney(v){if(v==null||isNaN(v))return'—';return'$'+parseFloat(v).toFixed(2);}
+function initials(name){if(!name)return'?';const p=name.trim().split(' ');return(p[0][0]+(p[1]?p[1][0]:'')).toUpperCase();}
+
+async function loadOverview(){
+  const grid=document.getElementById('stats-grid');
+  grid.innerHTML='<div class="loader"><span class="loading-dots">Loading</span></div>';
+  try{
+    const d=await api('/overview');
+    grid.innerHTML=`
+      <div class="stat"><div class="stat-label">Total Users</div><div class="stat-value">${d.users}</div></div>
+      <div class="stat"><div class="stat-label">Approved Drivers</div><div class="stat-value teal">${d.drivers}</div></div>
+      <div class="stat"><div class="stat-label">Pending Approval</div><div class="stat-value yellow">${d.pending_drivers}</div></div>
+      <div class="stat"><div class="stat-label">Total Jobs</div><div class="stat-value">${d.jobs}</div></div>
+      <div class="stat"><div class="stat-label">Open Jobs</div><div class="stat-value teal">${d.open_jobs}</div></div>
+      <div class="stat"><div class="stat-label">Completed Jobs</div><div class="stat-value green">${d.completed_jobs}</div></div>
+      <div class="stat"><div class="stat-label">Gross Revenue</div><div class="stat-value green">${fmtMoney(d.gross_revenue)}</div></div>`;
+  }catch(e){grid.innerHTML='<div class="empty">Failed to load stats</div>';}
 }
 
-async function apiAdmin(method, url, body) {
-  const opts = {
-    method,
-    headers: { 'Content-Type': 'application/json', 'x-admin-password': ADMIN_PW },
-    credentials: 'include'
-  };
-  if (body) opts.body = JSON.stringify(body);
-  const res = await fetch(url, opts);
-  return res.json();
+async function loadDrivers(){
+  try{
+    allDrivers=await api('/drivers');
+    renderDrivers();
+    const pending=allDrivers.filter(d=>(d.license_photo||d.insurance_photo)&&!d.driver_approved).length;
+    const badge=document.getElementById('pending-badge');
+    badge.textContent=pending;badge.style.display=pending>0?'inline':'none';
+  }catch(e){document.getElementById('drivers-grid').innerHTML='<div class="empty">Failed to load drivers</div>';}
 }
 
-async function approveDriver(userId) {
-  await apiAdmin('POST', `/api/admin/drivers/${userId}/approve`);
-  loadData();
+function renderDrivers(){
+  const filter=document.getElementById('driver-filter').value;
+  let list=allDrivers;
+  if(filter==='pending')list=allDrivers.filter(d=>(d.license_photo||d.insurance_photo)&&!d.driver_approved);
+  else if(filter==='approved')list=allDrivers.filter(d=>d.driver_approved);
+  const grid=document.getElementById('drivers-grid');
+  if(!list.length){grid.innerHTML='<div class="empty">No drivers found</div>';return;}
+  grid.innerHTML=list.map(d=>driverCard(d)).join('');
 }
 
-async function rejectDriver(userId) {
-  const reason = prompt('Reason for rejection (sent to driver):') || 'Insurance card unclear or expired';
-  await apiAdmin('POST', `/api/admin/drivers/${userId}/reject`, { reason });
-  loadData();
-}
-
-async function loadData() {
-  const data = await apiAdmin('GET', '/api/admin/drivers');
-  if (data.error) { alert('API error: ' + data.error); return; }
-  renderAll(data);
-}
-
-function renderAll(data) {
-  const pending = data.filter(u => (u.insurance_photo || u.license_photo) && !u.driver_approved);
-  const approved = data.filter(u => u.driver_approved);
-
-  document.getElementById('stat-total').textContent = data.length;
-  document.getElementById('stat-drivers').textContent = data.filter(u => u.vehicle_type).length;
-  document.getElementById('stat-pending').textContent = pending.length;
-  document.getElementById('stat-approved').textContent = approved.length;
-
-  renderList('pending-list', pending, true);
-  renderList('approved-list', approved, false);
-  renderAllUsers('all-users-list', data);
-}
-
-function renderList(elId, users, showActions) {
-  const el = document.getElementById(elId);
-  if (!users.length) { el.innerHTML = `<div class="empty">None yet</div>`; return; }
-  el.innerHTML = users.map(u => `
-    <div class="driver-card">
-      <div style="display:flex;flex-direction:column;gap:8px;">
-        <div style="font-size:10px;color:#666;text-transform:uppercase;letter-spacing:0.05em;">Driver's License</div>
-        ${u.license_photo ? `<img class="insurance-img" src="${u.license_photo}" onclick="viewImg('${u.license_photo}')" title="Click to enlarge">` : '<div style="width:200px;height:130px;background:#1C1C1C;border-radius:8px;display:flex;align-items:center;justify-content:center;color:#444;font-size:12px;">Not uploaded</div>'}
-        <div style="font-size:10px;color:#666;text-transform:uppercase;letter-spacing:0.05em;margin-top:4px;">Insurance Card</div>
-        ${u.insurance_photo ? `<img class="insurance-img" src="${u.insurance_photo}" onclick="viewImg('${u.insurance_photo}')" title="Click to enlarge">` : '<div style="width:200px;height:130px;background:#1C1C1C;border-radius:8px;display:flex;align-items:center;justify-content:center;color:#444;font-size:12px;">Not uploaded</div>'}
-      </div>
-      <div class="driver-info">
-        <div class="driver-name">${u.name}</div>
-        <div class="driver-meta">${u.email} · ${u.phone || 'No phone'}</div>
-        <div class="driver-detail" style="margin-top:10px;">
-          🚗 ${u.vehicle_type || 'No vehicle'} ${u.vehicle_description ? '· ' + u.vehicle_description : ''}<br>
-          🔢 Plate: ${u.license_plate || 'Not provided'}<br>
-          📅 Submitted: ${u.insurance_submitted_at ? new Date(u.insurance_submitted_at).toLocaleDateString() : 'Not submitted'}<br>
-          🪪 License: ${u.license_photo ? '✓ Uploaded' : '✗ Missing'}<br>
-          📋 Insurance: ${u.insurance_photo ? '✓ Uploaded' : '✗ Missing'}<br>
-          ⭐ Rating: ${u.rating_count > 0 ? (u.rating_total/u.rating_count).toFixed(1) + ' (' + u.rating_count + ' reviews)' : 'No ratings yet'}
-        </div>
-        <div style="margin-top:8px;">
-          <span class="status-badge ${u.driver_approved ? 'status-approved' : u.insurance_photo ? 'status-pending' : 'status-rejected'}">
-            ${u.driver_approved ? '✓ Approved' : u.insurance_photo ? '⏳ Pending Review' : 'No Documents'}
-          </span>
-        </div>
-      </div>
-      ${showActions ? `
-      <div class="actions">
-        <button class="btn-approve" onclick="approveDriver('${u.id}')">✓ Approve</button>
-        <button class="btn-reject" onclick="rejectDriver('${u.id}')">✗ Reject</button>
-      </div>` : ''}
+function driverCard(d){
+  const isPending=(d.license_photo||d.insurance_photo)&&!d.driver_approved;
+  const rating=d.rating_count>0?(d.rating_total/d.rating_count).toFixed(1):'—';
+  let statusBadge='';
+  if(d.driver_approved)statusBadge='<span class="approved-badge">&#10003; Approved</span>';
+  else if(d.license_photo||d.insurance_photo)statusBadge='<span class="pending-badge">&#8987; Pending Review</span>';
+  const licPhoto=d.license_photo?`<div class="photo-thumb" onclick="openPhoto('${esc(d.license_photo)}')"><img src="${esc(d.license_photo)}" alt="License" onerror="this.parentNode.innerHTML='<span style=padding:8px>License<br>not loaded</span>'"><div class="ph-label">Driver License</div></div>`:'<div class="photo-thumb"><span>No license<br>photo</span></div>';
+  const insPhoto=d.insurance_photo?`<div class="photo-thumb" onclick="openPhoto('${esc(d.insurance_photo)}')"><img src="${esc(d.insurance_photo)}" alt="Insurance" onerror="this.parentNode.innerHTML='<span style=padding:8px>Insurance<br>not loaded</span>'"><div class="ph-label">Insurance</div></div>`:'<div class="photo-thumb"><span>No insurance<br>photo</span></div>';
+  const actions=isPending?`<div class="driver-actions"><button class="btn-approve" onclick="approveDriver('${d.id}')">&#10003; Approve</button><button class="btn-reject" onclick="openRejectModal('${d.id}')">&#10005; Reject</button></div>`:'';
+  return`<div class="driver-card" id="driver-${d.id}">
+    <div class="driver-card-head">
+      <div class="driver-avatar">${esc(initials(d.name))}</div>
+      <div><div class="driver-name">${esc(d.name)}</div><div class="driver-email">${esc(d.email)}</div></div>
+      <div style="margin-left:auto">${statusBadge}</div>
     </div>
-  `).join('');
+    <div class="driver-card-body">
+      <div class="driver-row"><span class="lbl">Phone</span><span>${esc(d.phone||'—')}</span></div>
+      <div class="driver-row"><span class="lbl">Vehicle</span><span>${esc(d.vehicle_type||d.vehicle_description||'—')}</span></div>
+      <div class="driver-row"><span class="lbl">License Plate</span><span>${esc(d.license_plate||'—')}</span></div>
+      <div class="driver-row"><span class="lbl">Rating</span><span>${rating}${d.rating_count>0?` <span style="color:#666">(${d.rating_count})</span>`:''}</span></div>
+      <div class="driver-row"><span class="lbl">Background Check</span><span>${esc(d.background_check||'pending')}</span></div>
+      <div class="driver-row"><span class="lbl">Joined</span><span>${fmtDate(d.created_at)}</span></div>
+      <div class="photos-row">${licPhoto}${insPhoto}</div>
+      ${actions}
+    </div>
+  </div>`;
 }
 
-function renderAllUsers(elId, users) {
-  const el = document.getElementById(elId);
-  el.innerHTML = `<table style="width:100%;border-collapse:collapse;">
-    <tr style="border-bottom:1px solid rgba(255,255,255,0.08);font-size:11px;color:#666;text-transform:uppercase;letter-spacing:0.05em;">
-      <th style="text-align:left;padding:8px 12px;">Name</th>
-      <th style="text-align:left;padding:8px 12px;">Email</th>
-      <th style="text-align:left;padding:8px 12px;">Vehicle</th>
-      <th style="text-align:left;padding:8px 12px;">Insurance</th>
-      <th style="text-align:left;padding:8px 12px;">Status</th>
-      <th style="text-align:left;padding:8px 12px;">Joined</th>
-    </tr>
-    ${users.map(u => `
-    <tr style="border-bottom:1px solid rgba(255,255,255,0.04);">
-      <td style="padding:10px 12px;font-weight:500;">${u.name}</td>
-      <td style="padding:10px 12px;color:#666;">${u.email}</td>
-      <td style="padding:10px 12px;color:#666;">${u.vehicle_type || '—'}</td>
-      <td style="padding:10px 12px;">${u.insurance_photo ? `<a href="${u.insurance_photo}" target="_blank" style="color:#00C2A8;font-size:12px;">View</a>` : '<span style="color:#444;">None</span>'}</td>
-      <td style="padding:10px 12px;">
-        <span class="status-badge ${u.driver_approved ? 'status-approved' : u.insurance_photo ? 'status-pending' : ''}">
-          ${u.driver_approved ? 'Approved' : u.insurance_photo ? 'Pending' : 'Shipper'}
-        </span>
-      </td>
-      <td style="padding:10px 12px;color:#666;font-size:12px;">${new Date(u.created_at).toLocaleDateString()}</td>
-    </tr>`).join('')}
-  </table>`;
+async function approveDriver(id){
+  try{
+    await api('/drivers/'+id+'/approve',{method:'POST'});
+    const i=allDrivers.findIndex(d=>d.id===id);
+    if(i>=0){allDrivers[i].driver_approved=1;allDrivers[i].insurance_verified=1;}
+    renderDrivers();updatePendingBadge();
+    toast('Driver approved — email sent','success');
+  }catch(e){toast('Failed to approve driver','error');}
 }
+function openRejectModal(id){
+  rejectTargetId=id;document.getElementById('reject-reason').value='';
+  document.getElementById('reject-modal').classList.add('open');
+}
+function closeRejectModal(){rejectTargetId=null;document.getElementById('reject-modal').classList.remove('open');}
+async function confirmReject(){
+  if(!rejectTargetId)return;
+  const reason=document.getElementById('reject-reason').value.trim();
+  try{
+    await api('/drivers/'+rejectTargetId+'/reject',{method:'POST',body:JSON.stringify({reason})});
+    const i=allDrivers.findIndex(d=>d.id===rejectTargetId);
+    if(i>=0){allDrivers[i].license_photo=null;allDrivers[i].insurance_photo=null;allDrivers[i].driver_approved=0;}
+    closeRejectModal();renderDrivers();updatePendingBadge();
+    toast('Driver rejected — email sent','success');
+  }catch(e){toast('Failed to reject driver','error');}
+}
+function updatePendingBadge(){
+  const pending=allDrivers.filter(d=>(d.license_photo||d.insurance_photo)&&!d.driver_approved).length;
+  const badge=document.getElementById('pending-badge');
+  badge.textContent=pending;badge.style.display=pending>0?'inline':'none';
+}
+
+async function loadJobs(){
+  const tbody=document.getElementById('jobs-tbody');
+  try{
+    const jobs=await api('/jobs');
+    if(!jobs.length){tbody.innerHTML='<tr><td colspan="9" class="empty">No jobs yet</td></tr>';return;}
+    const typeLabels={delivery:'Delivery',marketplace:'Marketplace',gig_yard:'Yard Work',gig_labor:'Labor',gig_dump:'Dump Run',gig_clean:'Cleaning',gig_handyman:'Handyman'};
+    tbody.innerHTML=jobs.map(j=>`<tr>
+      <td style="font-size:11px;color:#555;font-family:monospace">${esc(j.id.substring(0,8))}…</td>
+      <td><a href="/job/${esc(j.id)}" target="_blank">${esc(j.title)}</a></td>
+      <td style="color:#888;font-size:12px">${esc(typeLabels[j.job_type]||j.job_type)}</td>
+      <td><span class="dot ${esc(j.status)}"></span>${esc(j.status)}</td>
+      <td>${esc(j.shipper_name||'—')}</td>
+      <td>${esc(j.driver_name||'—')}</td>
+      <td>${fmtMoney(j.offered_price)}</td>
+      <td style="color:var(--green)">${fmtMoney(j.platform_fee)}</td>
+      <td style="color:#666;font-size:12px">${fmtDate(j.created_at)}</td>
+    </tr>`).join('');
+  }catch(e){tbody.innerHTML='<tr><td colspan="9" class="empty">Failed to load jobs</td></tr>';}
+}
+
+async function loadUsers(){
+  const tbody=document.getElementById('users-tbody');
+  try{
+    const users=await api('/drivers');
+    if(!users.length){tbody.innerHTML='<tr><td colspan="7" class="empty">No users yet</td></tr>';return;}
+    tbody.innerHTML=users.map(u=>{
+      const rating=u.rating_count>0?(u.rating_total/u.rating_count).toFixed(1)+` (${u.rating_count})`:'—';
+      let ds='—';
+      if(u.driver_approved)ds='<span class="approved-badge" style="font-size:11px">&#10003; Driver</span>';
+      else if(u.license_photo||u.insurance_photo)ds='<span class="pending-badge" style="font-size:11px">Pending</span>';
+      return`<tr>
+        <td>${esc(u.name)}</td><td>${esc(u.email)}</td><td>${esc(u.phone||'—')}</td>
+        <td>${ds}</td><td>${rating}</td>
+        <td style="color:#666;font-size:12px">${fmtDate(u.created_at)}</td>
+        <td><button onclick="viewUser('${esc(u.id)}')" style="background:transparent;border:1px solid var(--border);color:#888;padding:4px 10px;border-radius:6px;font-size:12px;cursor:pointer">View</button></td>
+      </tr>`;
+    }).join('');
+  }catch(e){tbody.innerHTML='<tr><td colspan="7" class="empty">Failed to load users</td></tr>';}
+}
+
+async function viewUser(id){
+  viewingUserId=id;
+  document.getElementById('user-modal-name').textContent='Loading…';
+  document.getElementById('user-modal-body').innerHTML='<div class="loader"><span class="loading-dots">Loading</span></div>';
+  document.getElementById('user-modal').classList.add('open');
+  try{
+    const u=await api('/users/'+id);
+    document.getElementById('user-modal-name').textContent=u.name||'User Detail';
+    const rows=[
+      ['ID',u.id],['Email',u.email],['Phone',u.phone||'—'],
+      ['Vehicle',u.vehicle_type||'—'],['Vehicle Desc',u.vehicle_description||'—'],
+      ['License Plate',u.license_plate||'—'],['Driver Approved',u.driver_approved?'Yes':'No'],
+      ['Insurance Verified',u.insurance_verified?'Yes':'No'],['Background Check',u.background_check||'—'],
+      ['Rating',u.rating_count>0?`${(u.rating_total/u.rating_count).toFixed(1)} (${u.rating_count} ratings)`:'—'],
+      ['Stripe Customer',u.stripe_customer_id||'—'],['Stripe Connect',u.stripe_connect_id||'—'],
+      ['Home Address',u.home_address||'—'],['Bio',u.bio||'—'],['Joined',fmtDate(u.created_at)]
+    ];
+    document.getElementById('user-modal-body').innerHTML=rows.map(([k,v])=>`<div class="user-detail-row"><span class="k">${esc(k)}</span><span class="v">${esc(v)}</span></div>`).join('');
+  }catch(e){document.getElementById('user-modal-body').innerHTML='<div class="empty">Failed to load user</div>';}
+}
+function closeUserModal(){viewingUserId=null;document.getElementById('user-modal').classList.remove('open');}
+async function deleteUser(){
+  if(!viewingUserId)return;
+  if(!confirm('Permanently delete this user? Cannot be undone.'))return;
+  try{
+    await api('/users/'+viewingUserId,{method:'DELETE'});
+    closeUserModal();toast('User deleted','success');loadUsers();loadOverview();
+  }catch(e){toast('Failed to delete user','error');}
+}
+
+function openPhoto(url){document.getElementById('lightbox-img').src=url;document.getElementById('lightbox').classList.add('open');}
+function closeLightbox(){document.getElementById('lightbox').classList.remove('open');}
 </script>
 </body>
 </html>
