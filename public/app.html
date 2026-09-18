@@ -2071,8 +2071,12 @@ function fmtDate(ts, isLocal){
 let acTimers={};
 function positionAcList(list, input){
   const rect=input.getBoundingClientRect();
-  list.style.cssText='position:fixed;z-index:9999;max-height:220px;overflow-y:auto;'
-    +'left:'+rect.left+'px;width:'+rect.width+'px;top:'+(rect.bottom+2)+'px;';
+  list.style.position='fixed';
+  list.style.top=(rect.bottom+2)+'px';
+  list.style.left=rect.left+'px';
+  list.style.width=rect.width+'px';
+  list.style.bottom='';
+  list.style.zIndex='9999';
   if(list.parentNode!==document.body) document.body.appendChild(list);
 }
 function cityAutocomplete(input, listId){
