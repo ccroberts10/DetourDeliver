@@ -44,6 +44,29 @@ app.use('/api/jobs', require('./routes/jobs'));
 app.use('/api/stripe', require('./routes/stripe'));
 app.use('/api/admin', require('./routes/admin'));
 
+// Nominatim proxy — avoids CORS/browser blocks on client-side geocoding
+app.get('/api/geocode/search', async (req, res) => {
+  try {
+    const { q, type } = req.query;
+    if (!q) return res.json([]);
+    const url = `https://nominatim.openstreetmap.org/search?q=${encodeURIComponent(q)}&format=json&limit=8&addressdetails=1`;
+    const r = await fetch(url, { headers: { 'User-Agent': 'DetourDeliver/1.0 (detourdeliver.com)' } });
+    const data = await r.json();
+    res.json(data);
+  } catch(e) { res.json([]); }
+});
+
+app.get('/api/geocode/reverse', async (req, res) => {
+  try {
+    const { lat, lon } = req.query;
+    if (!lat || !lon) return res.json({});
+    const url = `https://nominatim.openstreetmap.org/reverse?lat=${lat}&lon=${lon}&format=json`;
+    const r = await fetch(url, { headers: { 'User-Agent': 'DetourDeliver/1.0 (detourdeliver.com)' } });
+    const data = await r.json();
+    res.json(data);
+  } catch(e) { res.json({}); }
+});
+
 app.get('/api/debug/session', (req, res) => {
   res.json({ userId: req.session.userId || null, sessionId: req.sessionID });
 });
