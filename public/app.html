@@ -2069,9 +2069,15 @@ function fmtDate(ts, isLocal){
   }catch(e){return'';}
 }
 let acTimers={};
+function positionAcList(list, input){
+  const rect=input.getBoundingClientRect();
+  list.style.cssText='position:fixed;z-index:9999;max-height:220px;overflow-y:auto;'
+    +'left:'+rect.left+'px;width:'+rect.width+'px;top:'+(rect.bottom+2)+'px;';
+  if(list.parentNode!==document.body) document.body.appendChild(list);
+}
 function cityAutocomplete(input, listId){
   const query=input.value.trim();
-  const list=document.getElementById(listId);
+  let list=document.getElementById(listId);
   if(!list)return;
   if(query.length<2){list.style.display='none';return;}
   clearTimeout(acTimers[listId]);
@@ -2081,10 +2087,7 @@ function cityAutocomplete(input, listId){
       const results=await res.json();
       const cities=results.filter(r=>r.address&&r.address.country_code==='us'&&(r.address.city||r.address.town||r.address.village||r.address.county||r.address.municipality)).slice(0,5);
       if(!cities.length){list.style.display='none';return;}
-      const rect=input.getBoundingClientRect();
-      list.style.top=(rect.bottom+2)+'px';
-      list.style.left=rect.left+'px';
-      list.style.width=rect.width+'px';
+      positionAcList(list, input);
       list.style.display='block';
       list.innerHTML=cities.map((r,i)=>{
         const addr=r.address;
@@ -2126,22 +2129,19 @@ function addressAutocomplete(input, listId, zipId, cityId, stateId){
       const res=await fetch(`/api/geocode/search?q=${encodeURIComponent(query+', '+context+', USA')}`);
       const results=await res.json();
       if(!results.length){list.style.display='none';return;}
-      const rect=input.getBoundingClientRect();
-      list.style.top=(rect.bottom+2)+'px';
-      list.style.left=rect.left+'px';
-      list.style.width=rect.width+'px';
+      positionAcList(list, input);
       list.style.display='block';
       list.innerHTML=results.map((r,i)=>{
-        const name=r.name||r.display_name.split(',')[0];
         const addr=r.address;
-        const street=addr.house_number?`${addr.house_number} ${addr.road||''}`:addr.road||'';
+        const street=addr.house_number?`${addr.house_number} ${addr.road||''}`.trim():addr.road||'';
         const cityName=addr.city||addr.town||addr.village||addr.county||'';
         const stateName=addr.state_code||addr.state||'';
         const postalCode=addr.postcode||'';
-        const displayAddr=[street,cityName,stateName,postalCode].filter(Boolean).join(', ');
+        const primaryLine=street||r.display_name.split(',')[0];
+        const secondaryLine=[cityName,stateName,postalCode].filter(Boolean).join(', ');
         return`<div class="autocomplete-item" onclick="selectAddress('${listId}','${input.id}','${cityId}','${stateId}','${zipId}',${i})">
-          <div class="autocomplete-name">${escHtml(name)}</div>
-          ${displayAddr?`<div class="autocomplete-addr">${escHtml(displayAddr)}</div>`:''}
+          <div style="font-weight:500;font-size:14px">${escHtml(primaryLine)}</div>
+          ${secondaryLine?`<div style="font-size:12px;color:var(--text3);margin-top:1px">${escHtml(secondaryLine)}</div>`:''}
         </div>`;
       }).join('');
       // Store results for selection
