@@ -1622,8 +1622,8 @@ function getNearMe(){
     try{
       const r=await fetch(`/api/geocode/reverse?lat=${pos.coords.latitude}&lon=${pos.coords.longitude}`);
       const data=await r.json();
-      const city=data.address.city||data.address.town||data.address.village||'';
-      const state=data.address.state_code||'';
+      const city=(data.address?.city||data.address?.town||data.address?.village||'');
+      const state=(data.address?.state_code||'');
       document.getElementById('browse-destination').value=`${city}, ${state}`;
       browseAll();
     }catch(e){results.innerHTML='<div class="empty-state">Could not determine your city. Try searching by location.</div>';}
