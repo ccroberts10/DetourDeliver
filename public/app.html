@@ -251,8 +251,8 @@ textarea{resize:none}
 .nav-item{position:relative}
 .toast.show{opacity:1;transform:translateX(-50%) translateY(0)}
 .autocomplete-wrap{position:relative;}
-.autocomplete-list{position:absolute;top:100%;left:0;right:0;background:var(--dark2);border:1px solid rgba(0,194,168,0.3);border-radius:var(--rs);z-index:9999;max-height:220px;overflow-y:auto;box-shadow:0 8px 24px rgba(0,0,0,0.2);}
-.autocomplete-item{padding:11px 14px;font-size:13px;cursor:pointer;border-bottom:0.5px solid rgba(0,0,0,0.04);line-height:1.4;}
+.autocomplete-list{position:absolute;top:100%;left:0;right:0;background:#FFFFFF;border:1px solid rgba(0,194,168,0.4);border-radius:var(--rs);z-index:9999;max-height:220px;overflow-y:auto;box-shadow:0 4px 20px rgba(0,0,0,0.15);}
+.autocomplete-item{padding:11px 14px;font-size:13px;cursor:pointer;border-bottom:0.5px solid rgba(0,0,0,0.07);line-height:1.4;color:#0F0F0F;}
 .autocomplete-item:last-child{border-bottom:none;}
 .autocomplete-item:active,.autocomplete-item:hover{background:rgba(0,194,168,0.1);color:var(--teal);}
 .autocomplete-name{font-weight:500;color:var(--white);}
@@ -2134,6 +2134,7 @@ function addressAutocomplete(input, listId, zipId, cityId, stateId){
       const res=await fetch(`/api/geocode/search?q=${encodeURIComponent(query+', '+context+', USA')}`);
       const results=await res.json();
       if(!results.length){list.style.display='none';return;}
+      positionAcList(list, input);
       list.style.display='block';
       list.innerHTML=results.map((r,i)=>{
         const addr=r.address;
