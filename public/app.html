@@ -1620,7 +1620,7 @@ function getNearMe(){
   if(!navigator.geolocation){results.innerHTML='<div class="empty-state">Location not supported on this device</div>';return;}
   navigator.geolocation.getCurrentPosition(async(pos)=>{
     try{
-      const r=await fetch(`https://nominatim.openstreetmap.org/reverse?lat=${pos.coords.latitude}&lon=${pos.coords.longitude}&format=json`);
+      const r=await fetch(`/api/geocode/reverse?lat=${pos.coords.latitude}&lon=${pos.coords.longitude}`);
       const data=await r.json();
       const city=data.address.city||data.address.town||data.address.village||'';
       const state=data.address.state_code||'';
@@ -2077,10 +2077,7 @@ function cityAutocomplete(input, listId){
   clearTimeout(acTimers[listId]);
   acTimers[listId]=setTimeout(async()=>{
     try{
-      const q=encodeURIComponent(`${query}, USA`);
-      const res=await fetch(`https://nominatim.openstreetmap.org/search?q=${q}&format=json&limit=8&addressdetails=1`,{
-        headers:{'Accept':'application/json','User-Agent':'DetourDeliver/1.0'}
-      });
+      const res=await fetch(`/api/geocode/search?q=${encodeURIComponent(query+', USA')}`);
       const results=await res.json();
       const cities=results.filter(r=>r.address&&(r.address.city||r.address.town||r.address.village||r.address.county||r.address.municipality)).slice(0,5);
       if(!cities.length){list.style.display='none';return;}
@@ -2121,10 +2118,7 @@ function addressAutocomplete(input, listId, zipId, cityId, stateId){
       const state=document.getElementById(stateId)?.value.trim()||'CO';
       // Build search query — include zip/city for local context
       const context=zip||`${city}, ${state}`;
-      const q=encodeURIComponent(`${query}, ${context}, USA`);
-      const res=await fetch(`https://nominatim.openstreetmap.org/search?q=${q}&format=json&limit=5&addressdetails=1`,{
-        headers:{'Accept':'application/json','User-Agent':'DetourDeliver/1.0'}
-      });
+      const res=await fetch(`/api/geocode/search?q=${encodeURIComponent(query+', '+context+', USA')}`);
       const results=await res.json();
       if(!results.length){list.style.display='none';return;}
       list.style.display='block';
