@@ -8,6 +8,8 @@ const ADMIN_PASSWORD = process.env.ADMIN_PASSWORD
   : null;
 
 function requireAdmin(req, res, next) {
+  res.set('Cache-Control', 'no-store, no-cache, must-revalidate');
+  res.set('Pragma', 'no-cache');
   if (!ADMIN_PASSWORD) return res.status(503).json({ error: 'Admin not configured — set ADMIN_PASSWORD env var' });
   const auth = req.headers['x-admin-password'] || req.headers['authorization']?.replace('Bearer ','');
   if (auth !== ADMIN_PASSWORD) return res.status(401).json({ error: 'Unauthorized' });
@@ -82,6 +84,47 @@ router.post('/drivers/:id/reject', requireAdmin, async (req, res) => {
   }
   console.log(`Driver rejected: ${user?.name} (${user?.email}) — Reason: ${rejectionReason}`);
   res.json({ success: true });
+});
+
+// All jobs with shipper/driver names
+router.get('/jobs', requireAdmin, (req, res) => {
+  const jobs = db.prepare(`
+    SELECT j.*,
+      s.name as shipper_name, s.email as shipper_email,
+      d.name as driver_name, d.email as driver_email
+    FROM jobs j
+    LEFT JOIN users s ON j.shipper_id = s.id
+    LEFT JOIN users d ON j.driver_id = d.id
+    ORDER BY j.created_at DESC
+    LIMIT 200
+  `).all();
+  res.json(jobs);
+});
+
+// Single user detail
+router.get('/users/:id', requireAdmin, (req, res) => {
+  const user = db.prepare('SELECT * FROM users WHERE id = ?').get(req.params.id);
+  if (!user) return res.status(404).json({ error: 'Not found' });
+  delete user.password_hash;
+  res.json(user);
+});
+
+// Delete user (nuclear option)
+router.delete('/users/:id', requireAdmin, (req, res) => {
+  db.prepare('DELETE FROM users WHERE id = ?').run(req.params.id);
+  res.json({ success: true });
+});
+
+// Platform stats
+router.get('/overview', requireAdmin, (req, res) => {
+  const users = db.prepare('SELECT COUNT(*) as c FROM users').get().c;
+  const drivers = db.prepare('SELECT COUNT(*) as c FROM users WHERE driver_approved = 1').get().c;
+  const pending = db.prepare('SELECT COUNT(*) as c FROM users WHERE (license_photo IS NOT NULL OR insurance_photo IS NOT NULL) AND driver_approved = 0').get().c;
+  const jobs = db.prepare('SELECT COUNT(*) as c FROM jobs').get().c;
+  const open = db.prepare("SELECT COUNT(*) as c FROM jobs WHERE status = 'open'").get().c;
+  const completed = db.prepare("SELECT COUNT(*) as c FROM jobs WHERE status = 'completed'").get().c;
+  const revenue = db.prepare("SELECT COALESCE(SUM(platform_fee),0) as total FROM jobs WHERE status = 'completed'").get().total;
+  res.json({ users, drivers, pending_drivers: pending, jobs, open_jobs: open, completed_jobs: completed, gross_revenue: revenue });
 });
 
 module.exports = router;
