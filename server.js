@@ -39,11 +39,15 @@ if (!fs.existsSync(uploadsPath)) fs.mkdirSync(uploadsPath, { recursive: true });
 app.use('/uploads', express.static(uploadsPath));
 app.use(express.static(path.join(__dirname, 'public'), { index: false }));
 
+const stripeRoutes = require('./routes/stripe');
 app.use('/api/auth', require('./routes/auth'));
 app.use('/api/jobs', require('./routes/jobs'));
-app.use('/api/stripe', require('./routes/stripe'));
+app.use('/api/stripe', stripeRoutes);
 app.use('/api/admin', require('./routes/admin'));
 app.use('/api/push', require('./routes/push'));
+
+// Stripe webhook — must use raw body (already handled above)
+app.post('/api/stripe/webhook', stripeRoutes.webhookHandler);
 
 // Nominatim proxy — avoids CORS/browser blocks on client-side geocoding
 app.get('/api/geocode/search', async (req, res) => {
@@ -98,6 +102,8 @@ app.get('/terms', (req, res) => res.sendFile(path.join(__dirname, 'public', 'ter
 app.get('/privacy', (req, res) => res.sendFile(path.join(__dirname, 'public', 'privacy.html')));
 app.get('/app', (req, res) => res.sendFile(path.join(__dirname, 'public', 'app.html')));
 
+function escHtml(s){ return String(s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;').replace(/'/g,'&#39;'); }
+
 // Public shareable job page — no login required
 app.get('/job/:jobId', (req, res) => {
   try {
@@ -116,20 +122,20 @@ app.get('/job/:jobId', (req, res) => {
     const parts = [];
     parts.push('<!DOCTYPE html><html lang="en"><head>');
     parts.push('<meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1.0">');
-    parts.push('<title>Detour - ' + job.title + '</title>');
+    parts.push('<title>Detour - ' + escHtml(job.title) + '</title>');
     parts.push('<link href="https://fonts.googleapis.com/css2?family=Syne:wght@700;800&family=DM+Sans:wght@300;400;500&display=swap" rel="stylesheet">');
     parts.push('<style>*{margin:0;padding:0;box-sizing:border-box}body{background:#080808;color:#fff;font-family:"DM Sans",sans-serif;padding-bottom:60px}nav{background:#080808;border-bottom:0.5px solid rgba(255,255,255,0.08);padding:14px 20px;display:flex;align-items:center;justify-content:space-between}.dm{width:26px;height:26px;background:#00C2A8;border-radius:0 13px 13px 0;position:relative;display:inline-block;vertical-align:middle;margin-right:6px}.dm::after{content:"";width:10px;height:10px;background:#080808;border-radius:50%;position:absolute;top:50%;left:55%;transform:translate(-50%,-50%)}.wm{font-family:"Syne",sans-serif;font-size:19px;font-weight:800;letter-spacing:-1px;color:#fff;vertical-align:middle}.btn{background:#00C2A8;color:#000;padding:9px 16px;border-radius:20px;font-size:13px;font-weight:600;text-decoration:none}.card{background:#111;border:0.5px solid rgba(255,255,255,0.07);border-radius:14px;padding:18px;margin:12px 16px 0}.tag{display:inline-block;background:rgba(0,194,168,0.1);border:0.5px solid rgba(0,194,168,0.25);color:#00C2A8;padding:4px 12px;border-radius:20px;font-size:12px;margin-bottom:12px}h1{font-family:"Syne",sans-serif;font-size:24px;font-weight:800;letter-spacing:-0.5px;flex:1}.price{font-family:"Syne",sans-serif;font-size:30px;font-weight:800;color:#00C2A8;letter-spacing:-1px}.row{display:flex;align-items:flex-start;justify-content:space-between;gap:8px;margin-bottom:10px}.lbl{font-size:11px;color:rgba(255,255,255,0.3);letter-spacing:0.08em;text-transform:uppercase;margin-bottom:4px}.val{font-size:15px;font-weight:500;margin-bottom:14px}.val:last-child{margin-bottom:0}.div{height:0.5px;background:rgba(255,255,255,0.06);margin:12px 0}.badge{display:inline-block;padding:4px 12px;border-radius:20px;font-size:12px;font-weight:600;margin-bottom:12px}.cta{display:block;background:#00C2A8;color:#000;padding:16px;border-radius:14px;text-align:center;font-family:"Syne",sans-serif;font-size:17px;font-weight:800;text-decoration:none;margin:16px 16px 0}.sub{text-align:center;font-size:12px;color:rgba(255,255,255,0.3);margin-top:10px;padding:0 16px}.foot{text-align:center;margin-top:32px;font-size:11px;color:rgba(255,255,255,0.18)}</style></head><body>');
     parts.push('<nav><a href="https://detourdeliver.com" style="text-decoration:none"><span class="dm"></span><span class="wm">etour</span></a><a class="btn" href="https://detourdeliver.com/app">Deliver this</a></nav>');
-    parts.push('<div class="card"><div class="tag">' + label + '</div>');
-    parts.push('<div class="row"><h1>' + job.title + '</h1><div class="price">$' + parseFloat(job.price).toFixed(2) + '</div></div>');
-    parts.push('<div class="badge" style="background:' + (isOpen ? 'rgba(0,194,168,0.12)' : 'rgba(255,255,255,0.06)') + ';color:' + (isOpen ? '#00C2A8' : 'rgba(255,255,255,0.4)') + '">' + statusText + '</div>');
-    if (job.description) parts.push('<div class="lbl">Description</div><div class="val">' + job.description + '</div>');
+    parts.push('<div class="card"><div class="tag">' + escHtml(label) + '</div>');
+    parts.push('<div class="row"><h1>' + escHtml(job.title) + '</h1><div class="price">$' + parseFloat(job.price).toFixed(2) + '</div></div>');
+    parts.push('<div class="badge" style="background:' + (isOpen ? 'rgba(0,194,168,0.12)' : 'rgba(255,255,255,0.06)') + ';color:' + (isOpen ? '#00C2A8' : 'rgba(255,255,255,0.4)') + '">' + escHtml(statusText) + '</div>');
+    if (job.description) parts.push('<div class="lbl">Description</div><div class="val">' + escHtml(job.description) + '</div>');
     parts.push('</div>');
-    parts.push('<div class="card"><div class="lbl">Pickup</div><div class="val">' + (job.pickup_address || 'See app') + '</div><div class="div"></div><div class="lbl">Dropoff</div><div class="val">' + (job.dropoff_address || 'See app') + '</div></div>');
+    parts.push('<div class="card"><div class="lbl">Pickup</div><div class="val">' + escHtml(job.pickup_address || 'See app') + '</div><div class="div"></div><div class="lbl">Dropoff</div><div class="val">' + escHtml(job.dropoff_address || 'See app') + '</div></div>');
     if (job.size || job.weight) {
       parts.push('<div class="card">');
-      if (job.size) parts.push('<div class="lbl">Size</div><div class="val">' + job.size + '</div>');
-      if (job.weight) parts.push('<div class="lbl">Weight</div><div class="val">' + job.weight + ' lbs</div>');
+      if (job.size) parts.push('<div class="lbl">Size</div><div class="val">' + escHtml(job.size) + '</div>');
+      if (job.weight) parts.push('<div class="lbl">Weight</div><div class="val">' + escHtml(String(job.weight)) + ' lbs</div>');
       parts.push('</div>');
     }
     if (isOpen) {
