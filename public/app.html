@@ -251,7 +251,7 @@ textarea{resize:none}
 .nav-item{position:relative}
 .toast.show{opacity:1;transform:translateX(-50%) translateY(0)}
 .autocomplete-wrap{position:relative;}
-.autocomplete-list{position:fixed;background:var(--dark2);border:1px solid rgba(0,194,168,0.3);border-radius:var(--rs);z-index:9999;max-height:220px;overflow-y:auto;box-shadow:0 8px 24px rgba(0,0,0,0.2);}
+.autocomplete-list{position:absolute;top:100%;left:0;right:0;background:var(--dark2);border:1px solid rgba(0,194,168,0.3);border-radius:var(--rs);z-index:9999;max-height:220px;overflow-y:auto;box-shadow:0 8px 24px rgba(0,0,0,0.2);}
 .autocomplete-item{padding:11px 14px;font-size:13px;cursor:pointer;border-bottom:0.5px solid rgba(0,0,0,0.04);line-height:1.4;}
 .autocomplete-item:last-child{border-bottom:none;}
 .autocomplete-item:active,.autocomplete-item:hover{background:rgba(0,194,168,0.1);color:var(--teal);}
@@ -2111,7 +2111,8 @@ function selectCity(inputId, listId, index){
   const r=list._results[index];
   const addr=r.address;
   const city=addr.city||addr.town||addr.village||addr.municipality||addr.county||'';
-  const state=addr.state_code||(addr.state?addr.state.substring(0,2).toUpperCase():'');
+  const stateAbbrSel={'Alabama':'AL','Alaska':'AK','Arizona':'AZ','Arkansas':'AR','California':'CA','Colorado':'CO','Connecticut':'CT','Delaware':'DE','Florida':'FL','Georgia':'GA','Hawaii':'HI','Idaho':'ID','Illinois':'IL','Indiana':'IN','Iowa':'IA','Kansas':'KS','Kentucky':'KY','Louisiana':'LA','Maine':'ME','Maryland':'MD','Massachusetts':'MA','Michigan':'MI','Minnesota':'MN','Mississippi':'MS','Missouri':'MO','Montana':'MT','Nebraska':'NE','Nevada':'NV','New Hampshire':'NH','New Jersey':'NJ','New Mexico':'NM','New York':'NY','North Carolina':'NC','North Dakota':'ND','Ohio':'OH','Oklahoma':'OK','Oregon':'OR','Pennsylvania':'PA','Rhode Island':'RI','South Carolina':'SC','South Dakota':'SD','Tennessee':'TN','Texas':'TX','Utah':'UT','Vermont':'VT','Virginia':'VA','Washington':'WA','West Virginia':'WV','Wisconsin':'WI','Wyoming':'WY'};
+  const state=addr.state_code||stateAbbrSel[addr.state]||'';
   const el=document.getElementById(inputId);
   if(el)el.value=state?`${city}, ${state}`:city;
   list.style.display='none';
@@ -2133,7 +2134,6 @@ function addressAutocomplete(input, listId, zipId, cityId, stateId){
       const res=await fetch(`/api/geocode/search?q=${encodeURIComponent(query+', '+context+', USA')}`);
       const results=await res.json();
       if(!results.length){list.style.display='none';return;}
-      positionAcList(list, input);
       list.style.display='block';
       list.innerHTML=results.map((r,i)=>{
         const addr=r.address;
