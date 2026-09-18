@@ -256,8 +256,10 @@ function showTab(name,el){
   el.classList.add('active');
 }
 
-function api(path,opts={}){
-  return fetch(API+path,{...opts,headers:{'x-admin-password':adminPw,'Content-Type':'application/json',...(opts.headers||{})}}).then(r=>r.json());
+async function api(path,opts={}){
+  const r=await fetch(API+path,{...opts,headers:{'x-admin-password':adminPw,'Content-Type':'application/json',...(opts.headers||{})}});
+  const text=await r.text();
+  try{return JSON.parse(text);}catch(e){throw new Error(`HTTP ${r.status}: ${text.substring(0,200)}`);}
 }
 
 function toast(msg,type=''){
@@ -283,7 +285,7 @@ async function loadOverview(){
       <div class="stat"><div class="stat-label">Open Jobs</div><div class="stat-value teal">${d.open_jobs}</div></div>
       <div class="stat"><div class="stat-label">Completed Jobs</div><div class="stat-value green">${d.completed_jobs}</div></div>
       <div class="stat"><div class="stat-label">Gross Revenue</div><div class="stat-value green">${fmtMoney(d.gross_revenue)}</div></div>`;
-  }catch(e){grid.innerHTML='<div class="empty">Failed to load stats</div>';}
+  }catch(e){grid.innerHTML='<div class="empty">Failed to load stats<br><small style="color:#555">'+esc(e.message)+'</small></div>';}
 }
 
 async function loadDrivers(){
@@ -293,7 +295,7 @@ async function loadDrivers(){
     const pending=allDrivers.filter(d=>(d.license_photo||d.insurance_photo)&&!d.driver_approved).length;
     const badge=document.getElementById('pending-badge');
     badge.textContent=pending;badge.style.display=pending>0?'inline':'none';
-  }catch(e){document.getElementById('drivers-grid').innerHTML='<div class="empty">Failed to load drivers</div>';}
+  }catch(e){document.getElementById('drivers-grid').innerHTML='<div class="empty">Failed to load drivers<br><small style="color:#555">'+esc(e.message)+'</small></div>';}
 }
 
 function renderDrivers(){
