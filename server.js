@@ -43,6 +43,7 @@ app.use('/api/auth', require('./routes/auth'));
 app.use('/api/jobs', require('./routes/jobs'));
 app.use('/api/stripe', require('./routes/stripe'));
 app.use('/api/admin', require('./routes/admin'));
+app.use('/api/push', require('./routes/push'));
 
 // Nominatim proxy — avoids CORS/browser blocks on client-side geocoding
 app.get('/api/geocode/search', async (req, res) => {
