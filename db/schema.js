@@ -147,6 +147,10 @@ migrate(`ALTER TABLE jobs ADD COLUMN dropoff_state TEXT`);
 migrate(`ALTER TABLE ratings ADD COLUMN role TEXT DEFAULT 'driver'`);
 migrate(`ALTER TABLE jobs ADD COLUMN promo_code TEXT`);
 migrate(`ALTER TABLE jobs ADD COLUMN promo_discount REAL DEFAULT 0`);
+migrate(`ALTER TABLE driver_routes ADD COLUMN origin_lat REAL`);
+migrate(`ALTER TABLE driver_routes ADD COLUMN origin_lng REAL`);
+migrate(`ALTER TABLE driver_routes ADD COLUMN destination_lat REAL`);
+migrate(`ALTER TABLE driver_routes ADD COLUMN destination_lng REAL`);
 
 // Promo codes table
 db.exec(`
