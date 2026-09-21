@@ -155,4 +155,14 @@ app.get('/job/:jobId', (req, res) => {
 
 app.get('*', (req, res) => res.sendFile(path.join(__dirname, 'public', 'app.html')));
 
+// Auto-expire driver routes 2 hours after departure
+function expireOldRoutes() {
+  try {
+    const result = db.prepare(`UPDATE driver_routes SET active = 0 WHERE active = 1 AND departure_time < datetime('now', '-2 hours')`).run();
+    if (result.changes > 0) console.log(`Expired ${result.changes} driver route(s)`);
+  } catch(e) { console.error('Route expiry error:', e.message); }
+}
+expireOldRoutes();
+setInterval(expireOldRoutes, 30 * 60 * 1000);
+
 app.listen(PORT, () => console.log('Detour running on port ' + PORT));
