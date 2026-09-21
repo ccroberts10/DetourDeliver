@@ -104,7 +104,7 @@ router.post('/driver-routes', requireAuth, (req, res) => {
 });
 
 router.get('/driver-routes/my', requireAuth, (req, res) => {
-  const routes = db.prepare(`SELECT * FROM driver_routes WHERE driver_id = ? AND active = 1 ORDER BY departure_time ASC`).all(req.session.userId);
+  const routes = db.prepare(`SELECT * FROM driver_routes WHERE driver_id = ? AND active = 1 AND departure_time > datetime('now') ORDER BY departure_time ASC`).all(req.session.userId);
   routes.forEach(r => { r.haul_types = JSON.parse(r.haul_types || '[]'); });
   res.json(routes);
 });
