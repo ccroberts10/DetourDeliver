@@ -1683,14 +1683,53 @@ function renderSingleLocationMap(job){
   const mapUrl=`https://www.openstreetmap.org/export/embed.html?bbox=${lng-pad},${lat-pad},${lng+pad},${lat+pad}&layer=mapnik&marker=${lat},${lng}`;
   return`<div class="job-map"><iframe src="${mapUrl}" style="width:100%;height:100%;border:none;" loading="lazy" title="Job location map"></iframe></div>`;
 }
+function homeDriveCard(r){
+  const dep=fmtDate(r.departure_time,true);
+  const hauls=JSON.parse(typeof r.haul_types==='string'?r.haul_types:JSON.stringify(r.haul_types||[]));
+  const haulLabels=hauls.map(h=>SZ[h]||h).join(', ');
+  return`<div class="job-card" style="border-left:3px solid var(--teal);cursor:pointer;" onclick="startJobFromRoute('${r.id}','${escHtml(r.origin_city)}','${escHtml(r.destination_city)}')">
+    <div style="display:flex;align-items:center;gap:6px;margin-bottom:6px;">
+      <span style="font-size:11px;font-weight:700;letter-spacing:0.06em;text-transform:uppercase;color:var(--teal);">🚗 Driver available</span>
+    </div>
+    <div class="job-card-header" style="margin-bottom:4px;">
+      <div class="job-card-title">${escHtml(r.origin_city)} → ${escHtml(r.destination_city)}</div>
+    </div>
+    <div class="job-meta"><span>🕐 ${dep}</span><span>↗ up to ${r.max_detour_minutes} min detour</span></div>
+    ${r.driver_name?`<div class="job-meta" style="margin-top:4px;"><span>👤 ${escHtml(r.driver_name)}</span>${r.avg_rating?`<span>⭐ ${r.avg_rating}</span>`:''}</div>`:''}
+    ${haulLabels?`<div class="job-meta" style="margin-top:4px;"><span>📦 ${haulLabels}</span></div>`:''}
+    <div style="margin-top:10px;font-size:12px;font-weight:600;color:var(--teal);">Tap to send something with this driver →</div>
+  </div>`;
+}
+function startJobFromRoute(routeId, origin, dest){
+  // Pre-fill job post with this driver's route
+  showView('view-post');
+  setTimeout(()=>{
+    const pickupEl=document.getElementById('pickup-city');
+    const dropoffEl=document.getElementById('dropoff-city');
+    if(pickupEl) pickupEl.value=origin;
+    if(dropoffEl) dropoffEl.value=dest;
+    // store route id to attach to job
+    window._requestedDriverRouteId=routeId;
+    toast('Route pre-filled — add your item details and post!');
+  },200);
+}
 async function loadOpenJobs(){
   const list=document.getElementById('open-jobs-list');
   if(!list)return;
   list.innerHTML='<div class="empty-state">Loading...</div>';
   try{
-    const jobs=await api('GET','/api/jobs');
-    allOpenJobs=jobs; // Store for filter
-    if(!jobs.length){list.innerHTML='<div class="empty-state">No open jobs right now.\nPost one or check back soon!</div>';return;}
+    const [jobs, routes]=await Promise.all([
+      api('GET','/api/jobs'),
+      fetch('/api/jobs/driver-routes').then(r=>r.json()).catch(()=>[])
+    ]);
+    allOpenJobs=jobs;
+    // Inject driver route cards at top of feed
+    const routeHtml=routes.length
+      ? routes.map(r=>homeDriveCard(r)).join('')
+      : '';
+    if(!jobs.length && !routes.length){list.innerHTML='<div class="empty-state">No open jobs right now.\nPost one or check back soon!</div>';return;}
+    // Render routes first, then jobs below
+    if(routeHtml) list.insertAdjacentHTML('beforeend', routeHtml);
     renderFilteredJobs();
   }catch(e){list.innerHTML='<div class="empty-state">Could not load jobs</div>';}
 }
