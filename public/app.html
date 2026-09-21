@@ -12,9 +12,9 @@
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
 <meta name="apple-mobile-web-app-title" content="Detour">
-<link rel="apple-touch-icon" href="/icons/detour-icon-teal-192px.png">
-<link rel="icon" type="image/png" sizes="192x192" href="/icons/detour-icon-teal-192px.png">
-<link rel="icon" type="image/png" sizes="512x512" href="/icons/detour-icon-teal-512px.png">
+<link rel="apple-touch-icon" href="/icons/detour-icon-192.png">
+<link rel="icon" type="image/png" sizes="192x192" href="/icons/detour-icon-192.png">
+<link rel="icon" type="image/png" sizes="512x512" href="/icons/detour-icon-512.png">
 <meta name="stripe-pk" content="pk_live_51HsdjEHr60zI2cLPJB3fA6O1sX0HI45REiwT7DfGYvJ0oiL5sLkU608l8DevXTkcSEOjlYpxrejhcXtpVdxqRrsn00KLZzc6di">
 <link href="https://fonts.googleapis.com/css2?family=Syne:wght@700;800&family=DM+Sans:wght@300;400;500&family=DM+Mono:wght@400;500&display=swap" rel="stylesheet">
 <style>
@@ -42,9 +42,9 @@ html,body{height:100%;background:var(--page);color:var(--text);font-family:var(-
 .auth-top{flex:1;display:flex;flex-direction:column;align-items:center;justify-content:center;padding:40px 28px 28px;position:relative;z-index:1}
 
 /* D-MARK LOGO */
-.auth-logo-wrap{display:flex;align-items:center;gap:6px;margin-bottom:16px}
-.auth-d-mark{width:56px;height:56px;background:var(--teal);border-radius:0 28px 28px 0;position:relative;flex-shrink:0;display:flex;align-items:center;justify-content:center}
-.auth-d-mark::before{content:'';width:24px;height:24px;background:var(--page);border-radius:50%;position:absolute}
+.auth-logo-wrap{display:flex;align-items:center;gap:14px;margin-bottom:16px}
+.auth-d-mark{flex-shrink:0}
+
 .auth-wordmark{font-family:var(--font-display);font-size:52px;font-weight:800;letter-spacing:-3px;line-height:1;color:var(--text)}
 .auth-tagline{font-family:var(--font-display);font-size:17px;font-weight:700;color:var(--text2);text-align:center;letter-spacing:-0.3px;line-height:1.3;max-width:260px}
 .auth-tagline em{color:var(--teal);font-style:normal}
@@ -74,9 +74,9 @@ textarea{resize:none}
 .btn-ghost:hover{color:var(--teal)}
 #app-screen{background:var(--black)}
 .app-header{background:rgba(245,240,232,0.97);backdrop-filter:blur(12px);border-bottom:0.5px solid var(--border2);padding:12px 20px;display:flex;align-items:center;justify-content:space-between;flex-shrink:0}
-.header-logo-wrap{display:flex;align-items:center;gap:5px}
-.header-d-mark{width:26px;height:26px;background:var(--teal);border-radius:0 13px 13px 0;position:relative;flex-shrink:0;display:flex;align-items:center;justify-content:center}
-.header-d-mark::before{content:'';width:11px;height:11px;background:var(--page);border-radius:50%;position:absolute}
+.header-logo-wrap{display:flex;align-items:center;gap:8px}
+.header-d-mark{flex-shrink:0}
+
 .header-wordmark{font-family:var(--font-display);font-size:20px;font-weight:800;letter-spacing:-0.8px;color:var(--text)}
 .header-logo{font-family:var(--font-display);font-size:22px;font-weight:800;letter-spacing:-1px;color:var(--white)}
 .header-logo span{color:var(--teal)}
@@ -272,8 +272,13 @@ textarea{resize:none}
   <div class="auth-wrap">
     <div class="auth-top">
       <div class="auth-logo-wrap">
-        <div class="auth-d-mark"></div>
-        <div class="auth-wordmark">etour</div>
+        <div class="auth-d-mark">
+          <svg width="64" height="64" viewBox="0 0 200 200" fill="none" style="border-radius:14px;background:#00C2A8;display:block">
+            <path d="M 92 28 L 92 172 L 56 172 Q 14 172 14 100 Q 14 28 56 28 Z" fill="#000"/>
+            <path d="M 108 28 L 108 172 L 144 172 Q 186 172 186 100 Q 186 28 144 28 Z" fill="none" stroke="#000" stroke-width="8" stroke-linejoin="round"/>
+          </svg>
+        </div>
+        <div class="auth-wordmark">Detour</div>
       </div>
       <p class="auth-tagline">Commuting?<br><em>Now get paid for it.</em></p>
       <div class="auth-pills">
@@ -352,8 +357,13 @@ textarea{resize:none}
 <div id="app-screen" class="screen">
   <div class="app-header">
     <div class="header-logo-wrap">
-      <div class="header-d-mark"></div>
-      <div class="header-wordmark">etour</div>
+      <div class="header-d-mark">
+        <svg width="30" height="30" viewBox="0 0 200 200" fill="none" style="border-radius:7px;background:#00C2A8;display:block">
+          <path d="M 92 28 L 92 172 L 56 172 Q 14 172 14 100 Q 14 28 56 28 Z" fill="#000"/>
+          <path d="M 108 28 L 108 172 L 144 172 Q 186 172 186 100 Q 186 28 144 28 Z" fill="none" stroke="#000" stroke-width="9" stroke-linejoin="round"/>
+        </svg>
+      </div>
+      <div class="header-wordmark" style="font-family:var(--font-display);font-size:20px;font-weight:800;letter-spacing:-0.8px;color:var(--white)">Detour</div>
     </div>
     <div class="header-user">
       <div onclick="showView('view-gigs');setNavActive(document.querySelectorAll('.nav-item')[2]);switchGigsMode('profile')" style="cursor:pointer;display:flex;align-items:center;gap:6px;">
@@ -2833,7 +2843,7 @@ async function savePushSub(sub){
 
 function showPushNotification(title,body){
   if(Notification.permission==='granted'&&document.hidden){
-    new Notification(title,{body,icon:'/icons/detour-icon-teal-192px.png',badge:'/icons/detour-icon-teal-192px.png'});
+    new Notification(title,{body,icon:'/icons/detour-icon-192.png',badge:'/icons/detour-icon-192.png'});
   }
 }
 
