@@ -6,6 +6,7 @@ const stripe = require('stripe')(process.env.STRIPE_SECRET_KEY);
 const multer = require('multer');
 const path = require('path');
 const { geocode, notifyMatchedDrivers } = require('../utils/matching');
+const { notifyJobCompleted } = require('../utils/email');
 
 const fs = require('fs');
 const storage = multer.diskStorage({
@@ -482,6 +483,24 @@ router.post('/:id/confirm', requireAuth, upload.array('photos', 6), async (req, 
   db.prepare("UPDATE jobs SET dropoff_photos = ?, dropoff_confirmed_at = CURRENT_TIMESTAMP, status = 'completed', stripe_transfer_id = ? WHERE id = ?")
     .run(JSON.stringify([...existing, ...photos]), null, job.id);
   res.json({ success: true });
+
+  // Send receipt email to shipper
+  setImmediate(async () => {
+    try {
+      const shipper = db.prepare('SELECT name, email FROM users WHERE id = ?').get(job.shipper_id);
+      const driver = db.prepare('SELECT name FROM users WHERE id = ?').get(job.driver_id);
+      if (shipper?.email) {
+        await notifyJobCompleted({
+          shipperEmail: shipper.email,
+          shipperName: shipper.name || 'there',
+          jobTitle: job.title,
+          driverName: driver?.name || 'Your driver',
+          price: job.offered_price,
+          platformFee: job.platform_fee
+        });
+      }
+    } catch(e) { console.error('Receipt email error:', e.message); }
+  });
 
   // Handle Stripe capture + transfer asynchronously
   if (job.stripe_payment_intent_id && process.env.STRIPE_SECRET_KEY) {
