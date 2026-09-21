@@ -368,79 +368,51 @@ textarea{resize:none}
 
     <!-- HOME -->
     <div id="view-home" class="view active">
-      <div class="home-hero">
-        <div class="home-greeting">Hey, <span id="home-name"></span> 👋</div>
-        <div class="home-sub">Your commute. Your paycheck.</div>
-        <div class="home-buzz">Free afternoon? Log on. Find a job. Get paid.</div>
+      <!-- GREETING -->
+      <div style="padding:8px 0 20px">
+        <div style="font-family:var(--font-display);font-size:28px;font-weight:800;letter-spacing:-0.8px;color:var(--text);line-height:1.1">Hey, <span id="home-name"></span>.</div>
+        <div style="font-size:14px;color:var(--text3);margin-top:3px;">What do you need?</div>
       </div>
 
-      <!-- DRIVER CTA BANNER — shows for unverified drivers, hides when approved -->
-      <div id="home-driver-cta" style="display:none;background:var(--surface);border:1.5px solid var(--teal);border-radius:var(--r);padding:20px;margin-bottom:16px;">
-        <div style="font-family:var(--font-mono);font-size:10px;color:var(--teal);letter-spacing:0.12em;text-transform:uppercase;margin-bottom:8px;">🚗 Become a Driver</div>
-        <div style="font-family:var(--font-display);font-size:22px;font-weight:800;letter-spacing:-0.5px;line-height:1.15;margin-bottom:6px;">Your drive just got<br><span style="color:var(--teal);">a raise.</span></div>
-        <div style="font-size:13px;color:var(--text2);line-height:1.6;margin-bottom:14px;">Earn $20–$80 picking up deliveries on drives you already make. Upload your license and insurance to get started.</div>
-        <div style="display:flex;gap:8px;margin-bottom:12px;">
-          <div style="background:rgba(0,194,168,0.1);border:0.5px solid rgba(0,194,168,0.2);border-radius:20px;padding:5px 12px;font-family:var(--font-mono);font-size:10px;color:var(--teal);">$20–$80 per job</div>
-          <div style="background:rgba(0,194,168,0.1);border:0.5px solid rgba(0,194,168,0.2);border-radius:20px;padding:5px 12px;font-family:var(--font-mono);font-size:10px;color:var(--teal);">75% to you</div>
-          <div style="background:rgba(0,194,168,0.1);border:0.5px solid rgba(0,194,168,0.2);border-radius:20px;padding:5px 12px;font-family:var(--font-mono);font-size:10px;color:var(--teal);">Free to join</div>
-        </div>
-        <button class="btn-primary" onclick="showDriverOnboard()" style="font-size:15px;padding:14px;margin:0;">🚗 Complete Driver Setup →</button>
-        <div id="home-driver-cta-status" style="font-size:12px;color:var(--text3);margin-top:10px;text-align:center;"></div>
+      <!-- DRIVER SETUP BANNER (only shows when needed) -->
+      <div id="home-driver-cta" style="display:none;background:var(--surface);border:1.5px solid var(--teal);border-radius:var(--r);padding:16px;margin-bottom:16px;">
+        <div style="font-family:var(--font-display);font-size:16px;font-weight:800;margin-bottom:4px;">Complete driver setup →</div>
+        <div style="font-size:13px;color:var(--text2);margin-bottom:12px;">Upload your license & insurance to start earning.</div>
+        <button class="btn-primary" onclick="showDriverOnboard()" style="font-size:14px;padding:12px;margin:0;">Get Started</button>
+        <div id="home-driver-cta-status" style="font-size:12px;color:var(--text3);margin-top:8px;text-align:center;"></div>
       </div>
 
-      <!-- QUICK POST -->
-      <button class="quick-post-btn" onclick="showQuickPost()">⚡ Post a Delivery — Someone's Already Going Your Way</button>
-
-      <!-- CLEAR USER PATHWAY CARDS -->
-      <div style="margin-bottom:20px;">
-        <div style="font-size:10px;color:rgba(0,0,0,0.35);text-transform:uppercase;letter-spacing:0.12em;margin-bottom:10px;font-family:var(--font-mono);">I need something done</div>
-        <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:10px;">
-          <div class="action-card shipper-card" onclick="showView('view-post');setNavActive(document.querySelectorAll('.nav-item')[1])">
-            <div class="action-icon">📦</div>
-            <div class="action-title">Post a Delivery</div>
-            <div class="action-sub">Someone's already heading your way</div>
-          </div>
-          <div class="action-card" style="background:var(--dark);border:0.5px solid rgba(0,0,0,0.06);border-radius:var(--r);padding:18px 14px;cursor:pointer;" onclick="showView('view-gigs');setNavActive(document.querySelectorAll('.nav-item')[2])">
-            <div class="action-icon">💼</div>
-            <div class="action-title">Post a Gig</div>
-            <div class="action-sub">Yard work, labor & more</div>
-          </div>
+      <!-- 4 ACTION SQUARES -->
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-bottom:28px;">
+        <div onclick="showView('view-post');setNavActive(document.querySelectorAll('.nav-item')[1])" style="background:var(--surface);border:0.5px solid var(--border2);border-radius:var(--r);padding:22px 18px;cursor:pointer;transition:transform 0.1s,border-color 0.2s;" ontouchstart="this.style.transform='scale(0.97)'" ontouchend="this.style.transform=''" onmouseenter="this.style.borderColor='rgba(0,194,168,0.5)'" onmouseleave="this.style.borderColor=''">
+          <div style="font-size:32px;margin-bottom:10px;">📦</div>
+          <div style="font-family:var(--font-display);font-size:15px;font-weight:800;letter-spacing:-0.3px;color:var(--text);">Send something</div>
+          <div style="font-size:12px;color:var(--text3);margin-top:3px;">Post a delivery</div>
         </div>
-        <div style="font-size:10px;color:rgba(0,0,0,0.35);text-transform:uppercase;letter-spacing:0.12em;margin-bottom:10px;margin-top:16px;font-family:var(--font-mono);">I want to earn money</div>
-        <div class="action-card driver-card" onclick="showView('view-gigs');setNavActive(document.querySelectorAll('.nav-item')[2]);switchGigsMode('earn')" style="display:flex;align-items:center;gap:14px;padding:16px 18px;">
-          <div style="font-size:28px;">🚗</div>
-          <div>
-            <div class="action-title" style="margin-bottom:2px;">Browse Jobs & Drive</div>
-            <div class="action-sub">Dead miles → live earnings. $20–$80 per job.</div>
-          </div>
+        <div onclick="showView('view-drive');setNavActive(document.querySelectorAll('.nav-item')[1]);switchDriveMode('post')" style="background:var(--surface);border:0.5px solid var(--border2);border-radius:var(--r);padding:22px 18px;cursor:pointer;transition:transform 0.1s,border-color 0.2s;" ontouchstart="this.style.transform='scale(0.97)'" ontouchend="this.style.transform=''" onmouseenter="this.style.borderColor='rgba(0,194,168,0.5)'" onmouseleave="this.style.borderColor=''">
+          <div style="font-size:32px;margin-bottom:10px;">🚗</div>
+          <div style="font-family:var(--font-display);font-size:15px;font-weight:800;letter-spacing:-0.3px;color:var(--text);">I'm driving</div>
+          <div style="font-size:12px;color:var(--text3);margin-top:3px;">Post your route</div>
+        </div>
+        <div onclick="showView('view-gigs');setNavActive(document.querySelectorAll('.nav-item')[2]);switchGigsMode('earn')" style="background:var(--surface);border:0.5px solid var(--border2);border-radius:var(--r);padding:22px 18px;cursor:pointer;transition:transform 0.1s,border-color 0.2s;" ontouchstart="this.style.transform='scale(0.97)'" ontouchend="this.style.transform=''" onmouseenter="this.style.borderColor='rgba(0,194,168,0.5)'" onmouseleave="this.style.borderColor=''">
+          <div style="font-size:32px;margin-bottom:10px;">💰</div>
+          <div style="font-family:var(--font-display);font-size:15px;font-weight:800;letter-spacing:-0.3px;color:var(--text);">Pick up a gig</div>
+          <div style="font-size:12px;color:var(--text3);margin-top:3px;">Browse & earn</div>
+        </div>
+        <div onclick="showView('view-jobs');loadMyJobs();setNavActive(document.querySelectorAll('.nav-item')[3])" style="background:var(--surface);border:0.5px solid var(--border2);border-radius:var(--r);padding:22px 18px;cursor:pointer;transition:transform 0.1s,border-color 0.2s;" ontouchstart="this.style.transform='scale(0.97)'" ontouchend="this.style.transform=''" onmouseenter="this.style.borderColor='rgba(0,194,168,0.5)'" onmouseleave="this.style.borderColor=''">
+          <div style="font-size:32px;margin-bottom:10px;">📋</div>
+          <div style="font-family:var(--font-display);font-size:15px;font-weight:800;letter-spacing:-0.3px;color:var(--text);">My jobs</div>
+          <div style="font-size:12px;color:var(--text3);margin-top:3px;">Track & manage</div>
         </div>
       </div>
 
-      <!-- JOB SEARCH -->
-      <div style="display:flex;gap:8px;margin-bottom:14px;align-items:center;">
-        <div style="flex:1;background:var(--surface);border:0.5px solid var(--border2);border-radius:50px;display:flex;align-items:center;padding:0 14px;gap:8px;">
-          <span style="color:var(--text3);font-size:14px;">🔍</span>
-          <input type="text" id="home-search" placeholder="Search jobs near you..." style="background:none;border:none;outline:none;color:var(--text);font-size:14px;flex:1;padding:10px 0;" oninput="filterOpenJobs(this.value)">
-        </div>
-        <button onclick="showJobFilters()" style="background:var(--dark2);border:0.5px solid rgba(0,0,0,0.08);border-radius:50px;padding:10px 14px;font-size:12px;color:var(--text2);cursor:pointer;white-space:nowrap;">⚙️ Filter</button>
+      <!-- OPEN JOBS FEED (compact, below the fold) -->
+      <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:10px;">
+        <div style="font-family:var(--font-display);font-size:14px;font-weight:700;color:var(--text2);">Open jobs near you</div>
+        <button class="btn-ghost" onclick="loadOpenJobs()" style="font-size:12px;">Refresh</button>
       </div>
-
-      <!-- JOB TYPE FILTER PILLS -->
-      <div style="display:flex;gap:6px;margin-bottom:14px;overflow-x:auto;padding-bottom:4px;" id="home-type-filters">
-        <button class="home-filter-pill active" onclick="filterByType('all',this)">All</button>
-        <button class="home-filter-pill" onclick="filterByType('standard',this)">📦 Delivery</button>
-        <button class="home-filter-pill" onclick="filterByType('yard_work',this)">🌿 Yard</button>
-        <button class="home-filter-pill" onclick="filterByType('labor',this)">💪 Labor</button>
-        <button class="home-filter-pill" onclick="filterByType('dump_run',this)">🚛 Dump</button>
-        <button class="home-filter-pill" onclick="filterByType('cleaning',this)">🧹 Clean</button>
-        <button class="home-filter-pill" onclick="filterByType('handyman',this)">🔧 Handyman</button>
-      </div>
-
-      <div class="section-head"><span>Available Near You</span><button class="btn-ghost" onclick="loadOpenJobs()">Refresh</button></div>
-      <div id="open-jobs-list" class="jobs-list"><div class="empty-state">Loading jobs near you...<br><span style="color:var(--teal);font-size:12px;font-family:var(--font-display);font-weight:700;">Free afternoon? Log on. Find a job. Get paid.</span></div></div>
-
-      <div class="section-head" style="margin-top:20px;"><span>🎯 Matched To Your Route</span><button class="btn-ghost" onclick="loadMatchedJobs()">Refresh</button></div>
-      <div id="matched-jobs-list" class="jobs-list" style="margin-bottom:6px;"></div>
+      <div id="open-jobs-list" class="jobs-list"><div class="empty-state">Loading...</div></div>
+      <div id="matched-jobs-list" class="jobs-list" style="margin-bottom:6px;display:none;"></div>
     </div>
 
     <!-- POST A DELIVERY -->
@@ -2911,7 +2883,7 @@ function showActiveJobBanner(job, driverName){
   banner.onclick = () => openJob(job.id, 'shipper');
   // Insert at top of home view body
   const homeView = document.getElementById('view-home');
-  const firstChild = homeView?.querySelector('.quick-post-btn');
+  const firstChild = homeView?.querySelector('#home-driver-cta');
   if(firstChild) homeView.insertBefore(banner, firstChild);
   else if(homeView) homeView.prepend(banner);
 }
