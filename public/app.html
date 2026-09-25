@@ -50,7 +50,7 @@ html,body{height:100%;background:var(--page);color:var(--text);font-family:var(-
 .auth-tagline em{color:var(--teal);font-style:normal}
 .auth-pills{display:flex;gap:8px;margin-top:22px;flex-wrap:wrap;justify-content:center}
 .auth-pill{background:rgba(0,194,168,0.06);border:0.5px solid rgba(0,194,168,0.2);border-radius:30px;padding:6px 14px;font-size:11px;color:var(--text2);font-family:var(--font-body);letter-spacing:0.04em}
-.auth-bottom{background:var(--surface);border-radius:28px 28px 0 0;border-top:0.5px solid var(--border2);padding:24px 24px 40px;overflow-y:auto;position:relative;z-index:1}
+.auth-bottom{background:var(--surface);border-radius:28px 28px 0 0;border-top:0.5px solid var(--border2);padding:24px 24px 100px;overflow-y:auto;position:relative;z-index:1}
 .tab-switch{display:flex;background:var(--dark3);border-radius:var(--rs);padding:4px;margin-bottom:22px;gap:4px}
 .tab-btn{flex:1;padding:9px;border:none;background:none;color:var(--text2);font-size:14px;font-family:var(--font-body);font-weight:500;border-radius:6px;cursor:pointer;transition:all 0.2s}
 .tab-btn.active{background:var(--teal);color:#000;font-weight:600}
@@ -390,6 +390,26 @@ textarea{resize:none}
           <label>License Plate</label>
           <input type="text" id="reg-plate" placeholder="ABC-1234" style="text-transform:uppercase;">
         </div>
+        <!-- Driver docs — only shown when driver role is selected -->
+        <div id="driver-docs-section" style="display:none;margin-bottom:4px;">
+          <div style="font-family:var(--font-mono);font-size:10px;color:var(--teal);letter-spacing:0.12em;text-transform:uppercase;margin-bottom:12px;margin-top:4px;">Verification docs</div>
+          <div style="font-size:12px;color:var(--text3);margin-bottom:14px;line-height:1.55;">Upload your driver's license and proof of insurance. Your account will be reviewed within 24 hours before you can accept jobs.</div>
+          <div class="field-group">
+            <label>Driver's License <span class="req">*</span></label>
+            <div id="license-signup-preview" style="display:none;margin-bottom:6px;"><img id="license-signup-thumb" style="width:100%;border-radius:8px;border:1px solid rgba(0,0,0,0.1);" src=""></div>
+            <button type="button" class="btn-secondary" id="license-signup-btn" style="width:100%;margin-bottom:4px;" onclick="document.getElementById('license-signup-file').click()">🪪 Upload Driver's License</button>
+            <input type="file" id="license-signup-file" accept="image/jpeg,image/jpg,image/png,image/heic,image/heif,image/*" style="display:none" onchange="previewSignupDoc('license',this)">
+            <div id="license-signup-status" style="font-size:11px;color:var(--teal);display:none;margin-bottom:2px;">✓ License attached</div>
+          </div>
+          <div class="field-group">
+            <label>Proof of Insurance <span class="req">*</span></label>
+            <div id="insurance-signup-preview" style="display:none;margin-bottom:6px;"><img id="insurance-signup-thumb" style="width:100%;border-radius:8px;border:1px solid rgba(0,0,0,0.1);" src=""></div>
+            <button type="button" class="btn-secondary" id="insurance-signup-btn" style="width:100%;margin-bottom:4px;" onclick="document.getElementById('insurance-signup-file').click()">📋 Upload Insurance Card</button>
+            <input type="file" id="insurance-signup-file" accept="image/jpeg,image/jpg,image/png,image/heic,image/heif,image/*" style="display:none" onchange="previewSignupDoc('insurance',this)">
+            <div id="insurance-signup-status" style="font-size:11px;color:var(--teal);display:none;margin-bottom:2px;">✓ Insurance attached</div>
+          </div>
+        </div>
+
         <div id="reg-error" class="error-msg"></div>
         <div style="display:flex;align-items:flex-start;gap:10px;margin:10px 0;background:var(--dark2);border-radius:var(--rs);padding:12px 14px;">
           <input type="checkbox" id="reg-terms" style="margin-top:3px;width:16px;height:16px;accent-color:var(--teal);flex-shrink:0;cursor:pointer;">
@@ -3497,9 +3517,36 @@ function toast(msg){const el=document.getElementById('toast');el.textContent=msg
 // ── DRIVER ONBOARDING ──
 var _obLicenseDone=false,_obInsuranceDone=false;
 function selectRole(role){
-  var d=document.getElementById('role-driver'),s=document.getElementById('role-shipper'),vf=document.getElementById('vehicle-field'),v=document.getElementById('reg-vehicle');
-  if(role==='driver'){d.style.background='rgba(0,194,168,0.15)';d.style.border='1.5px solid var(--teal)';s.style.background='var(--dark2)';s.style.border='1.5px solid rgba(0,0,0,0.08)';if(vf)vf.style.display='block';}
-  else{s.style.background='rgba(0,194,168,0.15)';s.style.border='1.5px solid var(--teal)';d.style.background='var(--dark2)';d.style.border='1.5px solid rgba(0,0,0,0.08)';if(vf)vf.style.display='none';if(v)v.value='';}
+  var d=document.getElementById('role-driver'),s=document.getElementById('role-shipper'),vf=document.getElementById('vehicle-field'),v=document.getElementById('reg-vehicle'),pf=document.getElementById('plate-field'),docs=document.getElementById('driver-docs-section');
+  if(role==='driver'){
+    d.style.background='rgba(0,194,168,0.15)';d.style.border='1.5px solid var(--teal)';
+    s.style.background='var(--dark2)';s.style.border='1.5px solid rgba(0,0,0,0.08)';
+    if(vf)vf.style.display='block';
+    if(pf)pf.style.display='block';
+    if(docs)docs.style.display='block';
+  } else {
+    s.style.background='rgba(0,194,168,0.15)';s.style.border='1.5px solid var(--teal)';
+    d.style.background='var(--dark2)';d.style.border='1.5px solid rgba(0,0,0,0.08)';
+    if(vf){vf.style.display='none';}
+    if(pf)pf.style.display='none';
+    if(docs)docs.style.display='none';
+    if(v)v.value='';
+  }
+}
+function previewSignupDoc(type,input){
+  if(!input.files||!input.files.length)return;
+  var preview=document.getElementById(type+'-signup-preview');
+  var thumb=document.getElementById(type+'-signup-thumb');
+  var status=document.getElementById(type+'-signup-status');
+  var btn=document.getElementById(type+'-signup-btn');
+  var reader=new FileReader();
+  reader.onload=function(e){
+    if(thumb){thumb.src=e.target.result;}
+    if(preview){preview.style.display='block';}
+    if(status){status.style.display='block';}
+    if(btn){btn.textContent=type==='license'?'🪪 License attached ✓':'📋 Insurance attached ✓';btn.style.borderColor='var(--teal)';btn.style.color='var(--teal)';}
+  };
+  reader.readAsDataURL(input.files[0]);
 }
 function showDriverOnboard(){
   var m=document.getElementById('driver-onboard-modal');
