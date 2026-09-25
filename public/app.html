@@ -1341,7 +1341,7 @@ async function register(){
   if(!name||!email||!password){document.getElementById('reg-error').textContent='Name, email, and password required';return;}
   if(password.length<8){document.getElementById('reg-error').textContent='Password must be at least 8 characters';return;}
   if(!document.getElementById('reg-terms').checked){document.getElementById('reg-error').textContent='Please agree to the Terms of Service to continue';return;}
-  try{const r=await api('POST','/api/auth/register',{name,email,phone,password,vehicle_type,license_plate});currentUser=r;localStorage.setItem('detour_uid',r.userId);localStorage.setItem('detour_name',r.name);enterApp(r.name);if(vehicle_type){setTimeout(()=>showDriverOnboard(),400);}}
+  try{const r=await api('POST','/api/auth/register',{name,email,phone,password,vehicle_type,license_plate});currentUser=r;localStorage.setItem('detour_uid',r.userId);localStorage.setItem('detour_name',r.name);if(vehicle_type)await uploadSignupDocs(r.userId);enterApp(r.name);if(vehicle_type){setTimeout(()=>showDriverOnboard(),400);}}
   catch(e){document.getElementById('reg-error').textContent=e.message;}
 }
 async function logout(){
@@ -3539,6 +3539,7 @@ function previewSignupDoc(type,input){
   var thumb=document.getElementById(type+'-signup-thumb');
   var status=document.getElementById(type+'-signup-status');
   var btn=document.getElementById(type+'-signup-btn');
+  // Show local preview — file is held on the input element and uploaded after register() creates the UID
   var reader=new FileReader();
   reader.onload=function(e){
     if(thumb){thumb.src=e.target.result;}
@@ -3547,6 +3548,23 @@ function previewSignupDoc(type,input){
     if(btn){btn.textContent=type==='license'?'🪪 License attached ✓':'📋 Insurance attached ✓';btn.style.borderColor='var(--teal)';btn.style.color='var(--teal)';}
   };
   reader.readAsDataURL(input.files[0]);
+}
+async function uploadSignupDocs(uid){
+  // Called by register() immediately after account creation, using the real UID
+  var licenseInput=document.getElementById('license-signup-file');
+  var insuranceInput=document.getElementById('insurance-signup-file');
+  var uploads=[];
+  if(licenseInput&&licenseInput.files&&licenseInput.files.length){
+    var fd=new FormData();
+    fd.append('license_card',licenseInput.files[0]);
+    uploads.push(fetch('/api/auth/license',{method:'POST',body:fd,credentials:'include',headers:{'x-user-id':uid}}).catch(function(){}));
+  }
+  if(insuranceInput&&insuranceInput.files&&insuranceInput.files.length){
+    var fd2=new FormData();
+    fd2.append('insurance_card',insuranceInput.files[0]);
+    uploads.push(fetch('/api/auth/insurance',{method:'POST',body:fd2,credentials:'include',headers:{'x-user-id':uid}}).catch(function(){}));
+  }
+  if(uploads.length)await Promise.all(uploads);
 }
 function showDriverOnboard(){
   var m=document.getElementById('driver-onboard-modal');
