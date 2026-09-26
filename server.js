@@ -45,6 +45,9 @@ app.use('/api/jobs', require('./routes/jobs'));
 app.use('/api/stripe', stripeRoutes);
 app.use('/api/admin', require('./routes/admin'));
 app.use('/api/push', require('./routes/push'));
+app.use('/api/leaderboard', require('./routes/leaderboard'));
+// alias driver stats under /api
+app.use('/api', require('./routes/leaderboard'));
 
 // Stripe webhook — must use raw body (already handled above)
 app.post('/api/stripe/webhook', stripeRoutes.webhookHandler);
@@ -164,5 +167,24 @@ function expireOldRoutes() {
 }
 expireOldRoutes();
 setInterval(expireOldRoutes, 30 * 60 * 1000);
+
+// ── Weekly leaderboard cron ───────────────────────────────────────────────────
+// Runs every hour and fires the leaderboard snapshot on Sunday at 11pm MT
+const { runWeeklyLeaderboard } = require('./utils/gamification');
+const stripe = require('stripe')(process.env.STRIPE_SECRET_KEY);
+
+function maybeRunLeaderboard() {
+  try {
+    const now = new Date();
+    // Sunday = 0, hour 23 in America/Denver (UTC-6 = 05:00 UTC next day Sun→Mon)
+    // We check UTC Sunday between 05:00–05:59 UTC = Sunday 11pm MT
+    const utcDay  = now.getUTCDay();    // 0=Sun
+    const utcHour = now.getUTCHours();  // 0-23
+    if (utcDay === 0 && utcHour === 5) {
+      runWeeklyLeaderboard(db, stripe);
+    }
+  } catch(e) { console.error('[leaderboard cron] Error:', e.message); }
+}
+setInterval(maybeRunLeaderboard, 60 * 60 * 1000); // check every hour
 
 app.listen(PORT, () => console.log('Detour running on port ' + PORT));
