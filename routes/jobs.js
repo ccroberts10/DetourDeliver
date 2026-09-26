@@ -7,6 +7,7 @@ const multer = require('multer');
 const path = require('path');
 const { geocode, notifyMatchedDrivers } = require('../utils/matching');
 const { notifyJobCompleted } = require('../utils/email');
+const { processJobCompletion } = require('../utils/gamification');
 
 const fs = require('fs');
 const storage = multer.diskStorage({
@@ -483,6 +484,13 @@ router.post('/:id/confirm', requireAuth, upload.array('photos', 6), async (req, 
   db.prepare("UPDATE jobs SET dropoff_photos = ?, dropoff_confirmed_at = CURRENT_TIMESTAMP, status = 'completed', stripe_transfer_id = ? WHERE id = ?")
     .run(JSON.stringify([...existing, ...photos]), null, job.id);
   res.json({ success: true });
+
+  // ── Gamification: streaks, milestones, reserve ───────────────────────────
+  setImmediate(() => {
+    try {
+      processJobCompletion(db, stripe, job);
+    } catch (e) { console.error('[gamification] Error:', e.message); }
+  });
 
   // Send receipt email to shipper
   setImmediate(async () => {
