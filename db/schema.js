@@ -152,6 +152,51 @@ migrate(`ALTER TABLE driver_routes ADD COLUMN origin_lng REAL`);
 migrate(`ALTER TABLE driver_routes ADD COLUMN destination_lat REAL`);
 migrate(`ALTER TABLE driver_routes ADD COLUMN destination_lng REAL`);
 
+// ── Gamification schema ──────────────────────────────────────────────────────
+
+// Streak + lifetime stats columns on users
+migrate(`ALTER TABLE users ADD COLUMN streak_count INTEGER DEFAULT 0`);
+migrate(`ALTER TABLE users ADD COLUMN streak_last_date TEXT`);
+migrate(`ALTER TABLE users ADD COLUMN streak_longest INTEGER DEFAULT 0`);
+migrate(`ALTER TABLE users ADD COLUMN lifetime_jobs INTEGER DEFAULT 0`);
+migrate(`ALTER TABLE users ADD COLUMN lifetime_earnings REAL DEFAULT 0`);
+migrate(`ALTER TABLE users ADD COLUMN tier TEXT DEFAULT 'bronze'`);
+migrate(`ALTER TABLE users ADD COLUMN reward_reserve REAL DEFAULT 0`);
+
+// Rewards log — every bonus payout
+db.exec(`
+  CREATE TABLE IF NOT EXISTS rewards (
+    id TEXT PRIMARY KEY,
+    driver_id TEXT NOT NULL,
+    type TEXT NOT NULL,
+    amount REAL NOT NULL,
+    description TEXT,
+    stripe_transfer_id TEXT,
+    week_start TEXT,
+    job_id TEXT,
+    created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+    FOREIGN KEY(driver_id) REFERENCES users(id)
+  );
+`);
+
+// Weekly leaderboard snapshots
+db.exec(`
+  CREATE TABLE IF NOT EXISTS weekly_leaderboard (
+    id TEXT PRIMARY KEY,
+    week_start TEXT NOT NULL,
+    driver_id TEXT NOT NULL,
+    rank INTEGER NOT NULL,
+    jobs_count INTEGER NOT NULL,
+    earnings REAL NOT NULL,
+    payout_amount REAL DEFAULT 0,
+    paid INTEGER DEFAULT 0,
+    created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+    UNIQUE(week_start, driver_id)
+  );
+`);
+
+// ── End gamification schema ───────────────────────────────────────────────────
+
 // Promo codes table
 db.exec(`
   CREATE TABLE IF NOT EXISTS promo_codes (
