@@ -91,6 +91,33 @@ textarea{resize:none}
 .home-greeting{font-family:var(--font-display);font-size:26px;font-weight:800;letter-spacing:-0.8px;line-height:1.1;color:var(--text)}
 .home-sub{font-size:14px;color:var(--gray);margin-top:4px;font-weight:300}
 .home-buzz{font-family:var(--font-display);font-size:13px;font-weight:700;color:var(--teal);margin-top:6px;letter-spacing:-0.2px}
+/* CORRIDOR HERO */
+.corridor-hero{background:var(--black);border-radius:var(--r);padding:18px 16px 16px;margin-bottom:20px;position:relative;overflow:hidden}
+.corridor-hero::before{content:'';position:absolute;inset:0;background:linear-gradient(135deg,rgba(0,194,168,0.06) 0%,transparent 60%);pointer-events:none}
+.corridor-eyebrow{font-size:11px;font-weight:500;color:rgba(240,237,230,0.4);letter-spacing:0.1em;text-transform:uppercase;margin-bottom:14px}
+.corridor-strip{display:flex;align-items:center;gap:0;margin-bottom:14px}
+.corridor-city{flex-shrink:0}
+.corridor-city .city-code{font-family:var(--font-display);font-size:22px;font-weight:800;color:#F0EDE6;letter-spacing:-0.5px;line-height:1}
+.corridor-city .city-name{font-size:11px;color:rgba(240,237,230,0.45);margin-top:2px}
+.corridor-city.dest{text-align:right}
+.corridor-track-wrap{flex:1;position:relative;margin:0 10px;height:32px;display:flex;align-items:center}
+.corridor-track{height:2px;background:rgba(240,237,230,0.1);border-radius:2px;position:absolute;left:0;right:0}
+.corridor-progress{height:2px;background:var(--teal);border-radius:2px;width:40%;position:absolute;left:0}
+.corridor-pkg{position:absolute;left:38%;transform:translateX(-50%);width:22px;height:22px;background:var(--teal);border-radius:5px;display:flex;align-items:center;justify-content:center;box-shadow:0 0 0 3px rgba(0,194,168,0.2)}
+.corridor-pkg svg{width:12px;height:12px;opacity:0.85}
+.corridor-bottom{display:flex;align-items:flex-end;justify-content:space-between}
+.corridor-meta{font-size:13px;color:rgba(240,237,230,0.55);line-height:1.5}
+.corridor-meta strong{color:#F0EDE6}
+.corridor-earn-block{text-align:right}
+.corridor-earn-label{font-size:11px;color:rgba(240,237,230,0.4);letter-spacing:0.04em;margin-bottom:2px}
+.corridor-earn{font-family:var(--font-display);font-size:32px;font-weight:800;color:var(--teal);letter-spacing:-1px;line-height:1}
+/* JOB CARD EXTRAS */
+.job-meta-row{display:flex;align-items:center;gap:8px;flex-wrap:wrap;margin-top:5px}
+.route-match-badge{font-size:10px;font-weight:700;color:var(--teal);background:rgba(0,194,168,0.1);border:0.5px solid rgba(0,194,168,0.25);border-radius:20px;padding:2px 8px;letter-spacing:0.02em;white-space:nowrap}
+.job-time-ago{font-size:11px;color:var(--text3)}
+.job-time-ago.hot{color:#E07B30;font-weight:600}
+.watchers{font-size:11px;color:var(--text3)}
+.watchers.live{color:#E07B30}
 .action-grid{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:24px}
 .action-card{background:var(--dark);border:0.5px solid rgba(0,0,0,0.06);border-radius:var(--r);padding:18px 14px;cursor:pointer;transition:border-color 0.2s,transform 0.1s,background 0.2s}
 .action-card:active{transform:scale(0.97)}
@@ -448,10 +475,39 @@ textarea{resize:none}
 
     <!-- HOME -->
     <div id="view-home" class="view active">
-      <!-- GREETING -->
-      <div style="padding:8px 0 20px">
-        <div style="font-family:var(--font-display);font-size:28px;font-weight:800;letter-spacing:-0.8px;color:var(--text);line-height:1.1">Hey, <span id="home-name"></span>.</div>
-        <div style="font-size:14px;color:var(--text3);margin-top:3px;">What do you need?</div>
+      <!-- CORRIDOR HERO -->
+      <div class="corridor-hero">
+        <div class="corridor-eyebrow">Your corridor · Today</div>
+        <div class="corridor-strip">
+          <div class="corridor-city">
+            <div class="city-code">DGO</div>
+            <div class="city-name">Durango</div>
+          </div>
+          <div class="corridor-track-wrap">
+            <div class="corridor-track"></div>
+            <div class="corridor-progress"></div>
+            <div class="corridor-pkg">
+              <svg viewBox="0 0 12 12" fill="none" stroke="white" stroke-width="1.3">
+                <rect x="1" y="1.5" width="10" height="9" rx="1.5"/>
+                <path d="M1 5h10M4 1.5v3M8 1.5v3"/>
+              </svg>
+            </div>
+          </div>
+          <div class="corridor-city dest">
+            <div class="city-code">FMN</div>
+            <div class="city-name">Farmington</div>
+          </div>
+        </div>
+        <div class="corridor-bottom">
+          <div class="corridor-meta">
+            <strong id="corridor-job-count">—</strong> open jobs on your route<br>
+            Hey, <span id="home-name"></span>.
+          </div>
+          <div class="corridor-earn-block">
+            <div class="corridor-earn-label">Potential earn</div>
+            <div class="corridor-earn" id="corridor-earn">—</div>
+          </div>
+        </div>
       </div>
 
       <!-- DRIVER SETUP BANNER (only shows when needed) -->
@@ -486,9 +542,9 @@ textarea{resize:none}
         </div>
       </div>
 
-      <!-- OPEN JOBS FEED (compact, below the fold) -->
+      <!-- OPEN JOBS FEED -->
       <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:10px;">
-        <div style="font-family:var(--font-display);font-size:14px;font-weight:700;color:var(--text2);">Open jobs near you</div>
+        <div style="font-family:var(--font-display);font-size:14px;font-weight:700;color:var(--text);">Open jobs <span style="color:var(--teal);" id="open-job-count"></span></div>
         <button class="btn-ghost" onclick="loadOpenJobs()" style="font-size:12px;">Refresh</button>
       </div>
       <div id="open-jobs-list" class="jobs-list"><div class="empty-state">Loading...</div></div>
@@ -1819,6 +1875,15 @@ async function loadOpenJobs(){
       fetch('/api/jobs/driver-routes').then(r=>r.json()).catch(()=>[])
     ]);
     allOpenJobs=jobs;
+    // Update corridor hero stats
+    const openCount=jobs.filter(j=>j.status==='open').length;
+    const totalEarn=jobs.filter(j=>j.status==='open').reduce((s,j)=>s+(parseFloat(j.offered_price)||0)*0.75,0);
+    const countEl=document.getElementById('corridor-job-count');
+    const earnEl=document.getElementById('corridor-earn');
+    const openCountEl=document.getElementById('open-job-count');
+    if(countEl)countEl.textContent=openCount;
+    if(earnEl)earnEl.textContent=totalEarn>0?`+$${Math.round(totalEarn)}`:'—';
+    if(openCountEl)openCountEl.textContent=openCount>0?`(${openCount})`:'';
     // Inject driver route cards at top of feed
     const routeHtml=routes.length
       ? routes.map(r=>homeDriveCard(r)).join('')
@@ -1874,7 +1939,16 @@ function jobCard(job,isDriver=false){
       <span style="font-size:12px;color:var(--text2);">Posted by <strong style="color:var(--text);">${escHtml(job.shipper_name||'Shipper')}</strong></span>
     </div>`;
   }
-  const card=`<div class="job-card" onclick="openJob('${job.id}','${isDriver?'driver':'shipper'}')"><div class="job-card-header"><div class="job-card-title">${escHtml(job.title)}</div><div class="job-price">$${parseFloat(job.offered_price).toFixed(2)}</div></div><div class="job-route"><div class="route-dot start"></div><div class="route-city">${pickupLoc}</div><div class="route-line"></div><div class="route-city">${dropoffLoc}</div><div class="route-dot end"></div></div><div class="job-meta"><span class="status-badge status-${job.status}">${ST[job.status]||job.status}</span><span>${TL[job.job_type]||'📦 General'}</span><span>${SZ[job.item_size]||job.item_size}</span>${job.fragile?'<span>⚠️ Fragile</span>':''}${isDriver?`<span style="color:var(--green);font-weight:600;">Earn $${payout}</span><span style="color:rgba(0,0,0,0.3);font-size:10px;">← swipe to accept</span>`:''}</div>${personPhoto}</div>`;
+  // Urgency: time since posted
+  const minutesAgo=job.created_at?Math.round((Date.now()-new Date(job.created_at).getTime())/60000):null;
+  const timeAgoText=minutesAgo!=null?(minutesAgo<60?`${minutesAgo} min ago`:`${Math.round(minutesAgo/60)}h ago`):null;
+  const isHot=minutesAgo!=null&&minutesAgo<30;
+  // Route match: check if Durango/Farmington corridor
+  const pickupLower=(job.pickup_city||'').toLowerCase();
+  const dropoffLower=(job.dropoff_city||'').toLowerCase();
+  const corridorCities=['durango','farmington','cortez','telluride','pagosa springs','silverton','aztec'];
+  const isOnRoute=corridorCities.some(c=>pickupLower.includes(c)||dropoffLower.includes(c));
+  const card=`<div class="job-card" onclick="openJob('${job.id}','${isDriver?'driver':'shipper'}')"><div class="job-card-header"><div class="job-card-title">${escHtml(job.title)}</div><div style="text-align:right;flex-shrink:0;"><div class="job-price">$${parseFloat(job.offered_price).toFixed(2)}</div>${timeAgoText?`<div class="job-time-ago${isHot?' hot':''}">${timeAgoText}</div>`:''}</div></div><div class="job-route"><div class="route-dot start"></div><div class="route-city">${pickupLoc}</div><div class="route-line"></div><div class="route-city">${dropoffLoc}</div><div class="route-dot end"></div></div><div class="job-meta-row">${isOnRoute&&job.status==='open'?'<span class="route-match-badge">✓ On your route</span>':''}<span class="status-badge status-${job.status}">${ST[job.status]||job.status}</span><span style="font-size:11px;color:var(--text3);">${TL[job.job_type]||'📦 General'}</span>${job.fragile?'<span style="font-size:11px;color:var(--text3);">⚠️ Fragile</span>':''}${isDriver?`<span style="color:var(--green);font-weight:600;font-size:11px;">Earn $${payout}</span>`:''}</div>${personPhoto}</div>`;
   if(isDriver&&job.status==='open'){
     const id=`sw-${job.id}`;
     setTimeout(()=>{const el=document.getElementById(id);if(el)makeSwipeable(el,job.id);},50);
